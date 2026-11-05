@@ -56,6 +56,10 @@
 | D30 | **Redirecionamento de teste (`EMAIL_TEST_TO`)** | Permite testar todos os fluxos sem domínio, sem risco de enviar a terceiros. |
 | D31 | **Branches `develop` → `main`** | Toda alteração passa por uma prévia da Vercel antes de chegar à produção. |
 | D32 | **Cabeçalhos de segurança no `vercel.json`** | CSP restrita a Supabase e Google Fonts; impede embutir o site em iframes e scripts de terceiros. |
+| D35 | **Links de e-mail com `token_hash` fixos no `{{ .SiteURL }}` + PKCE** | Nenhum token de sessão na URL e o destino não depende do pedido; funciona em outro dispositivo (auditoria V01). |
+| D36 | **MFA obrigatório para administradores (aal2 no servidor)** | O painel expõe dados de todos os usuários; senha sozinha não basta (V07). |
+| D37 | **Limite de requisições no próprio Postgres** (`rate_limit_hit`) | Sem serviço externo novo; protege a cota do Mercado Pago e evita abuso (V05). |
+| D38 | **Exclusão de conta mantém pagamentos anonimizados** | Atende ao direito de eliminação (LGPD) preservando registros financeiros de guarda obrigatória (V08). |
 | D34 | **Painel admin via Edge Function** | O navegador nunca recebe permissão para ler dados de outros usuários; a função confere `public.admins` com a chave de serviço. Esconder a tela é só conveniência. |
 | D33 | **Vercel Hobby na fase de teste, Pro antes de vender** | Hobby proíbe uso comercial; migrar é obrigatório antes de cobranças reais. |
 | D8 | **Design tokens centralizados** em `src/index.css` (`@theme`) | Trocar cores/fontes em um único lugar. |

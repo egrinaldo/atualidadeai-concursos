@@ -23,6 +23,9 @@ const Conta = lazy(() => auth().then((m) => ({ default: m.Conta })))
 const PagamentoRetorno = lazy(() => auth().then((m) => ({ default: m.PagamentoRetorno })))
 // Painel administrativo: pacote separado, baixado só por quem acessa /admin
 const Admin = lazy(() => import('@/pages/admin').then((m) => ({ default: m.Admin })))
+// Documentos jurídicos: pacote separado (texto longo, fora da landing)
+const Termos = lazy(() => import('@/pages/legal').then((m) => ({ default: m.Termos })))
+const Privacidade = lazy(() => import('@/pages/legal').then((m) => ({ default: m.Privacidade })))
 const SetupStatus = lazy(() => import('@/pages/SetupStatus').then((m) => ({ default: m.SetupStatus })))
 
 function normalize(path: string): string {
@@ -75,19 +78,15 @@ export default function App() {
   switch (path) {
     case '/termos':
       return (
-        <ComingSoon
-          title="Termos de Uso"
-          stage="documento em elaboração"
-          description="Os Termos de Uso serão publicados antes do início das vendas."
-        />
+        <Suspense fallback={<Loading />}>
+          <Termos />
+        </Suspense>
       )
     case '/privacidade':
       return (
-        <ComingSoon
-          title="Política de Privacidade"
-          stage="documento em elaboração"
-          description="A Política de Privacidade será publicada antes do início das vendas."
-        />
+        <Suspense fallback={<Loading />}>
+          <Privacidade />
+        </Suspense>
       )
     case '/status':
       if (import.meta.env.DEV) {

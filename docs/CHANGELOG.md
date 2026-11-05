@@ -2,6 +2,38 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.10.0] — 2026-11-05 — Termos de Uso e Política de Privacidade
+
+### Adicionado
+- Páginas `/termos` e `/privacidade` (versão 1.0), com índice, âncoras por seção e base legal: CDC (inclusive direito de arrependimento de 7 dias, art. 49), Decreto 7.962/2013, Marco Civil da Internet, LGPD e Resolução CD/ANPD 19/2024.
+- Conteúdo editável em `src/content/legal.ts`; dados do fornecedor/encarregado lidos de `src/config/site.ts` (campos vazios aparecem destacados como "a preencher", nunca inventados).
+- Migração 11: `access_logs` — registro de cada login (IP, data/hora, navegador) mantido por 6 meses (Marco Civil, art. 15), inclusive após exclusão da conta; sem acesso pelo site.
+
+### Alterado
+- FAQ "Posso cancelar a assinatura?" com as regras de cancelamento e arrependimento.
+
+## [0.9.0] — 2026-11-05 — Auditoria de segurança
+
+Relatórios: `docs/SEGURANCA_AUDITORIA.md`, `docs/SEGURANCA_CORRECOES.md`, `docs/SEGURANCA_RECOMENDACOES.md`.
+
+### Segurança
+- **Crítica (V01):** removido o curinga das Redirect URLs do Auth; links de e-mail fixos no site oficial com `token_hash` + `verifyOtp`; cliente em PKCE; script de Auth recusa curingas.
+- Redirecionamento após login aceita só caminhos internos (V02).
+- Webhook não grava chamadas com assinatura inválida, limita o payload e descarta reenvios idênticos (V03, V09).
+- Limite de requisições nas funções e em `capture_lead` (V04 parcial, V05).
+- Privilégios padrão do schema `public` fechados; funções utilitárias sem EXECUTE para o site; `user_preferences` com UPDATE só em campos de preferência (V06, V13).
+- Painel administrativo exige MFA (TOTP) — servidor recusa sessão sem `aal2` (V07).
+- Senha mínima 8 no servidor e reautenticação para troca de senha (V10); cadastro não revela e-mails existentes (V11); estorno/contestação cancela a assinatura (V12).
+
+### Adicionado
+- "Privacidade e dados" em `/conta`: baixar meus dados e excluir minha conta (Edge Function `account`).
+- Migração 10: `rate_limits`, `rate_limit_hit`, `apply_retention` + tarefa diária `lgpd-retencao`, `payment_events.signature_ts`.
+- Teste de estorno (22 testes Deno).
+
+### Alterado
+- `supabase-js` fixado em 2.119.0 nas funções; Vite 8.3.6.
+- Texto do cadastro: link de confirmação expira em 1 hora.
+
 ## [0.8.0] — 2026-11-05 — Área administrativa
 
 ### Adicionado
@@ -11,7 +43,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Migração 9: tabela `admins` (RLS: cada usuário lê só o próprio registro; inclusão apenas manual).
 - Administradores entram direto no painel: o login leva a `/admin` e `/conta` redireciona para lá (administrador não é assinante). `/admin` com `noindex` e sem cache.
 
- — 2026-11-05 — Etapa 1 · Subetapa 7: Testes, segurança e publicação
+## [0.7.0] — 2026-11-05 — Etapa 1 · Subetapa 7: Testes, segurança e publicação
 
 ### Adicionado
 - Publicação na Vercel: `https://atualidadeai-concursos.vercel.app` (deploy automático pela `main`; prévias pela `develop`).

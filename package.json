@@ -1,7 +1,7 @@
 {
   "name": "atualidadeai-concursos",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.10.0",
   "description": "AtualidadeAI Concursos — plataforma de atualidades para concursos públicos (Etapa 1: landing page, cadastro e pagamentos).",
   "type": "module",
   "engines": {
