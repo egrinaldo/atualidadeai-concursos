@@ -91,3 +91,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D46 | **Fontes comerciais desligadas até haver licença** | Produto pago: reprodução comercial exige autorização |
 | D47 | **Fetcher com lista de hosts por fonte e bloqueio de IP interno** | Evita SSRF quando fontes passarem a ser cadastradas pelo painel |
 | D48 | **Coleta a cada 3h com chave por janela** | Atualidade suficiente para edição diária; reexecução não duplica |
+| D49 | **Triagem e agrupamento por regras, sem IA** | Custo zero, reproduzível e auditável (motivos gravados); IA só refina os assuntos selecionados (2.5), cabendo na cota gratuita |
+| D50 | **Relevância numérica 0–100 com faixas** | Permite ordenar e cortar cada bloco do PDF por nota, não só por rótulo |
+| D51 | **Assunto = mesmo fato em fontes diferentes; bônus por fonte independente** | Evita repetição no PDF e premia fatos confirmados por grupos editoriais distintos |
+| D52 | **Fonte nacional sobre um só estado → bloco estadual** | O assinante do estado vê o fato no bloco dele; lei federal continua nacional |

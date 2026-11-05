@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.3: triagem, classificação e agrupamento
+
+### Adicionado
+- Triagem determinística (`worker/src/triage/`): idioma, descarte de ruído com motivo, categoria, alcance/UF e relevância 0–100 com motivos.
+- Agrupamento de notícias sobre o mesmo fato (TF-IDF + cosseno, janela de 72h) com relevância do assunto e contagem de fontes independentes.
+- Jobs `triage` e `cluster`; `tick` aceita várias etapas em sequência; workflow roda `collect,triage,cluster`.
+- Migração 14 (colunas de triagem, índices, parâmetros em `app_settings`) e script de reversão.
+- 16 testes novos (36 no total).
+
+### Corrigido
+- Idioma da fonte da Comissão Europeia (o feed "pt" publica em inglês).
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.2: robô de coleta
 
 ### Adicionado

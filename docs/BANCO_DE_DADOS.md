@@ -233,3 +233,11 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - `news_sources.language` (`pt`, `en`, `es`, `fr`).
 - `source_fetch_logs`: uma linha por tentativa de coleta (status `ok`/`not_modified`/`blocked_robots`/`error`, HTTP, itens, novos, duplicados, erro, duração). RLS ligado, acesso só do worker/admin. Retenção 90 dias (`apply_retention`).
 - Cadastro de 19 grupos e 24 fontes (18 ativas), idempotente (`where not exists` por `feed_url`). Motivos de inativação em `terms_notes`.
+
+## Migração 14 — Etapa 2.3 (triagem e agrupamento)
+
+- `news`: `relevance_score` (0–100), `triage_reasons` (jsonb com as regras aplicadas), `triaged_at`; índice parcial da fila de triagem.
+- `news_clusters`: `relevance_score`, `source_count` (fontes independentes); índice por bloco/relevância.
+- Fonte da Comissão Europeia: idioma corrigido para `en`.
+- `app_settings`: `triage.min_relevance_for_edition` (`media`), `triage.cluster_window_hours` (72), `triage.similarity_threshold` (0,38).
+- Reversão: `supabase/rollback/20261106000000_etapa2_triagem_e_agrupamento.down.sql`.

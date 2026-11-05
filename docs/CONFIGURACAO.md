@@ -300,7 +300,7 @@ Local: `cd worker && npm ci && npm test` · `npm run job -- healthcheck` (com as
 
 ### 8.1 Coleta agendada (Subetapa 2.2)
 
-- Workflow `.github/workflows/worker-collect.yml`: cron `7 */3 * * *` (UTC) + execução manual.
+- Workflow `.github/workflows/worker-collect.yml`: cron `7 */3 * * *` (UTC) + execução manual. Executa coleta, triagem e agrupamento (`tick collect,triage,cluster`).
 - Usa os segredos `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (Settings → Secrets and variables → Actions).
 - O GitHub só executa agendamentos do branch padrão (`main`): o robô passa a rodar sozinho depois do merge.
 - Detalhes: `docs/ROBO_NOTICIAS.md`.
