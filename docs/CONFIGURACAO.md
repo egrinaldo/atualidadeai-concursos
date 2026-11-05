@@ -201,26 +201,85 @@ Secrets usados pelas Edge Functions: `RESEND_API_KEY`, `EMAIL_FROM` (opcional), 
 6. Rode `npm run auth:email` de novo (atualiza o remetente do login) e `npm run email:samples` para conferir.
 7. Plano gratuito do Resend: limites diários/mensais — confira em <https://resend.com/pricing>.
 
-## 6. Git
+## 6. Git e GitHub
 
-O repositório Git já existe nesta pasta. Para registrar o progresso:
+- Repositório: `https://github.com/egrinaldo/atualidadeai-concursos` (privado).
+- Histórico reiniciado em 05/11/2026 com um único commit limpo: os commits antigos tinham credenciais em `.env.example`.
 
-```bash
+### Fluxo de branches
+
+| Branch | Uso | Publicação na Vercel |
+| --- | --- | --- |
+| `develop` | Todas as alterações entram aqui primeiro | Endereço de **prévia** (não afeta o site principal) |
+| `main` | Somente código já conferido na prévia | **Produção** — `https://atualidadeai-concursos.vercel.app` |
+
+```powershell
+# trabalhar sempre na develop
+git checkout develop
 git add -A
-git commit -m "feat: banco de dados Supabase - Subetapa 3"
+git commit -m "feat: descrição curta"
+git push                      # gera a prévia na Vercel
 ```
 
-A criação do repositório no GitHub e a conexão com a Vercel serão orientadas passo a passo na Subetapa 7.
+Depois de conferir a prévia: no GitHub, **Pull requests → New → base: `main` ← compare: `develop` → Create → Merge**. A Vercel publica a `main` em produção automaticamente.
 
-## 7. Vercel (resumo — detalhado na Subetapa 7)
+Recomendado: *Settings → Branches* → regra para `main` exigindo Pull Request (se o plano do GitHub oferecer para repositórios privados).
 
-`vercel.json` já define:
+## 7. Vercel
 
-| Campo | Valor |
+### 7.1 Projeto
+
+| Item | Valor |
 | --- | --- |
-| Framework | Vite |
-| Install Command | `npm install` |
-| Build Command | `npm run build` |
-| Output Directory | `dist` |
+| Projeto | `atualidadeai-concursos` (plano **Hobby**) |
+| Produção | `https://atualidadeai-concursos.vercel.app` (branch `main`) |
+| Prévias | uma por branch/commit, ex.: `atualidadeai-concursos-git-develop-<conta>.vercel.app` |
+| Framework / build / saída | definidos no `vercel.json`: Vite · `npm run build` · `dist` · `npm install` |
 
-Também configura o redirecionamento de rotas da SPA para `index.html`, cabeçalhos de segurança e cache longo para `/assets/`.
+`vercel.json` também configura: redirecionamento de rotas da SPA para `index.html`, cabeçalhos de segurança (CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, COOP) e cache longo para `/assets/`.
+
+### 7.2 Variáveis de ambiente (Settings → Environment Variables)
+
+Marque **Production** e **Preview** em todas:
+
+| Nome | Valor |
+| --- | --- |
+| `VITE_SUPABASE_URL` | URL do projeto Supabase (sem `/rest/v1`) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | chave pública (anon/publishable) |
+| `VITE_MERCADO_PAGO_PUBLIC_KEY` | Public Key do Mercado Pago |
+| `VITE_SITE_URL` | `https://atualidadeai-concursos.vercel.app` |
+
+**Nunca** cadastre na Vercel Access Token, segredo do webhook, chave do Resend, service_role ou dados do banco: eles ficam somente nos *Secrets* do Supabase. O build falha de propósito se uma chave secreta for colocada numa variável `VITE_`.
+
+Alterou uma variável? Ela só vale após novo deploy: **Deployments → ⋯ → Redeploy**.
+
+### 7.3 Ajustes no Supabase ligados ao endereço do site (já aplicados)
+
+| Onde | Valor |
+| --- | --- |
+| Secret `SITE_URL` (Edge Functions) | `https://atualidadeai-concursos.vercel.app` — retorno do checkout |
+| Auth → Site URL | `https://atualidadeai-concursos.vercel.app` |
+| Auth → Redirect URLs | produção, `https://atualidadeai-concursos-*.vercel.app/**` (prévias) e `http://localhost:5173/**` |
+
+Comando usado (reexecutável): `SITE_URLS="https://atualidadeai-concursos.vercel.app,https://atualidadeai-concursos-*.vercel.app,http://localhost:5173" npm run auth:email`.
+
+Observação: o retorno do checkout sempre leva ao site de **produção**, mesmo quando a assinatura começa numa prévia (o `SITE_URL` é único). O status da assinatura aparece normalmente na prévia ao abrir `/conta`.
+
+### 7.4 Domínio próprio e HTTPS
+
+O endereço `*.vercel.app` já tem HTTPS automático. Para usar um domínio (ex.: `atualidadeaiconcursos.com.br`):
+
+1. Vercel → projeto → **Settings → Domains → Add** → informe o domínio.
+2. No registrador (Registro.br etc.), crie os registros DNS que a Vercel indicar (normalmente `A 76.76.21.21` para o domínio raiz e `CNAME cname.vercel-dns.com` para `www`).
+3. Aguarde a verificação; o certificado HTTPS é emitido automaticamente.
+4. Atualize `VITE_SITE_URL` (Redeploy), o secret `SITE_URL` e rode `npm run auth:email` com o novo endereço em `SITE_URLS`.
+5. Verifique o mesmo domínio no Resend (§5.4) para enviar e-mails a qualquer destinatário.
+
+### 7.5 Falhas de build e rollback
+
+- Build com erro: o deploy aparece como **Error** em *Deployments*; o site continua na versão anterior. Clique no deploy → **Build Logs** para ver a mensagem (em geral erro de TypeScript; reproduza com `npm run build`).
+- Versão publicada com problema: **Deployments → deploy anterior que funcionava → ⋯ → Instant Rollback**. Depois corrija na `develop` e repita o fluxo.
+
+### 7.6 Limites do plano Hobby
+
+O Hobby é gratuito e **somente para uso não comercial**; os termos da Vercel consideram comercial qualquer site que solicite ou processe pagamentos. Ele atende a fase de testes. **Antes de ativar cobranças reais, migre para o plano Pro** (Settings → Billing). Limites do Hobby relevantes: 100 GB de transferência/mês e builds um por vez — folgados para o tamanho atual do site (~82 kB de JavaScript comprimido na landing).

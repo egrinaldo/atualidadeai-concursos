@@ -2,7 +2,7 @@
 
 Plataforma por assinatura que entrega a candidatos de concursos públicos atualidades regionais, nacionais e internacionais, organizadas com inteligência artificial e disponibilizadas em PDFs diários, semanais e mensais.
 
-> **Status:** Etapa 1 — Subetapas 1 a 5 concluídas (estrutura, landing page, banco, cadastro/login e assinatura pelo Mercado Pago em **ambiente de teste**). Subetapa 6 (e-mails via Resend) concluída. Próximo: testes finais e publicação na Vercel (Subetapa 7). Veja [docs/CHANGELOG.md](docs/CHANGELOG.md).
+> **Status:** Etapa 1 concluída (v0.7.0) — publicada em https://atualidadeai-concursos.vercel.app com Mercado Pago em **ambiente de teste**. Fluxo de alterações: `develop` → Pull Request → `main` ([docs/CONFIGURACAO.md §6](docs/CONFIGURACAO.md)). Veja [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 ## Stack
 
@@ -112,4 +112,6 @@ Veja o guia em [docs/design/DESIGN.md](docs/design/DESIGN.md#como-editar-a-landi
 - [Configuração](docs/CONFIGURACAO.md)
 - [Integrações](docs/INTEGRACOES.md)
 - [Design](docs/design/DESIGN.md)
+- [Relatório de testes](docs/TESTES.md)
+- [Manutenção](docs/MANUTENCAO.md)
 - [Changelog](docs/CHANGELOG.md)

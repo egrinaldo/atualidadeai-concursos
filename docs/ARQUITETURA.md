@@ -54,6 +54,9 @@
 | D28 | **Login via SMTP do Supabase + transacionais via API** | O Supabase Auth gera os links seguros de confirmação/recuperação; os e-mails de pagamento dependem de eventos do backend. |
 | D29 | **E-mails idempotentes (`email_log.dedupe_key`)** | Webhooks e sincronizações podem repetir o mesmo evento; cada evento gera no máximo um e-mail. |
 | D30 | **Redirecionamento de teste (`EMAIL_TEST_TO`)** | Permite testar todos os fluxos sem domínio, sem risco de enviar a terceiros. |
+| D31 | **Branches `develop` → `main`** | Toda alteração passa por uma prévia da Vercel antes de chegar à produção. |
+| D32 | **Cabeçalhos de segurança no `vercel.json`** | CSP restrita a Supabase e Google Fonts; impede embutir o site em iframes e scripts de terceiros. |
+| D33 | **Vercel Hobby na fase de teste, Pro antes de vender** | Hobby proíbe uso comercial; migrar é obrigatório antes de cobranças reais. |
 | D8 | **Design tokens centralizados** em `src/index.css` (`@theme`) | Trocar cores/fontes em um único lugar. |
 
 ## Preparação para etapas futuras
