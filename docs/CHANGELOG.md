@@ -2,6 +2,26 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.7.0] — 2026-11-05 — Etapa 1 · Subetapa 7: Testes, segurança e publicação
+
+### Adicionado
+- Publicação na Vercel: `https://atualidadeai-concursos.vercel.app` (deploy automático pela `main`; prévias pela `develop`).
+- Repositório GitHub privado `egrinaldo/atualidadeai-concursos`; fluxo `develop → Pull Request → main`.
+- Cabeçalhos de segurança (CSP, HSTS, X-Frame-Options, COOP, Permissions-Policy) e cache de assets no `vercel.json`.
+- Trava no build contra chave secreta em variáveis `VITE_`.
+- Migração 8: `pg_net` movido para o schema `extensions` (Security Advisor).
+- Documentação: `docs/TESTES.md`, `docs/MANUTENCAO.md`, guia de deploy em CONFIGURACAO §6–§7.
+
+### Alterado
+- Supabase: secret `SITE_URL` e Site URL/Redirect URLs do Auth apontando para produção (prévias e localhost mantidos).
+
+### Corrigido
+- Landing estourava a largura em 320 px (seção de demonstração do PDF).
+- Mensagem genérica quando o envio do e-mail de cadastro falha.
+
+### Segurança
+- Histórico do Git substituído por commit único: commits antigos continham o Access Token do Mercado Pago em `.env.example`.
+
 ## [0.6.0] — 2026-11-04 — Etapa 1 · Subetapa 6: E-mails e comunicações
 
 ### Adicionado
