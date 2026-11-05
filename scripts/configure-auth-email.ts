@@ -39,7 +39,18 @@ const fromMatch = from.match(/^(.*)<(.+)>$/)
 const senderName = (fromMatch?.[1] ?? 'AtualidadeAI Concursos').trim()
 const senderEmail = (fromMatch?.[2] ?? from).trim()
 
-const sites = (Deno.env.get('SITE_URLS') ?? 'http://localhost:5173').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean)
+const sites = (Deno.env.get('SITE_URLS') ?? 'https://atualidadeai-concursos.vercel.app,http://localhost:5173')
+  .split(',')
+  .map((s) => s.trim().replace(/\/+$/, ''))
+  .filter(Boolean)
+// Segurança (auditoria V01): endereços exatos apenas. Um curinga como
+// "projeto-*.vercel.app" casa com domínios que qualquer pessoa pode criar.
+for (const s of sites) {
+  if (s.includes('*') || !/^https:\/\/[a-z0-9.-]+$|^http:\/\/localhost(:\d+)?$/.test(s)) {
+    console.error(`Endereço não permitido em SITE_URLS: ${s} (use https exato, sem curinga)`)
+    Deno.exit(1)
+  }
+}
 const t = renderAuthTemplates()
 
 const patch = {
@@ -55,6 +66,8 @@ const patch = {
   smtp_sender_name: senderName,
   smtp_max_frequency: 30, // segundos mínimos entre e-mails para o mesmo usuário
   rate_limit_email_sent: 60, // e-mails de autenticação por hora (limite do projeto)
+  password_min_length: 8, // igual à regra do site (auditoria V10)
+  security_update_password_require_reauthentication: true, // troca de senha exige login recente
   mailer_subjects_confirmation: t.confirmation.subject,
   mailer_templates_confirmation_content: t.confirmation.html,
   mailer_subjects_recovery: t.recovery.subject,

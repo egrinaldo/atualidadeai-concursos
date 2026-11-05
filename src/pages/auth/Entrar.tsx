@@ -7,9 +7,21 @@ import { isAdmin } from '@/lib/admin'
 import { getSession, resendConfirmation, signIn } from '@/lib/auth'
 import { validateEmail } from '@/lib/validation'
 
-/** Só aceita destinos internos (evita redirecionamento para sites externos). */
+/**
+ * Só aceita destinos internos (evita redirecionamento aberto).
+ * Recusa "//", barra invertida e caracteres de controle — navegadores tratam
+ * "/\\site.com" e "/\t/site.com" como endereços externos — e confere a origem final.
+ */
 export function safeNext(value: string | null): string {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/conta'
+  const fallback = '/conta'
+  if (!value || !value.startsWith('/') || value.startsWith('//') || /[\\\u0000-\u001f\u007f]/.test(value)) return fallback
+  try {
+    const url = new URL(value, window.location.origin)
+    if (url.origin !== window.location.origin) return fallback
+    return url.pathname + url.search + url.hash
+  } catch {
+    return fallback
+  }
 }
 
 /**

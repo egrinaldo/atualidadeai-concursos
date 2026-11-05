@@ -1,5 +1,5 @@
 /**
- * POST /functions/v1/admin   (requer usuário logado E cadastrado em public.admins)
+ * POST /functions/v1/admin   (requer usuário logado, cadastrado em public.admins e com MFA — aal2)
  *
  * Backend do painel administrativo. Toda leitura usa a chave de serviço,
  * mas só depois de confirmar que quem chama é administrador.
@@ -13,9 +13,9 @@
  *   sync   { user_id }       → atualiza a assinatura consultando o Mercado Pago
  *   cancel { user_id }       → cancela a assinatura no Mercado Pago
  */
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
-import { adminClient, logEvent, userFromRequest } from '../_shared/db.ts'
-import { errorMessage, json, preflight } from '../_shared/http.ts'
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0'
+import { adminClient, logEvent, rateLimited, sessionAal, userFromRequest } from '../_shared/db.ts'
+import { errorMessage, json, preflight, tooManyRequests } from '../_shared/http.ts'
 import { isUuid } from '../_shared/mapping.ts'
 import { MercadoPago } from '../_shared/mercadopago.ts'
 import { applyPreapproval, fullSync } from '../_shared/sync.ts'
@@ -153,6 +153,9 @@ Deno.serve(async (req) => {
 
   const { data: isAdmin } = await db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
   if (!isAdmin) return json({ error: 'Acesso restrito a administradores.' }, 403)
+  // Administrador precisa de segundo fator (código do app autenticador)
+  if (sessionAal(req) !== 'aal2') return json({ error: 'Confirme o código de verificação (MFA) para acessar o painel.', code: 'mfa_required' }, 403)
+  if (await rateLimited(db, `admin:${user.id}`, 120, 60)) return tooManyRequests()
 
   const body = await req.json().catch(() => ({})) as { action?: string; user_id?: string }
   const action = body.action ?? ''

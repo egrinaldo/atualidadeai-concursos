@@ -4,7 +4,7 @@ import { PasswordField } from '@/components/forms/Field'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button } from '@/components/ui'
 import { useSession } from '@/hooks/useSession'
-import { readAuthErrorFromUrl, signOut, updatePassword } from '@/lib/auth'
+import { readAuthErrorFromUrl, signOut, updatePassword, verifyEmailLink } from '@/lib/auth'
 import { validatePassword, validatePasswordConfirmation } from '@/lib/validation'
 
 /**
@@ -13,16 +13,26 @@ import { validatePassword, validatePasswordConfirmation } from '@/lib/validation
  */
 export function RedefinirSenha() {
   const { session, loading } = useSession()
-  const [linkError] = useState(() => readAuthErrorFromUrl())
+  const [linkError, setLinkError] = useState(() => readAuthErrorFromUrl())
+  const [verifying, setVerifying] = useState(() => new URLSearchParams(window.location.search).has('token_hash'))
   const [password, setPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
   const [errors, setErrors] = useState<{ password?: string; confirmation?: string }>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Remove os tokens da barra de endereço depois de processados
+  // Link novo (?token_hash=...): validado aqui, sem tokens de sessão na URL
   useEffect(() => {
-    if (session && window.location.hash) history.replaceState(null, '', window.location.pathname)
+    if (!verifying) return
+    verifyEmailLink('recovery').then((r) => {
+      if (r && !r.ok) setLinkError(r.message)
+      setVerifying(false)
+    })
+  }, [verifying])
+
+  // Remove qualquer resto de token da barra de endereço
+  useEffect(() => {
+    if (session && (window.location.hash || window.location.search)) history.replaceState(null, '', window.location.pathname)
   }, [session])
 
   async function onSubmit(ev: FormEvent) {
@@ -45,7 +55,7 @@ export function RedefinirSenha() {
     window.location.assign('/entrar?senha=redefinida')
   }
 
-  if (loading) {
+  if (loading || verifying) {
     return (
       <AuthLayout title="Redefinir senha">
         <p className="text-slate-400" role="status">

@@ -3,18 +3,28 @@ import { Alert } from '@/components/forms/Alert'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button, Icon } from '@/components/ui'
 import { useSession } from '@/hooks/useSession'
-import { readAuthErrorFromUrl } from '@/lib/auth'
+import { readAuthErrorFromUrl, verifyEmailLink } from '@/lib/auth'
 
 /** Destino do link de confirmação de cadastro enviado por e-mail. */
 export function ConfirmarEmail() {
   const { session, loading } = useSession()
-  const [linkError] = useState(() => readAuthErrorFromUrl())
+  const [linkError, setLinkError] = useState(() => readAuthErrorFromUrl())
+  // Link novo (?token_hash=...): validado aqui, sem tokens de sessão na URL
+  const [verifying, setVerifying] = useState(() => new URLSearchParams(window.location.search).has('token_hash'))
 
   useEffect(() => {
-    if (session && window.location.hash) history.replaceState(null, '', window.location.pathname)
+    if (!verifying) return
+    verifyEmailLink('email').then((r) => {
+      if (r && !r.ok) setLinkError(r.message)
+      setVerifying(false)
+    })
+  }, [verifying])
+
+  useEffect(() => {
+    if (session && (window.location.hash || window.location.search)) history.replaceState(null, '', window.location.pathname)
   }, [session])
 
-  if (loading) {
+  if (loading || verifying) {
     return (
       <AuthLayout title="Confirmando e-mail">
         <p className="text-slate-400" role="status">

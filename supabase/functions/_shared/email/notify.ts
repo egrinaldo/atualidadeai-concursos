@@ -1,4 +1,4 @@
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0'
 import { errorMessage } from '../http.ts'
 import { getEmailProvider } from './provider.ts'
 import { renderTransactional, type EmailData, type TransactionalKind } from './templates.ts'

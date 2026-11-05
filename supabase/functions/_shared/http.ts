@@ -13,6 +13,13 @@ export function json(body: unknown, status = 200): Response {
   })
 }
 
+export function tooManyRequests(): Response {
+  return new Response(JSON.stringify({ error: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.' }), {
+    status: 429,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': '120' },
+  })
+}
+
 export function preflight(req: Request): Response | null {
   return req.method === 'OPTIONS' ? new Response('ok', { headers: corsHeaders }) : null
 }
