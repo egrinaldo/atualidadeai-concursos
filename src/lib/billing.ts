@@ -10,7 +10,7 @@ import type { Payment, Subscription } from '@/types/database'
 
 type Result<T> = { ok: true; data: T } | { ok: false; message: string }
 
-async function call<T>(fn: string, body: Record<string, unknown> = {}): Promise<Result<T>> {
+export async function call<T>(fn: string, body: Record<string, unknown> = {}): Promise<Result<T>> {
   try {
     const { data, error } = await getSupabase().functions.invoke<T>(fn, { body })
     if (error) {

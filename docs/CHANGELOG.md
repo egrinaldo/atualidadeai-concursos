@@ -2,7 +2,16 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [0.7.0] — 2026-11-05 — Etapa 1 · Subetapa 7: Testes, segurança e publicação
+## [0.8.0] — 2026-11-05 — Área administrativa
+
+### Adicionado
+- Painel `/admin` (somente administradores): visão geral com assinantes ativos, MRR, ticket médio, receita do mês/total, crescimento, conversão, churn, pagamentos recusados, leads e gráfico de receita dos últimos 6 meses.
+- Abas Assinantes (busca, filtro por status, detalhe com pagamentos e e-mails, atualizar pelo Mercado Pago, cancelar assinatura), Pagamentos e Leads — todas com exportação CSV.
+- Edge Function `admin` (confere o administrador no servidor) e módulo de indicadores testável (`admin/metrics.ts`, 3 testes; total 21).
+- Migração 9: tabela `admins` (RLS: cada usuário lê só o próprio registro; inclusão apenas manual).
+- Botão "Painel administrativo" na área do assinante para administradores; `/admin` com `noindex` e sem cache.
+
+ — 2026-11-05 — Etapa 1 · Subetapa 7: Testes, segurança e publicação
 
 ### Adicionado
 - Publicação na Vercel: `https://atualidadeai-concursos.vercel.app` (deploy automático pela `main`; prévias pela `develop`).

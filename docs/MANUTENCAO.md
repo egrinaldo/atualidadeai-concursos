@@ -7,6 +7,24 @@
 3. Pull Request `develop → main` no GitHub → Merge → produção atualizada.
 4. Problema em produção: Vercel → Deployments → versão anterior → **Instant Rollback**.
 
+## Painel administrativo (`/admin`)
+
+- Acesso: entrar com a conta de administrador → **Minha conta → Painel administrativo** (ou abrir `/admin`).
+- Indicadores excluem as contas de administrador. Meses no fuso de Fortaleza.
+- MRR = assinaturas ativas × preço do plano; receita = pagamentos **aprovados** (data do pagamento).
+- Cancelar pelo painel interrompe as cobranças no Mercado Pago (irreversível).
+
+Incluir outro administrador (SQL Editor do Supabase; a pessoa precisa ter conta no site):
+
+```sql
+insert into public.admins (user_id, note)
+select id, 'Motivo / nome' from auth.users where email = 'pessoa@exemplo.com';
+```
+
+Remover: `delete from public.admins where user_id = (select id from auth.users where email = 'pessoa@exemplo.com');`
+
+Publicar mudanças na função: `npx supabase functions deploy admin`.
+
 ## Onde editar
 
 | O quê | Arquivo |

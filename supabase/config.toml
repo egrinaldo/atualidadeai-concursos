@@ -25,3 +25,7 @@ verify_jwt = false
 # Conciliação agendada (pg_cron). Autenticada pelo cabeçalho x-cron-secret.
 [functions.mp-reconcile]
 verify_jwt = false
+
+# Painel administrativo: exige login; o código confere se o usuário está em public.admins.
+[functions.admin]
+verify_jwt = true

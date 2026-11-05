@@ -56,6 +56,7 @@
 | D30 | **Redirecionamento de teste (`EMAIL_TEST_TO`)** | Permite testar todos os fluxos sem domínio, sem risco de enviar a terceiros. |
 | D31 | **Branches `develop` → `main`** | Toda alteração passa por uma prévia da Vercel antes de chegar à produção. |
 | D32 | **Cabeçalhos de segurança no `vercel.json`** | CSP restrita a Supabase e Google Fonts; impede embutir o site em iframes e scripts de terceiros. |
+| D34 | **Painel admin via Edge Function** | O navegador nunca recebe permissão para ler dados de outros usuários; a função confere `public.admins` com a chave de serviço. Esconder a tela é só conveniência. |
 | D33 | **Vercel Hobby na fase de teste, Pro antes de vender** | Hobby proíbe uso comercial; migrar é obrigatório antes de cobranças reais. |
 | D8 | **Design tokens centralizados** em `src/index.css` (`@theme`) | Trocar cores/fontes em um único lugar. |
 

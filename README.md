@@ -93,6 +93,7 @@ npm run dev
 | `/confirmar-email` | Destino do link de confirmação de cadastro |
 | `/conta` | Área do assinante: dados, contratação, status e cancelamento da assinatura |
 | `/pagamento/retorno` (e `/sucesso`, `/pendente`, `/falha`) | Retorno do checkout — status confirmado na API do Mercado Pago |
+| `/admin` | Painel administrativo (somente administradores): indicadores, assinantes, pagamentos, leads |
 | `/termos`, `/privacidade` | Provisórias até a publicação dos documentos |
 | `/status` | Página técnica de verificação (somente em `npm run dev`) |
 

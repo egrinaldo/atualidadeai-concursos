@@ -174,3 +174,13 @@ As migrações foram executadas duas vezes seguidas em PostgreSQL real (PGlite),
 - exclusão de usuário remove dados pessoais e preserva o histórico de pagamentos.
 
 Limitação: o teste simula o ambiente Supabase; a validação final é feita no projeto real com `supabase/verificacao.sql` e `npm run check:supabase`.
+
+## Migração 9 — `admins` (área administrativa)
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `user_id` | uuid PK → `auth.users` | Usuário com acesso ao painel `/admin` |
+| `note` | text | Observação (ex.: "Responsável pelo projeto") |
+| `created_at` | timestamptz | Inclusão |
+
+RLS ativo: usuário autenticado lê **apenas o próprio** registro (para exibir o botão do painel). Sem permissão de inserir/alterar pelo site; inclusão manual via SQL. Os dados do painel são lidos pela Edge Function `admin` após conferir esta tabela.

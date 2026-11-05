@@ -21,6 +21,8 @@ const RedefinirSenha = lazy(() => auth().then((m) => ({ default: m.RedefinirSenh
 const ConfirmarEmail = lazy(() => auth().then((m) => ({ default: m.ConfirmarEmail })))
 const Conta = lazy(() => auth().then((m) => ({ default: m.Conta })))
 const PagamentoRetorno = lazy(() => auth().then((m) => ({ default: m.PagamentoRetorno })))
+// Painel administrativo: pacote separado, baixado só por quem acessa /admin
+const Admin = lazy(() => import('@/pages/admin').then((m) => ({ default: m.Admin })))
 const SetupStatus = lazy(() => import('@/pages/SetupStatus').then((m) => ({ default: m.SetupStatus })))
 
 function normalize(path: string): string {
@@ -47,6 +49,8 @@ const authRoutes: Record<string, () => ReactNode> = {
   '/pagamento/sucesso': () => <PagamentoRetorno />,
   '/pagamento/pendente': () => <PagamentoRetorno />,
   '/pagamento/falha': () => <PagamentoRetorno />,
+  // Acesso conferido no servidor (Edge Function "admin")
+  '/admin': () => <Admin />,
 }
 
 export default function App() {

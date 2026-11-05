@@ -5,6 +5,7 @@ import { SubscriptionPanel } from '@/components/billing/SubscriptionPanel'
 import { Button, Icon } from '@/components/ui'
 import { ufName } from '@/data/ufs'
 import { useSession } from '@/hooks/useSession'
+import { isAdmin } from '@/lib/admin'
 import { signOut } from '@/lib/auth'
 import { getSupabase } from '@/lib/supabase'
 import type { Profile } from '@/types/database'
@@ -18,6 +19,7 @@ export function Conta() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [fetched, setFetched] = useState(false)
+  const [admin, setAdmin] = useState(false)
   // Evita que o fim da sessão (logout) dispare o redirecionamento para o login
   const leaving = useRef(false)
 
@@ -27,6 +29,7 @@ export function Conta() {
       if (!leaving.current) window.location.replace('/entrar?next=/conta')
       return
     }
+    isAdmin(session.user.id).then(setAdmin)
     const supabase = getSupabase()
     supabase
       .from('profiles')
@@ -62,6 +65,13 @@ export function Conta() {
     <AuthLayout title={firstName ? `Olá, ${firstName}!` : 'Minha conta'} subtitle="Área do assinante" wide={false}>
       <div className="space-y-6">
         {error && <Alert tone="error">{error}</Alert>}
+
+        {admin && (
+          <Button href="/admin" variant="secondary" className="w-full">
+            <Icon name="layers" className="size-4" />
+            Painel administrativo
+          </Button>
+        )}
 
         <SubscriptionPanel accountEmail={session.user.email ?? ''} />
 

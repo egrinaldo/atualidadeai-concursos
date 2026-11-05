@@ -127,6 +127,12 @@ export type Database = {
         Update: never
         Relationships: []
       }
+      admins: {
+        Row: { user_id: string; note: string | null; created_at: string }
+        Insert: never // inclusão manual (SQL), nunca pelo site
+        Update: never
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: {
