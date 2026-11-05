@@ -1,0 +1,7 @@
+# Normaliza finais de linha (evita diffs falsos entre Windows e Linux/Vercel)
+* text=auto eol=lf
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.ico binary

@@ -1,0 +1,35 @@
+# Dependências
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Variáveis de ambiente (NUNCA versionar credenciais)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+!.env.example
+
+# Supabase CLI (arquivos locais)
+supabase/.temp/
+supabase/.branches/
+
+# Vercel
+.vercel/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

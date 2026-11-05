@@ -1,0 +1,27 @@
+# Configuração do Supabase CLI para este projeto (usada no deploy das Edge Functions).
+# Referência: https://supabase.com/docs/guides/functions
+
+project_id = "atualidadeai-concursos"
+
+# Webhook: chamado pelo Mercado Pago, que não envia o token de login do
+# Supabase. A autenticidade é verificada pela assinatura x-signature.
+[functions.mp-webhook]
+verify_jwt = false
+
+# As demais funções exigem usuário logado (verificação no gateway + no código).
+[functions.mp-create-subscription]
+verify_jwt = true
+
+[functions.mp-sync]
+verify_jwt = true
+
+[functions.mp-cancel-subscription]
+verify_jwt = true
+
+# Retorno do checkout (redirecionamento simples para o site; sem login).
+[functions.mp-return]
+verify_jwt = false
+
+# Conciliação agendada (pg_cron). Autenticada pelo cabeçalho x-cron-secret.
+[functions.mp-reconcile]
+verify_jwt = false

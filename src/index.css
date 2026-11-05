@@ -1,0 +1,148 @@
+@import 'tailwindcss';
+
+/*
+ * =====================================================================
+ * DESIGN TOKENS — AtualidadeAI Concursos
+ * ---------------------------------------------------------------------
+ * Derivados das referências em docs/design/referencias/ (ver
+ * docs/design/DESIGN.md). Para mudar cores ou fontes do site inteiro,
+ * altere SOMENTE os valores abaixo.
+ *
+ * Uso no código: bg-navy-900, text-brand-400, text-signal-400,
+ * font-display, shadow-glow, etc.
+ * =====================================================================
+ */
+@theme {
+  /* Tipografia */
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+
+  /* Azul-marinho — fundos e superfícies (base escura das referências) */
+  --color-navy-950: #070b1f;
+  --color-navy-900: #0b1230;
+  --color-navy-800: #111a42;
+  --color-navy-700: #1a2557;
+  --color-navy-600: #26346e;
+  --color-navy-500: #3a4a8a;
+
+  /* Azul da marca — botões, links, elementos de ação */
+  --color-brand-200: #c3d4ff;
+  --color-brand-300: #8fb3ff;
+  --color-brand-400: #5b8cff;
+  --color-brand-500: #3366ff;
+  --color-brand-600: #2450e6;
+  --color-brand-700: #1b3db8;
+
+  /* Sinal — único acento vibrante (destaques de palavras, indicadores "ao vivo") */
+  --color-signal-300: #8af0ff;
+  --color-signal-400: #38e1ff;
+  --color-signal-500: #0fc4ea;
+
+  /* Estados (feedback de formulários e pagamentos) */
+  --color-success-400: #34d399;
+  --color-warning-400: #fbbf24;
+  --color-danger-400: #f87171;
+
+  /* Sombras e brilhos */
+  --shadow-glow: 0 0 0 1px rgb(91 140 255 / 0.25), 0 12px 40px -8px rgb(51 102 255 / 0.55);
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 50px -20px rgb(0 0 0 / 0.6);
+
+  /* Animações discretas */
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-navy-950 font-sans text-slate-300 antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight text-white;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    @apply bg-brand-500/40 text-white;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-signal-400;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Utilitários de ambientação visual (fundo em grade e brilho radial) */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(91 140 255 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(91 140 255 / 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Revelação discreta ao rolar a página (controlada por components/ui/Reveal.tsx) */
+@utility reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  &[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Linha luminosa usada como divisor entre seções */
+@utility glow-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(91 140 255 / 0.5), rgb(56 225 255 / 0.6), rgb(91 140 255 / 0.5), transparent);
+}
+
+@utility bg-radial-glow {
+  background-image: radial-gradient(60% 50% at 50% 0%, rgb(51 102 255 / 0.35), transparent 70%);
+}

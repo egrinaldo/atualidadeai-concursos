@@ -1,0 +1,35 @@
+{
+  "name": "atualidadeai-concursos",
+  "private": true,
+  "version": "0.6.0",
+  "description": "AtualidadeAI Concursos — plataforma de atualidades para concursos públicos (Etapa 1: landing page, cadastro e pagamentos).",
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "check:supabase": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-supabase.mjs",
+    "test:functions": "npx --yes deno test --no-config supabase/functions/tests/",
+    "email:samples": "npx --yes deno run --no-config --allow-read --allow-env --allow-net scripts/send-email-samples.ts",
+    "auth:email": "npx --yes deno run --no-config --allow-read --allow-env --allow-net scripts/configure-auth-email.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.4",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "tailwindcss": "^4.3.4",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.5"
+  }
+}
