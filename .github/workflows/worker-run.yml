@@ -1,0 +1,38 @@
+# Execução do worker. Na 2.1 somente manual (healthcheck); os agendamentos
+# (coleta a cada 3h, edição diária etc.) entram nas próximas subetapas.
+name: worker-run
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Comando do worker'
+        required: true
+        default: healthcheck
+        type: choice
+        options: [healthcheck, run]
+permissions:
+  contents: read
+concurrency:
+  group: worker-run
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - run: npm run job -- ${{ inputs.command }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}

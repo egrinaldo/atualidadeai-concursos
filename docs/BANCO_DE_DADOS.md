@@ -203,3 +203,27 @@ RLS ativo: usuário autenticado lê **apenas o próprio** registro (para exibir 
 | `accessed_at` | Data e hora do login |
 
 Preenchida pelo gatilho `on_auth_session_created` (cada nova sessão do Supabase Auth). RLS ativo, sem acesso para `anon`/`authenticated`. Eliminação automática após 6 meses pela rotina `apply_retention`.
+
+## Migração 12 — Etapa 2.1 (notícias, IA, edições, PDFs e fila)
+
+Reversão documentada em `supabase/rollback/20261105200000_etapa2_estrutura_noticias.down.sql`.
+
+| Tabela | Finalidade |
+| --- | --- |
+| `news_categories` | 17 categorias editoriais |
+| `news_source_groups` | Grupo editorial das fontes (independência na verificação) |
+| `news_sources` | Fontes (RSS/Atom/API/HTML), alcance, UF, hosts permitidos (anti-SSRF), saúde da coleta |
+| `news_clusters` | Assunto/acontecimento que agrupa matérias de várias fontes; relevância e status editorial |
+| `news` | Notícias coletadas; `url_hash` único (deduplicação), `content_hash`, texto do feed por 30 dias |
+| `news_verifications` | Histórico de verificações por assunto (6 classificações, evidências, fontes independentes) |
+| `news_analyses` | Análises da IA (campos editoriais + JSON validado); reaproveitamento por `input_hash` |
+| `editorial_reviews` | Auditoria das decisões humanas |
+| `editions` / `edition_items` | Edição diária/semanal/mensal por UF e os itens por bloco (estado/nacional/internacional) |
+| `generated_documents` | PDF base por edição, com versão, checksum e resultado do QA |
+| `document_deliveries` | Entrega individual (área/e-mail), idempotente por documento+usuário+canal |
+| `processing_jobs` | Fila do worker (`claim_jobs`, `finish_job`) |
+| `ai_usage_logs` | Consumo e falhas da IA |
+| `app_settings` | Configurações editáveis pelo painel (UFs piloto, horários, modelos, orçamento diário) |
+
+Acesso: RLS em todas; escrita só pelo backend. O assinante lê apenas as próprias linhas de `document_deliveries`.
+Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção ampliada em `apply_retention()`.

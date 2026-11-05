@@ -67,3 +67,23 @@
 ## Preparação para etapas futuras
 
 As pastas `supabase/functions/` e `supabase/migrations/` já existem para receber, em etapas posteriores, funções de monitoramento de notícias, geração de PDFs e envios programados — sem impacto no frontend atual.
+
+## Etapa 2 — motor de notícias (Subetapa 2.1)
+
+```
+GitHub Actions (worker agendado) ──► Supabase Postgres (fila processing_jobs + dados)
+        │  coleta · triagem · verificação · análise · edição · PDF · entrega
+        ├──► NVIDIA NIM (camada de IA independente do provedor)
+        └──► Supabase Storage (bucket privado "documents")
+Painel /admin ◄──► Edge Functions (service_role) ◄──► Postgres/Storage
+Assinante /conta ──► link temporário do PDF individual (nome/e-mail no rodapé)
+```
+
+| # | Decisão | Motivo |
+| --- | --- | --- |
+| D39 | **Worker em GitHub Actions** (pasta `worker/`, pacote separado) | Edge Functions têm 2 s de CPU por requisição — insuficiente para lotes e PDF; Actions roda Node + Playwright, gratuito dentro da cota, sem servidor para manter |
+| D40 | **Fila no Postgres** (`processing_jobs` + `claim_jobs`/`finish_job` com `FOR UPDATE SKIP LOCKED`) | Retomada após falhas, idempotência (`dedupe_key`), backoff exponencial no banco; sem serviço de fila externo |
+| D41 | **PDF por estado + personalização por assinante** | Conteúdo depende só da UF (sem municípios). Base gerada uma vez por estado; capa/rodapé com nome e e-mail aplicados por assinante (`pdf-lib`) |
+| D42 | **Ordem do PDF: Estado → Nacional → Internacional** | O diferencial do produto vem primeiro |
+| D43 | **Piloto: Ceará; publicação às 06h; fechamento às 22h** (fuso de Brasília) | Separação clara entre estadual e nacional; folga de 1h30 para atrasos do agendador e da IA |
+| D44 | **Texto original das notícias apagado após 30 dias** | Direitos autorais: o produto guarda título, link e resumo próprio |

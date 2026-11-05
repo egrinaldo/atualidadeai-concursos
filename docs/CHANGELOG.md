@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.1: estrutura do banco e infraestrutura
+
+### Adicionado
+- Migração 12: 15 tabelas da Etapa 2 (fontes, notícias, assuntos, verificações, análises, revisões, edições, documentos, entregas, fila, consumo de IA, configurações), funções `claim_jobs`/`finish_job`, bucket privado `documents`, retenção ampliada. Script de reversão em `supabase/rollback/`.
+- `worker/`: pacote Node/TypeScript separado (config validada, log sem segredos, retry com backoff, fila no Postgres, tarefa `healthcheck`) com 8 testes.
+- Workflows `worker-ci` (testes) e `worker-run` (execução manual).
+
 ## [0.10.0] — 2026-11-05 — Termos de Uso e Política de Privacidade
 
 ### Adicionado

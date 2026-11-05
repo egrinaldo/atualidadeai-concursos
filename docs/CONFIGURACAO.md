@@ -287,3 +287,13 @@ O endereço `*.vercel.app` já tem HTTPS automático. Para usar um domínio (ex.
 ### 7.6 Limites do plano Hobby
 
 O Hobby é gratuito e **somente para uso não comercial**; os termos da Vercel consideram comercial qualquer site que solicite ou processe pagamentos. Ele atende a fase de testes. **Antes de ativar cobranças reais, migre para o plano Pro** (Settings → Billing). Limites do Hobby relevantes: 100 GB de transferência/mês e builds um por vez — folgados para o tamanho atual do site (~82 kB de JavaScript comprimido na landing).
+
+## 8. Worker da Etapa 2 (GitHub Actions)
+
+1. **Chave secreta dedicada:** Supabase → Project Settings → API Keys → *Secret keys* → **Create new secret key** (nome: `worker`). Pode ser revogada sem afetar o site.
+2. GitHub → repositório → **Settings → Secrets and variables → Actions → New repository secret**:
+   `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a chave do passo 1), `NVIDIA_API_KEY`.
+3. GitHub → **Actions → worker-run → Run workflow → healthcheck**: confere banco, bucket e configuração.
+4. Testes automáticos: workflow `worker-ci` a cada alteração em `worker/`.
+
+Local: `cd worker && npm ci && npm test` · `npm run job -- healthcheck` (com as variáveis no ambiente).
