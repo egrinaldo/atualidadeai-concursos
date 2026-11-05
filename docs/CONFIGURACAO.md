@@ -259,9 +259,13 @@ Alterou uma variável? Ela só vale após novo deploy: **Deployments → ⋯ →
 | --- | --- |
 | Secret `SITE_URL` (Edge Functions) | `https://atualidadeai-concursos.vercel.app` — retorno do checkout |
 | Auth → Site URL | `https://atualidadeai-concursos.vercel.app` |
-| Auth → Redirect URLs | produção, `https://atualidadeai-concursos-*.vercel.app/**` (prévias) e `http://localhost:5173/**` |
+| Auth → Redirect URLs | **somente endereços exatos**: `https://atualidadeai-concursos.vercel.app/**` e `http://localhost:5173/**` |
 
-Comando usado (reexecutável): `SITE_URLS="https://atualidadeai-concursos.vercel.app,https://atualidadeai-concursos-*.vercel.app,http://localhost:5173" npm run auth:email`.
+Comando (reexecutável; sem `SITE_URLS` usa produção + localhost): `npm run auth:email`.
+
+> ⚠️ **Nunca use curinga** (ex.: `projeto-*.vercel.app`) nas Redirect URLs: qualquer pessoa pode criar um domínio que casa com o padrão e receber links de login (vulnerabilidade V01 da auditoria). O script recusa curingas.
+>
+> Os links dos e-mails de confirmação e de recuperação apontam sempre para o **site oficial** (`{{ .SiteURL }}`), inclusive quando o cadastro é feito numa prévia ou em `localhost`. Para testar localmente, abra o link e troque o endereço por `http://localhost:5173` mantendo `?token_hash=...`.
 
 Observação: o retorno do checkout sempre leva ao site de **produção**, mesmo quando a assinatura começa numa prévia (o `SITE_URL` é único). O status da assinatura aparece normalmente na prévia ao abrir `/conta`.
 

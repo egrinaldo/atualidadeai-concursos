@@ -184,3 +184,12 @@ Limitação: o teste simula o ambiente Supabase; a validação final é feita no
 | `created_at` | timestamptz | Inclusão |
 
 RLS ativo: usuário autenticado lê **apenas o próprio** registro (para exibir o botão do painel). Sem permissão de inserir/alterar pelo site; inclusão manual via SQL. Os dados do painel são lidos pela Edge Function `admin` após conferir esta tabela.
+
+## Migração 10 — endurecimento de segurança (auditoria 05/11/2026)
+
+- Privilégios padrão do schema `public` (papel `postgres`): novos objetos **não** são liberados a `anon`/`authenticated`.
+- `user_preferences`: INSERT em (`user_id`, `state`, `city`, `interests`); UPDATE só em (`state`, `city`, `interests`).
+- `rate_limits` (`key`, `window_start`, `hits`) + `rate_limit_hit(chave, máximo, janela_segundos)` — somente `service_role`.
+- `capture_lead`: limite de 10 por IP/hora e 300/hora no total.
+- `payment_events.signature_ts`: deduplicação de reenvios do webhook.
+- `apply_retention()` + pg_cron `lgpd-retencao` (diário, 06:41 UTC): `payment_events` > 12 meses, `email_log` > 24 meses, leads não convertidos > 24 meses, `rate_limits` > 2 dias. `payments` nunca são apagados.
