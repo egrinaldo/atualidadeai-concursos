@@ -44,16 +44,9 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
 
   if (error) return { ok: false, message: translateAuthError(error), code: error.code }
 
-  // Com confirmação de e-mail ativa, o Supabase não revela se o e-mail já
-  // existe: devolve um usuário "fantasma" sem identidades.
-  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-    return {
-      ok: false,
-      code: 'user_already_exists',
-      message: 'Este e-mail já está cadastrado. Entre na sua conta ou recupere a senha.',
-    }
-  }
-
+  // E-mail já cadastrado: o Supabase devolve um usuário "fantasma" (sem
+  // identidades). Respondemos igual a um cadastro novo para não revelar
+  // quais e-mails têm conta (enumeração de usuários).
   return { ok: true, needsConfirmation: !data.session }
 }
 
@@ -86,8 +79,29 @@ export async function updatePassword(password: string): Promise<AuthResult> {
   return error ? { ok: false, message: translateAuthError(error), code: error.code } : { ok: true }
 }
 
-export async function signOut(): Promise<void> {
-  await getSupabase().auth.signOut()
+/**
+ * Valida o link recebido por e-mail (?token_hash=...&type=...) e cria a sessão.
+ * Retorna null quando a URL não traz um link desse tipo.
+ */
+export async function verifyEmailLink(expected: 'email' | 'recovery'): Promise<AuthResult | null> {
+  const params = new URLSearchParams(window.location.search)
+  const tokenHash = params.get('token_hash')
+  const type = params.get('type')
+  if (!tokenHash) return null
+  // Remove o token da barra de endereço/histórico antes de qualquer outra coisa
+  history.replaceState(null, '', window.location.pathname)
+  if (type !== expected || !/^[A-Za-z0-9_-]{10,200}$/.test(tokenHash)) {
+    return { ok: false, message: 'Link inválido. Solicite um novo.' }
+  }
+  const { error } = await getSupabase().auth.verifyOtp({ token_hash: tokenHash, type: expected })
+  if (!error) return { ok: true }
+  if (error.code === 'otp_expired' || /expired|invalid/i.test(error.message))
+    return { ok: false, code: error.code, message: 'Este link expirou ou já foi usado. Solicite um novo.' }
+  return { ok: false, code: error.code, message: translateAuthError(error) }
+}
+
+export async function signOut(scope: 'global' | 'local' = 'global'): Promise<void> {
+  await getSupabase().auth.signOut({ scope })
 }
 
 export async function getSession(): Promise<Session | null> {

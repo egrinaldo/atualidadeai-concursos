@@ -6,8 +6,8 @@
  * (preapproval) no Mercado Pago, devolvendo o link de pagamento.
  * NÃO ativa nada: a ativação só ocorre após consulta à API (webhook/sync).
  */
-import { adminClient, logEvent, userFromRequest } from '../_shared/db.ts'
-import { errorMessage, json, preflight, requireEnv } from '../_shared/http.ts'
+import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
+import { errorMessage, json, preflight, requireEnv, tooManyRequests } from '../_shared/http.ts'
 import { billingToMp } from '../_shared/mapping.ts'
 import { MercadoPago, MercadoPagoError } from '../_shared/mercadopago.ts'
 
@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
   const user = await userFromRequest(req, admin)
   if (!user) return json({ error: 'Faça login para assinar.' }, 401)
   if (!user.email_confirmed_at) return json({ error: 'Confirme seu e-mail antes de assinar.' }, 403)
+  // Cada tentativa cria uma assinatura no Mercado Pago: até 5 a cada 10 minutos
+  if (await rateLimited(admin, `mp-create:${user.id}`, 5, 600)) return tooManyRequests()
 
   let createdSubId: string | null = null
   try {

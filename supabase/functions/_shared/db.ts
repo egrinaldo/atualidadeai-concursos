@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2'
+import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.119.0'
 import { requireEnv } from './http.ts'
 
 /**
@@ -22,11 +22,41 @@ export async function userFromRequest(req: Request, admin: SupabaseClient): Prom
   return data.user
 }
 
+/**
+ * Nível de autenticação da sessão (aal1 = senha; aal2 = senha + código MFA).
+ * Lido do JWT já validado por userFromRequest.
+ */
+export function sessionAal(req: Request): 'aal1' | 'aal2' | null {
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+  const part = token.split('.')[1]
+  if (!part) return null
+  try {
+    const payload = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')))
+    return payload.aal === 'aal2' ? 'aal2' : payload.aal === 'aal1' ? 'aal1' : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Limite de requisições (janela fixa, contador no Postgres).
+ * Em caso de falha do banco, não bloqueia (fail-open) para não impedir pagamentos.
+ */
+export async function rateLimited(admin: SupabaseClient, key: string, max: number, windowSeconds: number): Promise<boolean> {
+  const { data, error } = await admin.rpc('rate_limit_hit', { p_key: key, p_max: max, p_window_seconds: windowSeconds })
+  if (error) {
+    console.error('[rate-limit]', error.message)
+    return false
+  }
+  return data === false
+}
+
 export async function logEvent(
   admin: SupabaseClient,
   event: {
     source: 'webhook' | 'sync' | 'checkout'
     topic?: string | null
+    signature_ts?: string | null
     action?: string | null
     resource_id?: string | null
     request_id?: string | null

@@ -5,8 +5,8 @@
  * (interrompe as próximas cobranças) e atualiza o banco com o estado
  * retornado pela API.
  */
-import { adminClient, logEvent, userFromRequest } from '../_shared/db.ts'
-import { errorMessage, json, preflight } from '../_shared/http.ts'
+import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
+import { errorMessage, json, preflight, tooManyRequests } from '../_shared/http.ts'
 import { MercadoPago } from '../_shared/mercadopago.ts'
 import { applyPreapproval } from '../_shared/sync.ts'
 
@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   const admin = adminClient()
   const user = await userFromRequest(req, admin)
   if (!user) return json({ error: 'Faça login.' }, 401)
+  if (await rateLimited(admin, `mp-cancel:${user.id}`, 5, 600)) return tooManyRequests()
 
   const { data: sub } = await admin
     .from('subscriptions')

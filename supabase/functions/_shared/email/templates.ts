@@ -189,6 +189,17 @@ export function renderTransactional(kind: TransactionalKind, d: EmailData): Rend
  * Modelos de autenticação aplicados ao Supabase Auth (Authentication → Emails).
  * Usam as variáveis do Supabase ({{ .ConfirmationURL }}), por isso `raw: true`.
  */
+/**
+ * Links dos e-mails de autenticação. Sempre apontam para o endereço oficial
+ * ({{ .SiteURL }}), nunca para um destino informado na requisição: mesmo que
+ * a lista de Redirect URLs seja alterada por engano, o link não sai do site.
+ * A página chama verifyOtp(token_hash) — nenhum token de sessão vai na URL.
+ */
+export const AUTH_LINKS = {
+  confirmation: '{{ .SiteURL }}/confirmar-email?token_hash={{ .TokenHash }}&type=email',
+  recovery: '{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=recovery',
+} as const
+
 export function renderAuthTemplates(): Record<'confirmation' | 'recovery', { subject: string; html: string }> {
   return {
     confirmation: {
@@ -202,7 +213,7 @@ export function renderAuthTemplates(): Record<'confirmation' | 'recovery', { sub
             'Olá!',
             'Recebemos seu cadastro no AtualidadeAI Concursos. Para ativar sua conta, confirme seu e-mail clicando no botão abaixo.',
           ],
-          cta: { label: 'Confirmar meu e-mail', url: '{{ .ConfirmationURL }}' },
+          cta: { label: 'Confirmar meu e-mail', url: AUTH_LINKS.confirmation },
           note: 'Se você não fez este cadastro, ignore este e-mail. O link expira em 24 horas.',
         },
       }),
@@ -215,7 +226,7 @@ export function renderAuthTemplates(): Record<'confirmation' | 'recovery', { sub
         title: 'Redefinir senha',
         block: {
           paragraphs: ['Olá!', 'Recebemos um pedido para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha.'],
-          cta: { label: 'Criar nova senha', url: '{{ .ConfirmationURL }}' },
+          cta: { label: 'Criar nova senha', url: AUTH_LINKS.recovery },
           note: 'Se você não pediu a redefinição, ignore este e-mail: sua senha atual continua valendo. O link expira em 1 hora.',
         },
       }),

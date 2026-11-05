@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert } from '@/components/forms/Alert'
 import { AuthLayout } from '@/components/layout/AuthLayout'
+import { PrivacyPanel } from '@/components/account/PrivacyPanel'
 import { SubscriptionPanel } from '@/components/billing/SubscriptionPanel'
 import { Button, Icon } from '@/components/ui'
 import { ufName } from '@/data/ufs'
@@ -92,6 +93,12 @@ export function Conta() {
             ))}
           </dl>
         </section>
+
+        <PrivacyPanel
+          onLeaving={() => {
+            leaving.current = true
+          }}
+        />
 
         <Button variant="ghost" className="w-full" onClick={logout}>
           <Icon name="arrowRight" className="size-4 rotate-180" />
