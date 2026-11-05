@@ -81,7 +81,7 @@ export async function clusterJob(_job: { payload: Record<string, unknown> }, ctx
   const created = [...new Set([...assignment.values()].filter((a) => a.is_new).map((a) => a.cluster_id))]
   const now = new Date().toISOString()
 
-  const newRows = created.map((id) => ({ id, ...aggregateCluster(byCluster.get(id)!.map(toMember)), status: 'open', created_at: now, updated_at: now }))
+  const newRows = created.map((id) => ({ id, ...aggregateCluster(byCluster.get(id)!.map(toMember)), status: 'open', members_changed_at: now, created_at: now, updated_at: now }))
   for (let i = 0; i < newRows.length; i += 200) {
     const { error } = await ctx.db.from('news_clusters').insert(newRows.slice(i, i + 200))
     if (error) throw new Error(`criar assuntos: ${error.message}`)
@@ -95,8 +95,12 @@ export async function clusterJob(_job: { payload: Record<string, unknown> }, ctx
   // Assuntos já existentes que ganharam matérias: recalcula agregados
   const existing = [...touched].filter((id) => !created.includes(id))
   await pool(existing, 8, async (id) => {
-    const { error } = await ctx.db.from('news_clusters').update({ ...aggregateCluster(byCluster.get(id)!.map(toMember)), updated_at: now }).eq('id', id)
+    // members_changed_at sinaliza para a verificação (2.4) que o assunto precisa ser verificado de novo
+    const { error } = await ctx.db.from('news_clusters').update({ ...aggregateCluster(byCluster.get(id)!.map(toMember)), members_changed_at: now, updated_at: now }).eq('id', id)
     if (error) failed++
+    // Assunto já verificado que ganhou matéria volta para a fila de verificação
+    const { error: e2 } = await ctx.db.from('news_clusters').update({ status: 'open' }).eq('id', id).eq('status', 'verified')
+    if (e2) failed++
   })
   if (failed) throw new Error(`agrupamento: ${failed} gravações falharam`)
 

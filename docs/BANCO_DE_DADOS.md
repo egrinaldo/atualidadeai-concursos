@@ -241,3 +241,10 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - Fonte da Comissão Europeia: idioma corrigido para `en`.
 - `app_settings`: `triage.min_relevance_for_edition` (`media`), `triage.cluster_window_hours` (72), `triage.similarity_threshold` (0,38).
 - Reversão: `supabase/rollback/20261106000000_etapa2_triagem_e_agrupamento.down.sql`.
+
+## Migração 15 — Etapa 2.4 (verificação)
+
+- `news_clusters`: `verification_status`, `verification_confidence`, `needs_review`, `verified_at` (resumo da verificação mais recente; histórico em `news_verifications`) e `members_changed_at` (quando o assunto ganhou matérias — dispara reverificação).
+- Índices da fila de verificação e da fila de revisão.
+- `app_settings`: `verification.edition_statuses`, `verification.single_source_min_reliability` (4).
+- Reversão: `supabase/rollback/20261106020000_etapa2_verificacao.down.sql`. Regras: `docs/VERIFICACAO_INFORMACOES.md`.
