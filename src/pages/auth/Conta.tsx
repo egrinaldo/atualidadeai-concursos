@@ -19,7 +19,8 @@ export function Conta() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [fetched, setFetched] = useState(false)
-  const [admin, setAdmin] = useState(false)
+  // null = verificando; administradores são levados ao painel
+  const [admin, setAdmin] = useState<boolean | null>(null)
   // Evita que o fim da sessão (logout) dispare o redirecionamento para o login
   const leaving = useRef(false)
 
@@ -29,7 +30,11 @@ export function Conta() {
       if (!leaving.current) window.location.replace('/entrar?next=/conta')
       return
     }
-    isAdmin(session.user.id).then(setAdmin)
+    // Administrador não é assinante: a área dele é o painel.
+    isAdmin(session.user.id).then((yes) => {
+      if (yes) window.location.replace('/admin')
+      setAdmin(yes)
+    })
     const supabase = getSupabase()
     supabase
       .from('profiles')
@@ -49,7 +54,7 @@ export function Conta() {
     window.location.assign('/')
   }
 
-  if (loading || !session || !fetched) {
+  if (loading || !session || !fetched || admin !== false) {
     return (
       <AuthLayout title="Minha conta">
         <p className="text-slate-400" role="status">
@@ -66,12 +71,6 @@ export function Conta() {
       <div className="space-y-6">
         {error && <Alert tone="error">{error}</Alert>}
 
-        {admin && (
-          <Button href="/admin" variant="secondary" className="w-full">
-            <Icon name="layers" className="size-4" />
-            Painel administrativo
-          </Button>
-        )}
 
         <SubscriptionPanel accountEmail={session.user.email ?? ''} />
 

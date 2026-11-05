@@ -9,7 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Abas Assinantes (busca, filtro por status, detalhe com pagamentos e e-mails, atualizar pelo Mercado Pago, cancelar assinatura), Pagamentos e Leads — todas com exportação CSV.
 - Edge Function `admin` (confere o administrador no servidor) e módulo de indicadores testável (`admin/metrics.ts`, 3 testes; total 21).
 - Migração 9: tabela `admins` (RLS: cada usuário lê só o próprio registro; inclusão apenas manual).
-- Botão "Painel administrativo" na área do assinante para administradores; `/admin` com `noindex` e sem cache.
+- Administradores entram direto no painel: o login leva a `/admin` e `/conta` redireciona para lá (administrador não é assinante). `/admin` com `noindex` e sem cache.
 
  — 2026-11-05 — Etapa 1 · Subetapa 7: Testes, segurança e publicação
 
