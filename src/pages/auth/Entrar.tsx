@@ -3,6 +3,7 @@ import { Alert } from '@/components/forms/Alert'
 import { PasswordField, TextField } from '@/components/forms/Field'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button } from '@/components/ui'
+import { isAdmin } from '@/lib/admin'
 import { getSession, resendConfirmation, signIn } from '@/lib/auth'
 import { validateEmail } from '@/lib/validation'
 
@@ -11,9 +12,19 @@ export function safeNext(value: string | null): string {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : '/conta'
 }
 
+/**
+ * Destino após o login: o endereço pedido em ?next= ou, sem ele,
+ * o painel para administradores e a área do assinante para os demais.
+ */
+async function destination(requested: string | null): Promise<string> {
+  if (requested) return safeNext(requested)
+  const session = await getSession()
+  return session && (await isAdmin(session.user.id)) ? '/admin' : '/conta'
+}
+
 export function Entrar() {
   const params = new URLSearchParams(window.location.search)
-  const next = safeNext(params.get('next'))
+  const requested = params.get('next')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
@@ -21,10 +32,10 @@ export function Entrar() {
   const [info, setInfo] = useState<string | null>(params.get('senha') === 'redefinida' ? 'Senha alterada. Entre com a nova senha.' : null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Já logado? Vai direto para a área do assinante.
+  // Já logado? Vai direto para a área certa (assinante ou administrador).
   useEffect(() => {
-    getSession().then((s) => s && window.location.replace(next))
-  }, [next])
+    getSession().then(async (s) => s && window.location.replace(await destination(requested)))
+  }, [requested])
 
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault()
@@ -35,9 +46,12 @@ export function Entrar() {
     if (e.email || e.password) return
     setSubmitting(true)
     const r = await signIn(email, password)
+    if (r.ok) {
+      window.location.assign(await destination(requested))
+      return
+    }
     setSubmitting(false)
-    if (r.ok) window.location.assign(next)
-    else setServerError({ message: r.message, code: r.code })
+    setServerError({ message: r.message, code: r.code })
   }
 
   async function resend() {

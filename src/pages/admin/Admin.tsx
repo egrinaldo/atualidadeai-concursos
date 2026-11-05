@@ -101,8 +101,8 @@ export function Admin() {
           </div>
           <div className="flex items-center gap-1">
             <span className="mr-2 hidden truncate text-sm text-slate-400 md:inline">{session.user.email}</span>
-            <Button href="/conta" variant="ghost" size="sm">
-              Minha conta
+            <Button href="/" variant="ghost" size="sm">
+              Ver site
             </Button>
             <Button variant="ghost" size="sm" onClick={logout}>
               Sair
