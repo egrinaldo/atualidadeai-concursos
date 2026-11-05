@@ -95,3 +95,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D50 | **Relevância numérica 0–100 com faixas** | Permite ordenar e cortar cada bloco do PDF por nota, não só por rótulo |
 | D51 | **Assunto = mesmo fato em fontes diferentes; bônus por fonte independente** | Evita repetição no PDF e premia fatos confirmados por grupos editoriais distintos |
 | D52 | **Fonte nacional sobre um só estado → bloco estadual** | O assinante do estado vê o fato no bloco dele; lei federal continua nacional |
+| D53 | **Verificação só com evidências do banco, sem IA** | Não inventa fontes; resultado auditável e reproduzível; IA não decide veracidade |
+| D54 | **Fonte independente = grupo editorial distinto** | Três editorias do mesmo veículo não confirmam um fato |
+| D55 | **Divergência numérica só no fato principal (título/resumo)** | Evita falsos alarmes com números de outras medidas no corpo do texto |
+| D56 | **Fonte única confiável entra sinalizada; divergência/contradição só após revisão** | Equilíbrio entre cobertura (poucas fontes no piloto) e segurança editorial |

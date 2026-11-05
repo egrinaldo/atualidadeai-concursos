@@ -2,6 +2,14 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.4: verificação das informações
+
+### Adicionado
+- Verificação determinística dos assuntos (`worker/src/verify/`): fontes independentes, fonte oficial, números coincidentes/divergentes, desmentidos e atribuições; 6 status, confiança e evidências só do banco.
+- Job `verify`, reverificação automática quando o assunto ganha matérias; workflow roda `collect,triage,cluster,verify`.
+- Migração 15 (resumo da verificação no assunto, `members_changed_at`, política editorial em `app_settings`) e reversão.
+- `docs/VERIFICACAO_INFORMACOES.md`; 13 testes novos (49 no total).
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.3: triagem, classificação e agrupamento
 
 ### Adicionado
