@@ -2,6 +2,16 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [0.10.0] — 2026-11-05 — Termos de Uso e Política de Privacidade
+
+### Adicionado
+- Páginas `/termos` e `/privacidade` (versão 1.0), com índice, âncoras por seção e base legal: CDC (inclusive direito de arrependimento de 7 dias, art. 49), Decreto 7.962/2013, Marco Civil da Internet, LGPD e Resolução CD/ANPD 19/2024.
+- Conteúdo editável em `src/content/legal.ts`; dados do fornecedor/encarregado lidos de `src/config/site.ts` (campos vazios aparecem destacados como "a preencher", nunca inventados).
+- Migração 11: `access_logs` — registro de cada login (IP, data/hora, navegador) mantido por 6 meses (Marco Civil, art. 15), inclusive após exclusão da conta; sem acesso pelo site.
+
+### Alterado
+- FAQ "Posso cancelar a assinatura?" com as regras de cancelamento e arrependimento.
+
 ## [0.9.0] — 2026-11-05 — Auditoria de segurança
 
 Relatórios: `docs/SEGURANCA_AUDITORIA.md`, `docs/SEGURANCA_CORRECOES.md`, `docs/SEGURANCA_RECOMENDACOES.md`.

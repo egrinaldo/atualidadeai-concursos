@@ -193,3 +193,13 @@ RLS ativo: usuário autenticado lê **apenas o próprio** registro (para exibir 
 - `capture_lead`: limite de 10 por IP/hora e 300/hora no total.
 - `payment_events.signature_ts`: deduplicação de reenvios do webhook.
 - `apply_retention()` + pg_cron `lgpd-retencao` (diário, 06:41 UTC): `payment_events` > 12 meses, `email_log` > 24 meses, leads não convertidos > 24 meses, `rate_limits` > 2 dias. `payments` nunca são apagados.
+
+## Migração 11 — `access_logs` (Marco Civil da Internet, art. 15)
+
+| Coluna | Descrição |
+| --- | --- |
+| `user_id` | Usuário (sem chave estrangeira: o registro permanece pelo prazo legal mesmo após a exclusão da conta) |
+| `ip`, `user_agent`, `aal` | Endereço IP, navegador e nível de autenticação da sessão |
+| `accessed_at` | Data e hora do login |
+
+Preenchida pelo gatilho `on_auth_session_created` (cada nova sessão do Supabase Auth). RLS ativo, sem acesso para `anon`/`authenticated`. Eliminação automática após 6 meses pela rotina `apply_retention`.

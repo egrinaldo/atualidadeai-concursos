@@ -9,7 +9,7 @@ Complementa `SEGURANCA_AUDITORIA.md` e `SEGURANCA_CORRECOES.md` (05/11/2026).
 | Alta | **V14 — rotação de credenciais** | 1) Mercado Pago → Suas integrações → Credenciais: renovar as credenciais de teste e o segredo do webhook; 2) Supabase → Account → Access Tokens: revogar o token pessoal usado no desenvolvimento; 3) Supabase → Database → trocar a senha do banco; 4) atualizar o `.env` local (sem colar no chat) e pedir a atualização dos *Secrets* das funções |
 | Alta | **Limpar o `.env` local** | Remover `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL` e `MERCADO_PAGO_TEST_BUYER_PASSWORD` quando não forem necessários |
 | Média | **V04 — CAPTCHA** | Criar site no Cloudflare Turnstile (gratuito) e autorizar a integração no cadastro e na recuperação de senha (Supabase Auth suporta nativamente; exige ajuste na CSP) |
-| Média | **V08 — documentos jurídicos** | Publicar Termos de Uso e Política de Privacidade (finalidades, bases legais, compartilhamento com Supabase, Mercado Pago, Resend e Vercel, prazos de retenção abaixo, canal do encarregado/DPO). Recomenda-se revisão por advogado |
+| Média | **V08 — documentos jurídicos** | Termos e Política publicados (v1.0, `src/content/legal.ts`). Falta preencher em `src/config/site.ts` os dados do fornecedor e do encarregado. Recomenda-se revisão por advogado |
 | Média | **MFA — códigos de recuperação** | Guardar a chave TOTP em local seguro. Se o celular for perdido, o fator pode ser removido por SQL (`delete from auth.mfa_factors where user_id = …`) e cadastrado de novo no próximo acesso |
 
 ## 2. Riscos residuais
