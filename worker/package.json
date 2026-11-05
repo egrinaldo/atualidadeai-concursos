@@ -1,0 +1,24 @@
+{
+  "name": "atualidadeai-worker",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Worker da Etapa 2: coleta, verificação, IA, PDFs e entregas.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "job": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "typescript": "~7.0.2"
+  }
+}
