@@ -244,7 +244,7 @@ export const faq = {
     {
       question: 'Posso cancelar a assinatura?',
       answer:
-        'Sim. As regras de cancelamento e renovação estarão descritas nos Termos de Uso, disponíveis antes da contratação.',
+        'Sim, a qualquer momento e sem multa, direto na sua área de assinante. Se cancelar em até 7 dias da contratação, devolvemos o valor integral (direito de arrependimento, art. 49 do CDC). Depois disso, as cobranças futuras param e o acesso segue até o fim do mês já pago. Detalhes nos Termos de Uso.',
     },
   ],
 }

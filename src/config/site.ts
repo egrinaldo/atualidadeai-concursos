@@ -11,6 +11,11 @@ export const site = {
   contactEmail: '',
   // Razão social / CNPJ: exibidos no rodapé quando preenchidos.
   legalName: '',
-  cnpj: '',
+  cnpj: '', // CNPJ, ou CPF se o fornecedor for pessoa física
+  // Endereço completo do fornecedor (exigido pelo Decreto 7.962/2013, art. 2º)
+  address: '',
+  // Encarregado de dados (LGPD, art. 41) — nome e e-mail do canal de privacidade
+  dpoName: '',
+  dpoEmail: '',
   socials: {} as Record<string, string>,
 } as const

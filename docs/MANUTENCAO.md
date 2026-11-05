@@ -25,6 +25,16 @@ Remover: `delete from public.admins where user_id = (select id from auth.users w
 
 Publicar mudanças na função: `npx supabase functions deploy admin`.
 
+**MFA (obrigatório):** o primeiro acesso ao painel pede para escanear um QR code num app autenticador; depois, cada login pede o código de 6 números. Perdeu o celular? No SQL Editor: `delete from auth.mfa_factors where user_id = (select id from auth.users where email = 'admin@exemplo.com');` — o próximo acesso pede novo cadastro.
+
+## Direitos do titular (LGPD)
+
+Em **Minha conta → Privacidade e dados** o usuário baixa seus dados (JSON) ou exclui a conta (confirmação por senha). A exclusão cancela a assinatura no Mercado Pago, apaga perfil, preferências, assinaturas, registros de e-mail e lead, e mantém os pagamentos sem identificação. Retenção automática: ver `docs/BANCO_DE_DADOS.md` (migração 10).
+
+## Segurança
+
+Relatórios e checklist: `docs/SEGURANCA_AUDITORIA.md`, `docs/SEGURANCA_CORRECOES.md`, `docs/SEGURANCA_RECOMENDACOES.md`.
+
 ## Onde editar
 
 | O quê | Arquivo |
