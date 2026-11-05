@@ -363,7 +363,10 @@ function ConfirmeSeuEmail({ email }: { email: string }) {
           <br />
           Abra o e-mail e clique no link para ativar sua conta.
         </p>
-        <Alert tone="info">Não encontrou? Verifique a caixa de spam ou promoções. O link expira em 24 horas.</Alert>
+        <Alert tone="info">
+          Não encontrou? Verifique a caixa de spam ou promoções. O link expira em 1 hora. Se este e-mail já tiver uma conta, nenhum
+          link novo é enviado: entre normalmente ou use “Esqueci minha senha”.
+        </Alert>
         {feedback && <Alert tone={feedback.tone}>{feedback.text}</Alert>}
         <Button variant="secondary" className="w-full" disabled={cooldown > 0 || sending} onClick={resend}>
           {sending ? 'Reenviando…' : cooldown > 0 ? `Reenviar e-mail em ${cooldown}s` : 'Reenviar e-mail'}

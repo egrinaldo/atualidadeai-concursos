@@ -6,8 +6,8 @@
  * assinante — garante o status correto mesmo se um webhook atrasar.
  * A decisão é sempre baseada na API do Mercado Pago, nunca na URL de retorno.
  */
-import { adminClient, logEvent, userFromRequest } from '../_shared/db.ts'
-import { errorMessage, json, preflight } from '../_shared/http.ts'
+import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
+import { errorMessage, json, preflight, tooManyRequests } from '../_shared/http.ts'
 import { MercadoPago } from '../_shared/mercadopago.ts'
 import { applyPreapproval, fullSync } from '../_shared/sync.ts'
 
@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
   const admin = adminClient()
   const user = await userFromRequest(req, admin)
   if (!user) return json({ error: 'Faça login.' }, 401)
+  // Cada sincronização consulta a API do Mercado Pago: até 20 a cada 10 minutos
+  if (await rateLimited(admin, `mp-sync:${user.id}`, 20, 600)) return tooManyRequests()
 
   const { data: sub } = await admin
     .from('subscriptions')

@@ -16,9 +16,10 @@ export const supabase: SupabaseClient<Database> | null = isSupabaseConfigured
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        // "implicit": o link de confirmação/recuperação funciona mesmo se
-        // aberto em outro navegador ou dispositivo (ex.: e-mail no celular).
-        flowType: 'implicit',
+        // PKCE: nenhum token de sessão trafega na URL. Os links de e-mail
+        // (confirmação e recuperação) usam token_hash + verifyOtp e por isso
+        // continuam funcionando em outro navegador ou dispositivo.
+        flowType: 'pkce',
       },
     })
   : null

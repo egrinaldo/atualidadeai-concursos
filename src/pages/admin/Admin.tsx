@@ -18,6 +18,7 @@ import {
 } from '@/lib/admin'
 import { signOut } from '@/lib/auth'
 import { cn } from '@/utils/cn'
+import { MfaGate } from './Mfa'
 import { inputClass, Kpi, Modal, Panel, RevenueChart, StatusBadge, Table, td } from './parts'
 
 type Tab = 'geral' | 'assinantes' | 'pagamentos' | 'leads'
@@ -88,6 +89,7 @@ export function Admin() {
   }
 
   return (
+    <MfaGate>
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-950/90 backdrop-blur">
         <Container className="flex h-16 items-center justify-between gap-4">
@@ -141,6 +143,7 @@ export function Admin() {
         </Container>
       </main>
     </div>
+    </MfaGate>
   )
 }
 

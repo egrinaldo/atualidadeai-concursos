@@ -44,8 +44,9 @@ Deno.test('funciona sem nome, valor ou data', () => {
 
 Deno.test('modelos de autenticação mantêm a variável do Supabase', () => {
   const t = renderAuthTemplates()
-  ok(t.confirmation.html.includes('href="{{ .ConfirmationURL }}"'), 'confirmação sem link')
-  ok(t.recovery.html.includes('href="{{ .ConfirmationURL }}"'), 'recuperação sem link')
+  ok(t.confirmation.html.includes('href="{{ .SiteURL }}/confirmar-email?token_hash={{ .TokenHash }}&type=email"'), 'confirmação sem link fixo')
+  ok(t.recovery.html.includes('href="{{ .SiteURL }}/redefinir-senha?token_hash={{ .TokenHash }}&type=recovery"'), 'recuperação sem link fixo')
+  ok(!t.confirmation.html.includes('ConfirmationURL') && !t.recovery.html.includes('ConfirmationURL'), 'link não pode depender do redirect informado')
   ok(t.confirmation.subject.includes('Confirme'), 'assunto confirmação')
 })
 

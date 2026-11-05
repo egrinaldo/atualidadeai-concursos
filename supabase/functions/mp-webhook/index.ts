@@ -8,12 +8,25 @@
  *
  * Respostas: 200 = recebido (o Mercado Pago não reenvia);
  *            401 = assinatura inválida; 500 = erro temporário (reenvia).
+ *
+ * Segurança (auditoria 05/11/2026):
+ * - chamadas com assinatura inválida NÃO são gravadas no banco (só no log
+ *   da função), para que ninguém consiga encher a tabela sem a chave;
+ * - o conteúdo gravado é limitado a MAX_PAYLOAD_CHARS;
+ * - reenvio idêntico (mesmo x-request-id e ts) de uma notificação já
+ *   processada é descartado sem nova consulta.
  */
+const MAX_PAYLOAD_CHARS = 16_000
+
+function boundedPayload(body: unknown): unknown {
+  const text = JSON.stringify(body ?? null)
+  return text.length <= MAX_PAYLOAD_CHARS ? body : { truncated: true, size: text.length }
+}
 import { adminClient, logEvent, updateEvent } from '../_shared/db.ts'
 import { errorMessage, json } from '../_shared/http.ts'
 import { notificationKind } from '../_shared/mapping.ts'
 import { MercadoPago, MercadoPagoError } from '../_shared/mercadopago.ts'
-import { verifyMercadoPagoSignature } from '../_shared/signature.ts'
+import { parseSignatureHeader, verifyMercadoPagoSignature } from '../_shared/signature.ts'
 import { applyAuthorizedPayment, applyPayment, applyPreapproval, fullSync, type ApplyResult } from '../_shared/sync.ts'
 
 Deno.serve(async (req) => {
@@ -34,22 +47,36 @@ Deno.serve(async (req) => {
     secret: Deno.env.get('MERCADO_PAGO_WEBHOOK_SECRET') ?? '',
   })
 
+  if (!check.valid) {
+    console.warn('[mp-webhook] assinatura inválida:', check.reason, '| tipo:', type, '| id:', String(dataId ?? '').slice(0, 40))
+    return json({ error: 'invalid signature' }, check.reason === 'secret_not_configured' ? 500 : 401)
+  }
+
+  // Reenvio idêntico de notificação já tratada: nada a fazer
+  const signatureTs = parseSignatureHeader(req.headers.get('x-signature')).ts ?? null
+  if (requestId && signatureTs) {
+    const { data: seen } = await admin
+      .from('payment_events')
+      .select('id')
+      .eq('request_id', requestId)
+      .eq('signature_ts', signatureTs)
+      .in('status', ['processed', 'ignored'])
+      .limit(1)
+      .maybeSingle()
+    if (seen) return json({ ok: true, duplicate: true })
+  }
+
   const eventId = await logEvent(admin, {
     source: 'webhook',
     topic: type,
     action,
-    resource_id: dataId ? String(dataId) : null,
+    resource_id: dataId ? String(dataId).slice(0, 100) : null,
     request_id: requestId,
-    signature_valid: check.valid,
-    status: check.valid ? 'received' : 'rejected',
-    error: check.valid ? null : check.reason,
-    payload: body,
+    signature_ts: signatureTs,
+    signature_valid: true,
+    status: 'received',
+    payload: boundedPayload(body),
   })
-
-  if (!check.valid) {
-    console.warn('[mp-webhook] assinatura inválida:', check.reason)
-    return json({ error: 'invalid signature' }, check.reason === 'secret_not_configured' ? 500 : 401)
-  }
   if (!dataId) {
     await updateEvent(admin, eventId, 'ignored', 'notificação sem data.id')
     return json({ ok: true })

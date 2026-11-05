@@ -29,3 +29,7 @@ verify_jwt = false
 # Painel administrativo: exige login; o código confere se o usuário está em public.admins.
 [functions.admin]
 verify_jwt = true
+
+# Direitos do titular (LGPD): exportar dados e excluir conta. Exige login.
+[functions.account]
+verify_jwt = true

@@ -2,7 +2,7 @@
  * Testes das regras de pagamento (sem rede).
  * Executar:  npx deno test supabase/functions/tests/
  */
-import { amountMatches, billingToMp, isUuid, mapPaymentStatus, mapPreapprovalStatus, notificationKind } from '../_shared/mapping.ts'
+import { amountMatches, billingToMp, isUuid, mapPaymentStatus, mapPreapprovalStatus, notificationKind, revokesAccess } from '../_shared/mapping.ts'
 import { buildManifest, hmacSha256Hex, parseSignatureHeader, verifyMercadoPagoSignature } from '../_shared/signature.ts'
 
 function assertEquals<T>(actual: T, expected: T, msg = '') {
@@ -99,4 +99,10 @@ Deno.test('frequência e UUID', () => {
   assertEquals(billingToMp('monthly'), { frequency: 1, frequency_type: 'months' })
   assertEquals(isUuid('c0ffee00-0000-4000-8000-000000000001'), true)
   assertEquals(isUuid('YG-1234'), false)
+})
+
+Deno.test('estorno e contestação encerram o acesso; demais status não', () => {
+  assertEquals(revokesAccess('refunded'), true)
+  assertEquals(revokesAccess('charged_back'), true)
+  for (const st of ['approved', 'pending', 'rejected', 'cancelled', 'in_mediation'] as const) assertEquals(revokesAccess(st), false, st)
 })

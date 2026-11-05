@@ -1,6 +1,6 @@
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0'
 import { emailForPaymentStatus, notifyUser } from './email/notify.ts'
-import { amountMatches, isUuid, mapPaymentStatus, mapPreapprovalStatus } from './mapping.ts'
+import { amountMatches, isUuid, mapPaymentStatus, mapPreapprovalStatus, revokesAccess } from './mapping.ts'
 import { MercadoPago, type AuthorizedPayment, type Payment, type Preapproval } from './mercadopago.ts'
 
 /**
@@ -96,6 +96,9 @@ async function upsertPayment(
   )
   if (error) throw new Error(`falha ao registrar pagamento: ${error.message}`)
 
+  // Estorno/contestação: cancela a assinatura no Mercado Pago (sem novas cobranças)
+  if (sub && revokesAccess(status)) await cancelAfterRefund(admin, sub.id, p.id, status)
+
   // Um e-mail por pagamento e status (aprovado, pendente ou recusado)
   const kind = emailForPaymentStatus(status)
   if (kind && sub) {
@@ -106,6 +109,30 @@ async function upsertPayment(
       data: { amount: p.amount ?? null },
     })
   }
+}
+
+async function cancelAfterRefund(admin: SupabaseClient, subscriptionId: string, paymentId: string, status: string) {
+  const { data: s } = await admin
+    .from('subscriptions')
+    .select('id, status, external_subscription_id')
+    .eq('id', subscriptionId)
+    .maybeSingle()
+  if (!s || !['active', 'pending', 'paused'].includes(s.status as string)) return
+  if (s.external_subscription_id) {
+    const updated = await MercadoPago.updatePreapproval(s.external_subscription_id as string, { status: 'cancelled' })
+    await applyPreapproval(admin, updated)
+  } else {
+    await admin.from('subscriptions').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', s.id)
+  }
+  await admin.from('payment_events').insert({
+    source: 'sync',
+    topic: 'payment',
+    action: 'cancel_after_refund',
+    resource_id: paymentId,
+    status: 'processed',
+    error: `assinatura ${s.id} cancelada: pagamento ${status}`,
+    processed_at: new Date().toISOString(),
+  })
 }
 
 export async function applyAuthorizedPayment(admin: SupabaseClient, ap: AuthorizedPayment): Promise<ApplyResult> {
