@@ -8,14 +8,11 @@ export const site = {
   tagline: 'Atualidades para concursos, organizadas por inteligência artificial.',
   // Preencher com dados reais quando disponíveis. Não inventar contatos.
   // Enquanto vazio, o rodapé não exibe o e-mail.
-  contactEmail: '',
+  contactEmail: 'atualidadeaiconcursos@gmail.com',
   // Razão social / CNPJ: exibidos no rodapé quando preenchidos.
-  legalName: '',
-  cnpj: '', // CNPJ, ou CPF se o fornecedor for pessoa física
-  // Endereço completo do fornecedor (exigido pelo Decreto 7.962/2013, art. 2º)
-  address: '',
-  // Encarregado de dados (LGPD, art. 41) — nome e e-mail do canal de privacidade
-  dpoName: '',
+  legalName: 'AtualidadeAIconcursos',
+  cnpj: '', // não exibido por decisão do responsável
+  // Canal do encarregado de dados (LGPD, art. 41); vazio = usa contactEmail
   dpoEmail: '',
   socials: {} as Record<string, string>,
 } as const
