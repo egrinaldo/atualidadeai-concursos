@@ -11,21 +11,15 @@ const SITE_URL = 'https://atualidadeai-concursos.vercel.app'
 /** Valores dos marcadores {{...}}; vazio = ainda não informado em site.ts. */
 const values: Record<string, string> = {
   empresa: site.legalName,
-  documento: site.cnpj,
-  endereco: site.address,
   email: site.contactEmail,
-  encarregado: site.dpoName,
   emailEncarregado: site.dpoEmail || site.contactEmail,
   site: SITE_URL,
   preco: formatBRL(plan.priceCents),
 }
 
 const labels: Record<string, string> = {
-  empresa: 'nome ou razão social',
-  documento: 'CNPJ/CPF',
-  endereco: 'endereço',
+  empresa: 'razão social',
   email: 'e-mail de atendimento',
-  encarregado: 'nome do encarregado',
   emailEncarregado: 'e-mail do encarregado',
 }
 

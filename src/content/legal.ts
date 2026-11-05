@@ -6,8 +6,8 @@
  * nunca um dado inventado. Ao alterar o conteúdo, atualize `LEGAL_VERSION`
  * e `LEGAL_EFFECTIVE_DATE`.
  *
- * Marcadores aceitos no texto: {{empresa}}, {{documento}}, {{endereco}},
- * {{email}}, {{encarregado}}, {{emailEncarregado}}, {{site}}, {{preco}}.
+ * Marcadores aceitos no texto: {{empresa}}, {{email}}, {{emailEncarregado}},
+ * {{site}}, {{preco}}.
  */
 
 export const LEGAL_VERSION = '1.0'
@@ -27,7 +27,7 @@ export const termsOfUse: LegalDocument = {
       title: '1. Identificação do fornecedor e aceitação',
       blocks: [
         {
-          p: 'A plataforma AtualidadeAI Concursos ("Plataforma") é disponibilizada por {{empresa}}, inscrito(a) sob o nº {{documento}}, com endereço em {{endereco}}, e-mail de atendimento {{email}} ("Fornecedor"), em conformidade com o art. 2º do Decreto nº 7.962/2013.',
+          p: 'A plataforma AtualidadeAI Concursos ("Plataforma") é disponibilizada por {{empresa}} ("Fornecedor"), que pode ser contatado pelo e-mail de atendimento {{email}}.',
         },
         {
           p: 'A aceitação destes Termos ocorre de forma eletrônica, mediante a marcação da caixa de concordância no cadastro, e é registrada com data e hora. A relação entre o Fornecedor e o usuário é regida pelo Código de Defesa do Consumidor (Lei nº 8.078/1990), pelo Marco Civil da Internet (Lei nº 12.965/2014), pela Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — "LGPD") e pelo Decreto nº 7.962/2013.',
@@ -245,10 +245,10 @@ export const privacyPolicy: LegalDocument = {
       title: '1. Controlador e encarregado',
       blocks: [
         {
-          p: 'O controlador dos dados pessoais tratados na Plataforma é {{empresa}}, inscrito(a) sob o nº {{documento}}, com endereço em {{endereco}} ("Controlador").',
+          p: 'O controlador dos dados pessoais tratados na Plataforma é {{empresa}} ("Controlador").',
         },
         {
-          p: 'O encarregado pelo tratamento de dados pessoais (art. 41 da LGPD) é {{encarregado}}, que pode ser contatado pelo e-mail {{emailEncarregado}} para qualquer assunto relacionado a esta Política e aos seus direitos como titular.',
+          p: 'O canal de comunicação com o encarregado pelo tratamento de dados pessoais (art. 41 da LGPD) é o e-mail {{emailEncarregado}}, que deve ser utilizado para qualquer assunto relacionado a esta Política e ao exercício dos seus direitos como titular.',
         },
       ],
     },
