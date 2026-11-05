@@ -16,6 +16,16 @@ npm run job -- run                  # processa a fila
 npm test && npm run typecheck
 ```
 
+## Comandos
+
+- `npm run job -- healthcheck` — testa conexão com o banco.
+- `npm run job -- tick collect,triage,cluster` — enfileira cada etapa da janela de 3h atual e executa em ordem (usado pelo workflow).
+- `npm run job -- run triage` / `run cluster` — processa triagem/agrupamento pendentes.
+- `npm run job -- enqueue collect` / `npm run job -- run collect` — enfileirar e processar manualmente.
+- Payload da coleta: `{"sourceId": "<uuid>", "force": true}` coleta uma fonte específica ignorando o intervalo.
+
+Fontes, regras e operação: `docs/ROBO_NOTICIAS.md`.
+
 ## Estrutura
 
 | Pasta | Conteúdo |

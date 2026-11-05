@@ -5,6 +5,7 @@
  *   npm run job -- healthcheck                 executa a verificação direto (sem fila)
  *   npm run job -- enqueue <tipo> [dedupeKey]  coloca uma tarefa na fila
  *   npm run job -- run [tipo,tipo] [máx]       processa a fila
+ *   npm run job -- tick <tipo[,tipo]>          enfileira a rodada atual de cada etapa (sem duplicar) e processa em ordem
  */
 import { loadConfig } from './config.ts'
 import { dbClient } from './db/client.ts'
@@ -30,6 +31,21 @@ async function main() {
     if (!JOB_TYPES.includes(arg1 as JobType)) throw new Error(`tipo inválido: ${arg1}`)
     const r = await queue.enqueue(arg1 as JobType, {}, { dedupeKey: arg2 })
     log.info('enfileirada', { type: arg1, result: r })
+    return
+  }
+  if (command === 'tick') {
+    // Etapas em sequência (ex.: "collect,triage,cluster"); uma rodada por janela de 3h — reexecuções não duplicam
+    const types = (arg1 ?? '').split(',').filter(Boolean)
+    if (!types.length || types.some((t) => !JOB_TYPES.includes(t as JobType))) throw new Error(`tipo inválido: ${arg1}`)
+    const now = new Date()
+    const slot = `${now.toISOString().slice(0, 10)}T${String(Math.floor(now.getUTCHours() / 3) * 3).padStart(2, '0')}`
+    for (const type of types as JobType[]) {
+      const r = await queue.enqueue(type, {}, { dedupeKey: `${type}:${slot}` })
+      log.info('rodada', { type, slot, result: r })
+      const summary = await runQueue(ctx, queue, handlers, { types: [type], maxJobs: 5 })
+      log.info('fila processada', { type, ...summary })
+      if (summary.failed > 0) process.exitCode = 1
+    }
     return
   }
   if (command === 'run') {
