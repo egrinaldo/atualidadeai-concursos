@@ -5,6 +5,7 @@
  *   npm run job -- healthcheck                 executa a verificação direto (sem fila)
  *   npm run job -- enqueue <tipo> [dedupeKey]  coloca uma tarefa na fila
  *   npm run job -- run [tipo,tipo] [máx]       processa a fila
+ *   npm run job -- tick <tipo>                 enfileira a rodada atual (sem duplicar) e processa
  */
 import { loadConfig } from './config.ts'
 import { dbClient } from './db/client.ts'
@@ -30,6 +31,18 @@ async function main() {
     if (!JOB_TYPES.includes(arg1 as JobType)) throw new Error(`tipo inválido: ${arg1}`)
     const r = await queue.enqueue(arg1 as JobType, {}, { dedupeKey: arg2 })
     log.info('enfileirada', { type: arg1, result: r })
+    return
+  }
+  if (command === 'tick') {
+    if (!JOB_TYPES.includes(arg1 as JobType)) throw new Error(`tipo inválido: ${arg1}`)
+    // Uma rodada por janela de 3h: reexecuções do agendador não duplicam a tarefa
+    const now = new Date()
+    const slot = `${now.toISOString().slice(0, 10)}T${String(Math.floor(now.getUTCHours() / 3) * 3).padStart(2, '0')}`
+    const r = await queue.enqueue(arg1 as JobType, {}, { dedupeKey: `${arg1}:${slot}` })
+    log.info('rodada', { type: arg1, slot, result: r })
+    const summary = await runQueue(ctx, queue, handlers, { types: [arg1 as JobType], maxJobs: 5 })
+    log.info('fila processada', summary)
+    if (summary.failed > 0) process.exitCode = 1
     return
   }
   if (command === 'run') {

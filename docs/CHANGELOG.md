@@ -2,6 +2,15 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.2: robô de coleta
+
+### Adicionado
+- Robô de coleta (`worker/src/jobs/collect.ts`): RSS/Atom/API IBGE, robots.txt (RFC 9309), cache HTTP, deduplicação por URL e por conteúdo, backoff por fonte.
+- Requisição segura contra SSRF (`worker/src/sources/fetcher.ts`): só HTTPS, hosts permitidos por fonte, bloqueio de IPs internos, limites de tamanho/tempo/redirecionamento.
+- Migração 13: coluna `news_sources.language`, tabela `source_fetch_logs`, 19 grupos e 24 fontes verificadas (18 ativas).
+- Workflow `worker-collect` (a cada 3h) e comando `tick`.
+- `docs/ROBO_NOTICIAS.md`.
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.1: estrutura do banco e infraestrutura
 
 ### Adicionado

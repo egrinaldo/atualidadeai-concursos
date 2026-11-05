@@ -87,3 +87,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D42 | **Ordem do PDF: Estado → Nacional → Internacional** | O diferencial do produto vem primeiro |
 | D43 | **Piloto: Ceará; publicação às 06h; fechamento às 22h** (fuso de Brasília) | Separação clara entre estadual e nacional; folga de 1h30 para atrasos do agendador e da IA |
 | D44 | **Texto original das notícias apagado após 30 dias** | Direitos autorais: o produto guarda título, link e resumo próprio |
+| D45 | **Coleta só por RSS/Atom/API oficial; sem raspagem de HTML** | Respeita termos e direitos autorais; menos frágil |
+| D46 | **Fontes comerciais desligadas até haver licença** | Produto pago: reprodução comercial exige autorização |
+| D47 | **Fetcher com lista de hosts por fonte e bloqueio de IP interno** | Evita SSRF quando fontes passarem a ser cadastradas pelo painel |
+| D48 | **Coleta a cada 3h com chave por janela** | Atualidade suficiente para edição diária; reexecução não duplica |
