@@ -48,6 +48,7 @@ export type Candidate = { cluster_id: string; analysis_id: string; title: string
 export type EditionDetail = { edition: EditionRow & { period_start: string; period_end: string }; items: EditionItem[]; documents: DocumentRow[]; candidates: Candidate[] }
 
 export type ReviewRow = ClusterBrief & { title: string; last_seen_at: string; analysis: { id: string; kind: AnalysisKind; status: string; audit_status: AuditStatus; audit_report: AuditReport | null; validation_errors: { erros?: string[]; avisos?: string[] } | null } | null }
+export type RobotDecision = { cluster_id: string; action: string; notes: string | null; created_at: string; cluster: { title: string; status: string; scope: string; state: string | null } | null }
 export type Analysis = {
   id: string
   status: string
@@ -132,7 +133,7 @@ export const editorialApi = {
   editionStatus: (id: string, op: 'approve' | 'hold' | 'regenerate', notes?: string) => ed<{ ok: true; status: EditionStatus }>('edition_status', { edition_id: id, op, notes }),
   editionItem: (id: string, analysisId: string, op: 'add' | 'remove' | 'up' | 'down', block?: string) => ed<{ ok: true }>('edition_item', { edition_id: id, analysis_id: analysisId, op, block }),
   documentUrl: (id: string) => ed<{ url: string; expiresIn: number }>('document_url', { document_id: id }),
-  reviewQueue: () => ed<{ rows: ReviewRow[] }>('review_queue'),
+  reviewQueue: () => ed<{ rows: ReviewRow[]; robot: RobotDecision[] }>('review_queue'),
   cluster: (id: string) => ed<ClusterDetail>('cluster', { cluster_id: id }),
   decide: (id: string, decision: 'approve' | 'reject' | 'reanalyze', notes?: string) => ed<{ ok: true }>('cluster_decide', { cluster_id: id, decision, notes }),
   editAnalysis: (id: string, changes: AnalysisChanges, notes?: string) => ed<{ ok: true; analysis_id: string }>('analysis_edit', { analysis_id: id, changes, notes }),
@@ -174,6 +175,6 @@ export const kindLabels: Record<AnalysisKind, string> = { analise: 'Análise', s
 export const verdictLabels: Record<AuditClaim['verdict'], string> = { apoiada: 'Sustentada', parcial: 'Parcial', sem_suporte: 'Sem suporte', contradita: 'Contradita' }
 export const blockLabels: Record<string, string> = { estado: 'Estado', nacional: 'Brasil', internacional: 'Mundo' }
 export const jobLabels: Record<string, string> = {
-  collect: 'Coleta', triage: 'Triagem', cluster: 'Agrupamento', verify: 'Verificação', analyze: 'Análise (IA)', audit: 'Auditoria de veracidade', synthesize: 'Sínteses semanais/mensais', compose: 'Montagem da edição', render: 'Geração do PDF', healthcheck: 'Verificação de saúde',
+  collect: 'Coleta', triage: 'Triagem', cluster: 'Agrupamento', verify: 'Verificação', analyze: 'Análise (IA)', audit: 'Auditoria de veracidade', review: 'Revisão automática', synthesize: 'Sínteses semanais/mensais', compose: 'Montagem da edição', render: 'Geração do PDF', healthcheck: 'Verificação de saúde',
 }
 export const fileSize = (b: number | null) => (b == null ? '—' : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`)

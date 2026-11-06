@@ -2,6 +2,22 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.7c: revisão automática da fila
+
+### Adicionado
+- Job `review` (`worker/src/review/decide.ts`): o robô decide a fila de revisão com regras conservadoras.
+  - Libera o que só aguarda confirmação: a seleção continua barrando.
+  - Libera o texto já auditado.
+  - Pede nova análise uma vez; depois, descarta.
+  - O texto editado por pessoa e reprovado fica com o editor.
+- Decisões registradas como "Robô:" em `editorial_reviews`.
+- Painel: quadro com as decisões do robô (48h). "Aprovar" desfaz um descarte.
+- Migração 21 (`review.auto`, `review.max_reanalysis`); 5 testes.
+
+### Alterado
+- `worker-collect` termina com `review`.
+- `worker-edition` às 22h12: `audit@edicao → review@edicao → compose@diaria → synthesize → audit@periodo → compose@periodo`.
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.7b: auditoria de veracidade e revisões semanal/mensal
 
 ### Adicionado

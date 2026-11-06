@@ -6,6 +6,7 @@ import { collect } from './collect.ts'
 import { composeJob } from './compose.ts'
 import { healthcheck } from './healthcheck.ts'
 import { renderJob } from './render.ts'
+import { reviewJob } from './review.ts'
 import { synthesizeJob } from './synthesize.ts'
 import { triageJob } from './triage.ts'
 import { verifyJob } from './verify.ts'
@@ -20,6 +21,7 @@ export const handlers: Partial<Record<JobType, JobHandler>> = {
   verify: verifyJob,
   analyze: analyzeJob,
   audit: auditJob,
+  review: reviewJob,
   synthesize: synthesizeJob,
   compose: composeJob,
   render: renderJob,

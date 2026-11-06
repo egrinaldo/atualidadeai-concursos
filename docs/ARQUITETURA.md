@@ -120,3 +120,4 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D75 | **Correção automática do texto da IA reprovado (até 2 rodadas); texto de pessoa vai ao editor** | Resolve sozinho os erros comuns sem sobrescrever decisão humana |
 | D76 | **Revisões hierárquicas: semanal a partir das diárias, mensal a partir das semanais; sínteses em `news_analyses` (`kind`)** | Mantém a curadoria já feita; reaproveita PDF, auditoria e painel sem tabelas paralelas |
 | D77 | **Síntese parte só dos nossos textos já auditados e é auditada de novo; se falhar, usa o texto diário mais recente** | Sem fatos novos no resumo do período; a revisão nunca fica vazia |
+| D78 | **Fila de revisão resolvida pelo robô com regras fixas; na dúvida, fora da edição; decisões registradas e reversíveis** | Operação sem gargalo humano sem abrir mão da verificação e da auditoria |

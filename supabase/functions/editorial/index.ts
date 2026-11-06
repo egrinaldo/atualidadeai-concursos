@@ -175,7 +175,15 @@ async function reviewQueue(db: Db) {
       .order('relevance_score', { ascending: false }).limit(100),
     'fila',
   ) ?? []
+  // Decisões automáticas do robô (revisor nulo) nas últimas 48h, para o editor conferir/desfazer
+  const robot = must(
+    await db.from('editorial_reviews').select('target_id, action, notes, created_at').is('reviewer_id', null).eq('target_type', 'cluster').gte('created_at', daysAgo(2)).order('created_at', { ascending: false }).limit(60),
+    'decisões do robô',
+  ) ?? []
+  const titles = robot.length ? must(await db.from('news_clusters').select('id, title, status, scope, state').in('id', [...new Set(robot.map((x: Any) => x.target_id))]), 'assuntos') ?? [] : []
+  const byId = new Map(titles.map((t: Any) => [t.id, t]))
   return {
+    robot: robot.map((x: Any) => ({ cluster_id: x.target_id, action: x.action, notes: x.notes, created_at: x.created_at, cluster: byId.get(x.target_id) ?? null })),
     rows: rows.map((r: Any) => {
       const latest = [...((r.news_analyses ?? []) as { id: string; kind: string; status: string; validation_errors: unknown; generated_at: string }[])].filter((a: Any) => a.kind === 'analise').sort((a: Any, b: Any) => b.generated_at.localeCompare(a.generated_at))[0] ?? null
       const { news_analyses: _, ...rest } = r
@@ -200,7 +208,13 @@ async function clusterDecide(db: Db, reviewer: string, id: string, decision: str
   const c = must(await db.from('news_clusters').select('id, status').eq('id', id).maybeSingle(), 'assunto')
   if (!c) throw new UserError('Assunto não encontrado.', 404)
   if (decision === 'approve') {
-    must(await db.from('news_clusters').update({ needs_review: false }).eq('id', id), 'aprovar')
+    // Desfaz descarte do robô: volta para analisado (se houver texto válido) ou verificado
+    let status = c.status
+    if (c.status === 'discarded') {
+      const { data: va } = await db.from('news_analyses').select('id').eq('cluster_id', id).eq('kind', 'analise').in('status', ['valid', 'edited']).limit(1)
+      status = va?.length ? 'analyzed' : 'verified'
+    }
+    must(await db.from('news_clusters').update({ needs_review: false, status }).eq('id', id), 'aprovar')
     await review(db, reviewer, 'cluster', id, 'approve', notes)
   } else if (decision === 'reject') {
     must(await db.from('news_clusters').update({ status: 'rejected', needs_review: false }).eq('id', id), 'reprovar')
@@ -208,7 +222,7 @@ async function clusterDecide(db: Db, reviewer: string, id: string, decision: str
   } else if (decision === 'reanalyze') {
     // Análises atuais deixam de valer; a próxima rodada do robô gera outra (consome cota de IA)
     must(await db.from('news_analyses').update({ status: 'superseded' }).eq('cluster_id', id).eq('kind', 'analise').in('status', ['valid', 'invalid', 'edited']), 'invalidar análises')
-    must(await db.from('news_clusters').update({ status: 'verified', needs_review: false }).eq('id', id).not('status', 'in', '(rejected,discarded,published)'), 'reanálise')
+    must(await db.from('news_clusters').update({ status: 'verified', needs_review: false }).eq('id', id).not('status', 'in', '(rejected,published)'), 'reanálise')
     await review(db, reviewer, 'cluster', id, 'request_reanalysis', notes)
   } else throw new UserError('Decisão inválida.')
   return { ok: true }
