@@ -100,7 +100,7 @@ export async function analyzeJob(job: { id: string; payload: Record<string, unkn
     const hash = inputHash(input)
 
     // Mesma entrada já analisada: reaproveita (válida) ou não insiste (inválida → aguarda revisão)
-    const { data: prev } = await ctx.db.from('news_analyses').select('id, status').eq('cluster_id', c.id).eq('input_hash', hash).eq('prompt_version', PROMPT_VERSION).in('status', ['valid', 'invalid', 'edited'])
+    const { data: prev } = await ctx.db.from('news_analyses').select('id, status').eq('cluster_id', c.id).eq('kind', 'analise').eq('input_hash', hash).eq('prompt_version', PROMPT_VERSION).in('status', ['valid', 'invalid', 'edited'])
     if (prev?.some((p) => p.status === 'valid' || p.status === 'edited')) {
       await ctx.db.from('news_clusters').update({ status: 'analyzed' }).eq('id', c.id).eq('status', 'verified')
       stats.reused++
@@ -127,7 +127,7 @@ export async function analyzeJob(job: { id: string; payload: Record<string, unkn
     const base = { cluster_id: c.id, provider: g.provider, model: g.model, prompt_version: PROMPT_VERSION, input_hash: hash }
     if (g.status === 'valid') {
       // Versões anteriores válidas deste assunto deixam de valer
-      await ctx.db.from('news_analyses').update({ status: 'superseded' }).eq('cluster_id', c.id).eq('status', 'valid')
+      await ctx.db.from('news_analyses').update({ status: 'superseded' }).eq('cluster_id', c.id).eq('kind', 'analise').eq('status', 'valid')
       const { error: e2 } = await ctx.db.from('news_analyses').insert({ ...base, status: 'valid', ...toAnalysisRow(g.data, input), validation_errors: g.warnings.length ? { avisos: g.warnings } : null })
       if (e2) throw new Error(`gravar análise: ${e2.message}`)
       // Avisos (ex.: número sem fonte no contexto) mandam o assunto para revisão antes do PDF

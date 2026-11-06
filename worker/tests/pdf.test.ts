@@ -12,6 +12,7 @@ const row = (title: string, p: Partial<SourceRow> = {}): SourceRow => ({
   consequences: { confirmados: ['a'], projecoes: ['b'] }, relevance_for_exams: 'Cai em prova.', possible_exam_topics: ['Economia'], memorize: ['x'],
   exam_approaches: ['y'], questions: [{ enunciado: 'Q?', alternativas: { B: 'b', A: 'a', C: 'c', D: 'd', E: 'e' }, gabarito: 'A', comentario: 'Porque sim.' }],
   refs: [{ url: 'https://ibge.gov.br/n', source: 'IBGE', title: 'T', official: true }, { url: 'javascript:alert(1)', source: 'X', title: null, official: false }],
+  audit_status: 'aprovada',
   ...p,
 })
 const meta = { type: 'diaria' as const, state: 'CE', referenceDate: '2026-11-06', periodStart: '2026-11-05T01:00:00.000Z', periodEnd: '2026-11-06T01:00:00.000Z' }
@@ -87,6 +88,10 @@ test('controle de qualidade: reprova texto quebrado, e-mail pessoal e edição v
   const bad = await qaEdition(doc, { cover: '<p>undefined</p>', body: '<p>fulano@exemplo.com</p>' }, bytes)
   assert.equal(bad.passed, false)
   assert.equal(bad.errors.length, 2)
+  // Trava da auditoria: item sem auditoria aprovada reprova o PDF
+  const docPend = buildDoc(meta, { estado: [row('A', { audit_status: 'reprovada' })], nacional: [row('B'), row('C')], internacional: [] })
+  const pend = await qaEdition(docPend, { cover: coverHtml(docPend, ''), body: bodyHtml(docPend, '') }, bytes)
+  assert.ok(pend.errors.some((e) => /auditoria de veracidade/.test(e)))
   const vazio = await qaEdition(buildDoc(meta, { estado: [], nacional: [], internacional: [] }), { cover: '', body: '' }, bytes)
   assert.ok(vazio.errors.some((e) => e.startsWith('poucos assuntos')))
 })

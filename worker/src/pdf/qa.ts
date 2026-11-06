@@ -21,6 +21,8 @@ export async function qaEdition(doc: EditionDoc, html: { cover: string; body: st
     if (i.references.some((r) => !/^https?:\/\//.test(r.url))) errors.push(`assunto ${i.n} com link inválido`)
     if (!i.questions.length) warnings.push(`assunto ${i.n} sem questões`)
     if (i.verification.tone === 'warn') warnings.push(`assunto ${i.n} de fonte única`)
+    // Trava final: nada sem auditoria de veracidade aprovada (ou dispensada pelo editor) vai para o PDF
+    if (i.audit !== 'aprovada' && i.audit !== 'dispensada') errors.push(`assunto ${i.n} sem auditoria de veracidade aprovada (${i.audit})`)
   }
   const visible = (h: string) => h.replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ')
   const text = visible(html.cover) + ' ' + visible(html.body)

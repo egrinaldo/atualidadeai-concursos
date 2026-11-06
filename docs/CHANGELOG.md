@@ -2,6 +2,44 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.7b: auditoria de veracidade e revisões semanal/mensal
+
+### Adicionado
+- **Auditoria de veracidade** (`worker/src/audit/`, job `audit`):
+  - modelo auditor diferente do redator;
+  - afirmações atômicas com trecho literal conferido na fonte sem IA;
+  - checagem de dia da semana e data.
+- Reprovação manda o assunto para revisão, com **correção automática** do texto da IA (até 2 rodadas, nova auditoria).
+- Trava em três pontos: montagem, `render` e QA do PDF.
+- **Revisões hierárquicas** (`worker/src/period/`, job `synthesize`):
+  - semanal a partir das diárias e mensal a partir das semanais (+ diárias não cobertas);
+  - o mesmo assunto em vários dias vira uma história com síntese e **linha do tempo**, auditada.
+- Painel:
+  - selo de auditoria nos itens;
+  - quadro com as afirmações não sustentadas;
+  - ações "Dispensar auditoria" (com justificativa registrada) e "Auditar de novo";
+  - sínteses no detalhe do assunto;
+  - 5 novas configurações.
+- `tick` aceita `tipo@etiqueta` (rodadas separadas na mesma janela).
+- Migração 20 (com gatilho que zera a auditoria de versões editadas); `docs/AUDITORIA_E_REVISOES.md`; 19 testes novos.
+
+### Alterado
+- `worker-collect` audita após a análise (timeout 50 min).
+- `worker-edition`: 22h12 `compose@diaria → synthesize → audit@edicao → compose@periodo`; 04h35 `audit@pdf → render`; recebe `NVIDIA_API_KEY`.
+- Cota diária de IA 60 → 120.
+- Edição manual zera a auditoria.
+
+## [Não publicado] — Etapa 2 · Subetapa 2.7: painel editorial
+
+### Adicionado
+- Abas **Editorial**, **Fontes** e **Robô** no `/admin` (`src/pages/admin/Editorial.tsx`, `src/lib/editorial.ts`).
+- Edge Function `editorial` (administrador + MFA, limite de requisições): edições (aprovar/reter/gerar de novo, incluir/remover/reordenar assuntos, baixar PDF por link temporário), fila de revisão (aprovar, editar com versão, pedir nova análise, reprovar), fontes (ativar/desativar, confiabilidade, cadastro validado), configurações validadas e monitoramento do robô.
+- Migração 19; `docs/PAINEL_EDITORIAL.md`; 7 testes Deno da validação.
+
+### Alterado
+- `Modal` do painel aceita largura maior (`wide`); aviso de sandbox aparece só nas abas financeiras.
+- Workflows usam `actions/checkout@v5` e `actions/setup-node@v5` (Node 24).
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.6: geração dos PDFs
 
 ### Adicionado

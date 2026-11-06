@@ -111,3 +111,12 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D66 | **Capa e miolo renderizados separadamente e unidos com pdf-lib** | Capa de página inteira sem cabeçalho/rodapé; pdf-lib também fará a personalização (2.8) |
 | D67 | **Fontes embutidas (OFL) e PDF base sem dado pessoal, validado por QA** | Resultado reprodutível; LGPD: personalização só na cópia do assinante |
 | D68 | **Alcance de veículo estadual decidido pela seção/conteúdo** | O Povo publica Ceará, Brasil e mundo no mesmo feed |
+| D69 | **Painel editorial em Edge Function própria (`editorial`), administrador + MFA verificados no servidor** | Separa editorial de assinantes/pagamentos; navegador nunca acessa tabelas de notícias |
+| D70 | **Edição manual cria nova versão da análise (original preservada) e tudo vai para `editorial_reviews`** | Auditoria completa: quem mudou o quê e quando |
+| D71 | **Configurações editáveis só de uma lista fechada, com validação por chave** | Evita quebrar o robô por valor inválido |
+| D72 | **Fonte cadastrada pelo painel: só https público, um host, modo resumo para imprensa, termos registrados** | SSRF e respeito a termos de uso também para cadastros manuais |
+| D73 | **Auditoria de veracidade por um segundo modelo, com trecho literal conferido sem IA** | O modelo pode "concordar" com qualquer coisa; o trecho que precisa existir na fonte é a prova verificável |
+| D74 | **Nada sem auditoria aprovada (ou dispensada com justificativa) entra no PDF — trava na montagem, na geração e no QA** | Defesa em camadas; dispensa sempre registrada |
+| D75 | **Correção automática do texto da IA reprovado (até 2 rodadas); texto de pessoa vai ao editor** | Resolve sozinho os erros comuns sem sobrescrever decisão humana |
+| D76 | **Revisões hierárquicas: semanal a partir das diárias, mensal a partir das semanais; sínteses em `news_analyses` (`kind`)** | Mantém a curadoria já feita; reaproveita PDF, auditoria e painel sem tabelas paralelas |
+| D77 | **Síntese parte só dos nossos textos já auditados e é auditada de novo; se falhar, usa o texto diário mais recente** | Sem fatos novos no resumo do período; a revisão nunca fica vazia |

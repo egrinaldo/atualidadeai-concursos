@@ -216,7 +216,7 @@ Reversão documentada em `supabase/rollback/20261105200000_etapa2_estrutura_noti
 | `news_clusters` | Assunto/acontecimento que agrupa matérias de várias fontes; relevância e status editorial |
 | `news` | Notícias coletadas; `url_hash` único (deduplicação), `content_hash`, texto do feed por 30 dias |
 | `news_verifications` | Histórico de verificações por assunto (6 classificações, evidências, fontes independentes) |
-| `news_analyses` | Análises da IA (campos editoriais + JSON validado); reaproveitamento por `input_hash` |
+| `news_analyses` | Análises da IA (campos editoriais + JSON validado); reaproveitamento por `input_hash`. Migração 20: `kind` (`analise` \| `sintese_semanal` \| `sintese_mensal`), `period_meta` (história, datas, linha do tempo, fontes da síntese) e auditoria de veracidade (`audit_status` pendente/aprovada/reprovada/erro/dispensada, `audit_report`, `audit_model`, `audit_hash`, `audited_at`); gatilho `news_analyses_reset_audit_on_edit` zera a auditoria de toda versão editada. Ver `docs/AUDITORIA_E_REVISOES.md` |
 | `editorial_reviews` | Auditoria das decisões humanas |
 | `editions` / `edition_items` | Edição diária/semanal/mensal por UF e os itens por bloco (estado/nacional/internacional) |
 | `generated_documents` | PDF base por edição, com versão, checksum e resultado do QA |
@@ -267,3 +267,9 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - `app_settings`: `edition.items_per_block` (diária/semanal/mensal por bloco) e `edition.template_version`.
 - Índices: `editions (reference_date, state, edition_type)` e `generated_documents (edition_id, version)`.
 - Reversão: `supabase/rollback/20261106080000_etapa2_edicoes_pdf.down.sql`. Fluxo: `docs/GERACAO_PDF.md`.
+
+## Migração 19 — Etapa 2.7 (painel editorial)
+
+- `editorial_reviews`: novos alvos (`setting`) e ações (`hold`, `add_item`, `remove_item`, `move_item`, `create`, `update`).
+- Índices: decisões por revisor; assuntos aguardando revisão.
+- Reversão: `supabase/rollback/20261106100000_etapa2_painel_editorial.down.sql`. Uso: `docs/PAINEL_EDITORIAL.md`.

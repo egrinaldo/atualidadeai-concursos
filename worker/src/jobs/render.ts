@@ -10,19 +10,21 @@ type ItemRow = {
   block: BlockKey
   position: number
   news_analyses: Omit<SourceRow, 'category' | 'verification_status' | 'source_count' | 'refs'> & {
+    id: string
     references: SourceRow['refs']
     news_clusters: { category: string | null; verification_status: string | null; source_count: number }
   }
 }
 
 const ANALYSIS_COLS =
-  'editorial_title, summary, what_happened, context, historical_background, political_analysis, economic_analysis, social_impact, why_it_matters, consequences, relevance_for_exams, possible_exam_topics, memorize, exam_approaches, questions, references, news_clusters!inner(category, verification_status, source_count)'
+  'id, audit_status, period_meta, editorial_title, summary, what_happened, context, historical_background, political_analysis, economic_analysis, social_impact, why_it_matters, consequences, relevance_for_exams, possible_exam_topics, memorize, exam_approaches, questions, references, news_clusters!inner(category, verification_status, source_count)'
 
 /**
  * Geração dos PDFs base (um por edição/UF, sem dados de assinante): monta o documento, renderiza (Playwright),
  * passa pelo controle de qualidade, envia ao bucket privado "documents" e registra em generated_documents.
  * Pega as edições da data (padrão: hoje em Brasília) que estão em revisão ou aprovadas — no horário-limite
  * da revisão (04h30) a edição em revisão é aprovada automaticamente (modo editorial padrão).
+ * Itens sem auditoria de veracidade aprovada ficam fora (e o QA reprova se algum escapar).
  * Payload opcional: { referenceDate, editionId }.
  */
 export async function renderJob(job: { payload: Record<string, unknown> }, ctx: JobContext) {
@@ -43,13 +45,20 @@ export async function renderJob(job: { payload: Record<string, unknown> }, ctx: 
         const { data: items, error: e1 } = await ctx.db.from('edition_items').select(`block, position, news_analyses!inner(${ANALYSIS_COLS})`).eq('edition_id', ed.id).order('position')
         if (e1) throw new Error(`itens: ${e1.message}`)
         const byBlock: Record<BlockKey, SourceRow[]> = { estado: [], nacional: [], internacional: [] }
+        // Auditoria de veracidade: só texto aprovado (ou dispensado pelo editor, com registro) entra no PDF
+        const excluded: string[] = []
         for (const it of (items ?? []) as unknown as ItemRow[]) {
           const a = it.news_analyses
+          if (a.audit_status !== 'aprovada' && a.audit_status !== 'dispensada') {
+            excluded.push(`${a.editorial_title} (${a.audit_status})`)
+            continue
+          }
           byBlock[it.block].push({ ...a, refs: a.references, category: a.news_clusters.category, verification_status: a.news_clusters.verification_status, source_count: a.news_clusters.source_count })
         }
         const doc = buildDoc({ type: ed.edition_type, state: ed.state, referenceDate: ed.reference_date, periodStart: ed.period_start, periodEnd: ed.period_end }, byBlock)
         const out = await renderEditionPdf(doc, { browser: browser as never })
         const qa = await qaEdition(doc, out.html, out.bytes)
+        if (excluded.length) qa.warnings.push(...excluded.map((t) => `fora do PDF pela auditoria de veracidade: ${t}`))
         const version = ed.current_version + 1
         const path = basePdfPath(ed.edition_type, ed.state, ed.reference_date, version)
         const checksum = createHash('sha256').update(out.bytes).digest('hex')
@@ -65,7 +74,7 @@ export async function renderJob(job: { payload: Record<string, unknown> }, ctx: 
         })
         if (e3) throw new Error(`registro do documento: ${e3.message}`)
         await ctx.db.from('editions').update({ status: qa.passed ? 'generated' : 'failed', current_version: version }).eq('id', ed.id)
-        results.push({ edition: ed.id, type: ed.edition_type, state: ed.state, version, pages: out.pageCount, kb: Math.round(out.bytes.length / 1024), qa: qa.passed ? 'ok' : qa.errors })
+        results.push({ edition: ed.id, type: ed.edition_type, state: ed.state, version, pages: out.pageCount, kb: Math.round(out.bytes.length / 1024), excluded_by_audit: excluded.length, qa: qa.passed ? 'ok' : qa.errors })
         ctx.log.info('PDF gerado', { edition: ed.id, type: ed.edition_type, state: ed.state, version, pages: out.pageCount, qa: qa.passed })
       } catch (e) {
         await ctx.db.from('editions').update({ status: 'failed' }).eq('id', ed.id)

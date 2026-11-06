@@ -34,14 +34,19 @@ async function main() {
     return
   }
   if (command === 'tick') {
-    // Etapas em sequência (ex.: "collect,triage,cluster"); uma rodada por janela de 3h — reexecuções não duplicam
-    const types = (arg1 ?? '').split(',').filter(Boolean)
-    if (!types.length || types.some((t) => !JOB_TYPES.includes(t as JobType))) throw new Error(`tipo inválido: ${arg1}`)
+    // Etapas em sequência (ex.: "collect,triage,cluster"); uma rodada por janela de 3h — reexecuções não duplicam.
+    // "tipo@etiqueta" separa rodadas do mesmo tipo na mesma janela e chega à tarefa como payload { stage: etiqueta }
+    // (ex.: "compose@diaria,synthesize,audit@edicao,compose@periodo").
+    const steps = (arg1 ?? '').split(',').filter(Boolean).map((s) => {
+      const [type, tag] = s.split('@')
+      return { type: type as JobType, tag: tag && /^[a-z]{1,20}$/.test(tag) ? tag : tag ? null : undefined }
+    })
+    if (!steps.length || steps.some((s) => !JOB_TYPES.includes(s.type) || s.tag === null)) throw new Error(`tipo inválido: ${arg1}`)
     const now = new Date()
     const slot = `${now.toISOString().slice(0, 10)}T${String(Math.floor(now.getUTCHours() / 3) * 3).padStart(2, '0')}`
-    for (const type of types as JobType[]) {
-      const r = await queue.enqueue(type, {}, { dedupeKey: `${type}:${slot}` })
-      log.info('rodada', { type, slot, result: r })
+    for (const { type, tag } of steps) {
+      const r = await queue.enqueue(type, tag ? { stage: tag } : {}, { dedupeKey: `${type}${tag ? `@${tag}` : ''}:${slot}` })
+      log.info('rodada', { type, tag, slot, result: r })
       const summary = await runQueue(ctx, queue, handlers, { types: [type], maxJobs: 5 })
       log.info('fila processada', { type, ...summary })
       if (summary.failed > 0) process.exitCode = 1

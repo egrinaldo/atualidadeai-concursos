@@ -1,4 +1,4 @@
-# Robô de coleta + triagem + agrupamento + verificação + análise por IA: a cada 3 horas (minuto 7, fora do horário de pico do agendador).
+# Robô de coleta + triagem + agrupamento + verificação + análise por IA + auditoria de veracidade: a cada 3 horas (minuto 7, fora do horário de pico do agendador).
 # Cada rodada é idempotente por janela de 3h (dedupe_key), então reexecuções não duplicam.
 name: worker-collect
 on:
@@ -13,22 +13,22 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 50
     environment: production
     defaults:
       run:
         working-directory: worker
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: worker/package-lock.json
       - run: npm ci
-      - run: npm run job -- tick collect,triage,cluster,verify,analyze
+      - run: npm run job -- tick collect,triage,cluster,verify,analyze,audit
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          # Sem a chave, a etapa de análise é ignorada (as demais seguem normalmente)
+          # Sem a chave, análise e auditoria são ignoradas (as demais seguem normalmente)
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
