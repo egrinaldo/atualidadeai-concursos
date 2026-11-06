@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { isDue, toNewsRows, type Source } from '../src/jobs/collect.ts'
 import { safeFetch } from '../src/sources/fetcher.ts'
 import { hostAllowed, isBlockedIp } from '../src/sources/net.ts'
-import { canonicalUrl, contentFingerprint, htmlToText, parseDate } from '../src/sources/normalize.ts'
+import { canonicalUrl, contentFingerprint, excerpt, htmlToText, parseDate, safeSlice } from '../src/sources/normalize.ts'
 import { parseFeed, parseIbge, parseNewsSitemap } from '../src/sources/parse.ts'
 import { isAllowed, parseRobots } from '../src/sources/robots.ts'
 
@@ -140,4 +140,13 @@ test('modo resumo (veículos de imprensa): nunca guarda o texto da matéria, só
   assert.ok(r.excerpt!.length <= 401, String(r.excerpt!.length))
   const [full] = toNewsRows(src, [item], now) // fontes públicas continuam guardando o texto (apagado em 30 dias)
   assert.ok((full.original_content ?? '').length > 1000)
+})
+
+test('texto: corte nunca parte emoji ao meio (JSON inválido no banco)', () => {
+  const s = 'abc😀def'
+  assert.equal(safeSlice(s, 4), 'abc')
+  assert.equal(safeSlice(s, 5), 'abc😀')
+  assert.doesNotThrow(() => JSON.parse(JSON.stringify(excerpt('x'.repeat(398) + '😀😀 fim', 400))))
+  const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
+  for (let n = 396; n <= 404; n++) assert.ok(!lone.test(excerpt('x'.repeat(n) + '😀😀😀 fim', 400)), String(n))
 })

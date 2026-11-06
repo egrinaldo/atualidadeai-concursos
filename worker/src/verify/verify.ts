@@ -1,3 +1,4 @@
+import { safeSlice } from '../sources/normalize.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
 import { fold } from '../triage/text.ts'
 import { attributions, compareClaims, DENIAL, extractClaims, type Claim } from './claims.ts'
@@ -128,12 +129,12 @@ export function verifyCluster(members: VerifyMember[], relevance: Relevance | nu
       source: m.source_name,
       url: m.url,
       fonte_oficial: m.is_primary,
-      trecho: (m.excerpt ?? m.content ?? m.title).slice(0, 300),
+      trecho: safeSlice(m.excerpt ?? m.content ?? m.title, 300),
     })),
     supporting_news_ids: members.filter((m) => !contradictory.has(m.id)).map((m) => m.id),
     contradictory_news_ids: [...contradictory],
     independent_sources: independent,
-    analysis: [...summary, ...notes].join(' ').slice(0, 5000),
+    analysis: safeSlice([...summary, ...notes].join(' '), 5000),
     needs_human_review: needsReview,
   }
 }

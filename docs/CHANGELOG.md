@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.6: geração dos PDFs
+
+### Adicionado
+- Gerador de PDF próprio (`worker/src/pdf/`): template HTML/CSS com identidade do site, fontes Sora/Manrope embutidas, capa + miolo + gabarito comentado; Playwright 1.63 e pdf-lib 1.17.1.
+- Jobs `compose` (edições diária/semanal/mensal por UF, ordem Estado → Brasil → Mundo) e `render` (PDF base, controle de qualidade, bucket privado, `generated_documents` com SHA-256).
+- Workflow `worker-edition` (22h12 montagem; 04h35 geração, horário de Brasília); migração 18; `docs/GERACAO_PDF.md`.
+
+### Corrigido
+- Veículo estadual de imprensa (O Povo, CN7) publicava Brasil e mundo no bloco do estado: alcance agora pela seção do endereço e pelo conteúdo; 48 notícias reclassificadas.
+- Corte de texto partia emoji ao meio e gerava JSON inválido no banco (`safeSlice`).
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.5b: veículos de imprensa
 
 ### Adicionado

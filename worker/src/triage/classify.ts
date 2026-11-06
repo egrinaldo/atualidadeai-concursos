@@ -11,6 +11,7 @@ export type TriageInput = {
   scope: Scope | null
   state: string | null
   category: string | null
+  url?: string | null // endereço da matéria: a seção (/mundo/, /brasil/) ajuda a definir o alcance
   source: { scope: Scope; state: string | null; default_category: string | null; reliability_level: number; is_primary: boolean; language: string }
 }
 
@@ -52,10 +53,25 @@ export function statesMentioned(original: string): Set<string> {
 /** Alcance e UF: parte da fonte e só muda com sinal claro no título. */
 export function resolveScope(input: TriageInput, category: string): { scope: Scope; state: string | null; reason?: string } {
   const src = input.source
-  if (src.scope === 'estadual') return { scope: 'estadual', state: src.state }
-  if (src.scope === 'internacional') return { scope: 'internacional', state: null }
   const t = fold(input.title)
   const states = statesMentioned(input.title)
+  let path = ''
+  try {
+    path = input.url ? fold(decodeURIComponent(new URL(input.url).pathname)) : ''
+  } catch {}
+  // Seção internacional do veículo (/mundo/, /internacional/, /world/)
+  if (src.scope === 'estadual' && src.is_primary) return { scope: 'estadual', state: src.state } // órgão oficial do estado: sempre o bloco do estado
+  if (src.scope !== 'internacional' && /\/(mundo|internacional|internacionais|world)\//.test(path) && !(src.state && states.has(src.state)))
+    return { scope: 'internacional', state: null, reason: 'seção internacional do veículo' }
+  if (src.scope === 'estadual') {
+    // Órgãos oficiais do estado (MP, TCE, TJ…) tratam dos próprios atos: sempre bloco do estado.
+    // Veículos de imprensa estaduais também publicam Brasil e mundo: sem citar o estado, decide pelo conteúdo/seção.
+    if (src.is_primary || (src.state && states.has(src.state))) return { scope: 'estadual', state: src.state }
+    if (FOREIGN.test(t) && !BRAZIL.test(t)) return { scope: 'internacional', state: null, reason: 'veículo estadual, fato no exterior' }
+    if (/\/(brasil|nacional|pais)\//.test(path)) return { scope: 'nacional', state: null, reason: 'veículo estadual, seção nacional' }
+    return { scope: 'estadual', state: src.state }
+  }
+  if (src.scope === 'internacional') return { scope: 'internacional', state: null }
   // Fato de um único estado vindo de fonte nacional → bloco do estado (exceto lei federal: vale para todos)
   const federalLaw = category === 'legislacao' || BOOST[0].re.test(t)
   if (states.size === 1 && !federalLaw) {

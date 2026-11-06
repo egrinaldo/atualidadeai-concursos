@@ -1,0 +1,45 @@
+# Edições do informativo (horários de Brasília = UTC−3):
+#   22h12 — monta as edições do dia seguinte (após o fechamento das 22h)
+#   04h35 — gera os PDFs base (após o prazo de revisão das 04h30); a publicação às 06h chega na Subetapa 2.8
+name: worker-edition
+on:
+  schedule:
+    - cron: '12 1 * * *'   # 22h12 em Brasília
+    - cron: '35 7 * * *'   # 04h35 em Brasília
+  workflow_dispatch:
+    inputs:
+      step:
+        description: 'Etapa a executar'
+        type: choice
+        options: [compose, render]
+        default: compose
+permissions:
+  contents: read
+concurrency:
+  group: worker-edition
+  cancel-in-progress: false
+jobs:
+  edition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || 'render') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - name: Instalar Chromium (só para gerar PDF)
+        if: env.STEP == 'render'
+        run: npx playwright install --with-deps chromium
+      - run: npm run job -- tick "$STEP"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}

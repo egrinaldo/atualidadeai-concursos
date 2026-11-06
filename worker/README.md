@@ -24,7 +24,9 @@ npm test && npm run typecheck
 - `npm run job -- enqueue collect` / `npm run job -- run collect` — enfileirar e processar manualmente.
 - Payload da coleta: `{"sourceId": "<uuid>", "force": true}` coleta uma fonte específica ignorando o intervalo.
 
-Fontes, regras e operação: `docs/ROBO_NOTICIAS.md`.
+- `npm run job -- tick compose` / `tick render` — monta as edições / gera os PDFs (precisa de `npx playwright install chromium`).
+
+Fontes, regras e operação: `docs/ROBO_NOTICIAS.md`. PDFs: `docs/GERACAO_PDF.md`.
 
 ## Estrutura
 
