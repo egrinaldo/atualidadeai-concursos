@@ -1,6 +1,8 @@
 # Edições do informativo (horários de Brasília = UTC−3):
-#   22h12 — monta as edições do dia seguinte (após o fechamento das 22h)
-#   04h35 — gera os PDFs base (após o prazo de revisão das 04h30); a publicação às 06h chega na Subetapa 2.8
+#   22h12 — monta a diária do dia seguinte (após o fechamento das 22h); às segundas/dia 1, gera as sínteses
+#           das revisões semanal/mensal a partir das edições anteriores, audita e monta as revisões
+#   04h35 — audita o que ainda estiver pendente nas edições e gera os PDFs base (após o prazo de revisão das 04h30);
+#           a publicação às 06h chega na Subetapa 2.8
 name: worker-edition
 on:
   schedule:
@@ -21,13 +23,16 @@ concurrency:
 jobs:
   edition:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 55
     environment: production
     defaults:
       run:
         working-directory: worker
     env:
       STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || 'render') }}
+      # Etapas de cada passo (tipo@etiqueta = rodada própria na mesma janela)
+      COMPOSE_STEPS: compose@diaria,synthesize,audit@edicao,compose@periodo
+      RENDER_STEPS: audit@pdf,render
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -39,7 +44,9 @@ jobs:
       - name: Instalar Chromium (só para gerar PDF)
         if: env.STEP == 'render'
         run: npx playwright install --with-deps chromium
-      - run: npm run job -- tick "$STEP"
+      - run: npm run job -- tick "$([ "$STEP" = compose ] && echo "$COMPOSE_STEPS" || echo "$RENDER_STEPS")"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          # Auditoria e sínteses usam a IA; sem a chave, nada não auditado chega ao PDF
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}

@@ -162,6 +162,11 @@ export const SETTINGS: Record<string, { label: string; help: string; check: (v: 
         return !!b && typeof b === 'object' && Object.keys(b).length === 3 && ['estado', 'nacional', 'internacional'].every((k) => int(b[k], 0, 30))
       }),
   },
+  'audit.enabled': { label: 'Auditoria de veracidade ligada', help: 'true ou false (desligada, nenhum texto novo chega ao PDF sem dispensa do editor)', check: (v) => typeof v === 'boolean' },
+  'audit.max_per_run': { label: 'Auditorias por rodada do robô', help: 'Inteiro de 1 a 20 (antes do PDF o limite é maior)', check: (v) => int(v, 1, 20) },
+  'audit.auto_correct': { label: 'Correção automática após auditoria', help: 'true ou false — texto da IA reprovado volta ao redator uma vez com os problemas', check: (v) => typeof v === 'boolean' },
+  'synthesis.max_calls_per_run': { label: 'Sínteses por rodada (semanal/mensal)', help: 'Inteiro de 0 a 40', check: (v) => int(v, 0, 40) },
+  'synthesis.similarity_threshold': { label: 'Limiar para juntar o mesmo assunto em dias diferentes', help: 'Número de 0,25 a 0,8 (padrão 0,4)', check: (v) => typeof v === 'number' && v >= 0.25 && v <= 0.8 },
   'triage.min_relevance_for_edition': { label: 'Relevância mínima para entrar na edição', help: 'baixa, media, alta ou muito_alta', check: (v) => ['baixa', 'media', 'alta', 'muito_alta'].includes(v as string) },
   'triage.similarity_threshold': { label: 'Limiar de agrupamento', help: 'Número de 0,2 a 0,8 (padrão 0,38)', check: (v) => typeof v === 'number' && v >= 0.2 && v <= 0.8 },
   'verification.single_source_min_reliability': { label: 'Confiabilidade mínima para fonte única', help: 'Inteiro de 1 a 5', check: (v) => int(v, 1, 5) },

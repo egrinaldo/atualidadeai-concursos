@@ -76,6 +76,12 @@ Deno.test('configurações: lista fechada e validação de cada valor', () => {
   assert(!validateSetting('verification.edition_statuses', ['contradita']).ok)
   assert(validateSetting('edition.items_per_block', { diaria: { estado: 5, nacional: 6, internacional: 4 }, semanal: { estado: 8, nacional: 10, internacional: 6 }, mensal: { estado: 10, nacional: 14, internacional: 8 } }).ok)
   assert(!validateSetting('edition.items_per_block', { diaria: { estado: 5 } }).ok)
+  assert(validateSetting('audit.enabled', false).ok)
+  assert(!validateSetting('audit.enabled', 'false').ok)
+  assert(validateSetting('audit.max_per_run', 8).ok)
+  assert(!validateSetting('audit.max_per_run', 0).ok)
+  assert(validateSetting('synthesis.similarity_threshold', 0.4).ok)
+  assert(!validateSetting('synthesis.similarity_threshold', 0.1).ok)
   assert(!validateSetting('ai.analysis_per_block', { estado: 5, nacional: 6, internacional: 4, extra: 1 }).ok)
 })
 

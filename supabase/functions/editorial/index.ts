@@ -61,7 +61,7 @@ async function dashboard(db: Db) {
       errors: u.filter((x: Any) => ['error', 'timeout', 'rate_limited'].includes(x.status)).length,
       invalidOutputs: u.filter((x: Any) => x.status === 'invalid_output').length,
       tokens: u.reduce((a: Any, x: Any) => a + (x.total_tokens ?? 0), 0),
-      budget: Number(budget.data?.value ?? 60),
+      budget: Number(budget.data?.value ?? 120),
     },
     jobs: lastJobs,
     sources: { active: src.filter((s: Any) => s.is_active).length, failing: src.filter((s: Any) => s.is_active && s.consecutive_failures > 0).length, total: src.length },
@@ -71,7 +71,7 @@ async function dashboard(db: Db) {
 
 /* ----------------------------- Edições ----------------------------- */
 
-const ANALYSIS_COLS = 'id, status, editorial_title, summary, cluster_id, news_clusters!inner(id, scope, state, category, relevance_score, verification_status, source_count, needs_review, status)'
+const ANALYSIS_COLS = 'id, status, kind, audit_status, audit_report, period_meta, editorial_title, summary, cluster_id, news_clusters!inner(id, scope, state, category, relevance_score, verification_status, source_count, needs_review, status)'
 
 async function edition(db: Db, id: string) {
   const ed = must(await db.from('editions').select('*').eq('id', id).maybeSingle(), 'edição')
@@ -86,16 +86,16 @@ async function edition(db: Db, id: string) {
   const from = new Date(Date.parse(ed.period_start) - 12 * 3_600_000).toISOString()
   const cands = must(
     await db.from('news_clusters')
-      .select('id, title, scope, state, relevance_score, verification_status, source_count, needs_review, news_analyses!inner(id, status, editorial_title, generated_at)')
-      .eq('status', 'analyzed').in('news_analyses.status', ['valid', 'edited']).gte('last_seen_at', from).lte('last_seen_at', ed.period_end)
+      .select('id, title, scope, state, relevance_score, verification_status, source_count, needs_review, news_analyses!inner(id, status, editorial_title, generated_at, audit_status)')
+      .eq('status', 'analyzed').in('news_analyses.status', ['valid', 'edited']).eq('news_analyses.kind', 'analise').gte('last_seen_at', from).lte('last_seen_at', ed.period_end)
       .order('relevance_score', { ascending: false }).limit(60),
     'candidatos',
   ) ?? []
   const candidates = cands
     .filter((c: Any) => !inEdition.has(c.id) && (c.scope !== 'estadual' || c.state === ed.state))
     .map((c: Any) => {
-      const a = [...(c.news_analyses as { id: string; editorial_title: string; generated_at: string }[])].sort((x: Any, y: Any) => y.generated_at.localeCompare(x.generated_at))[0]
-      return { cluster_id: c.id, analysis_id: a.id, title: a.editorial_title, scope: c.scope, state: c.state, relevance_score: c.relevance_score, verification_status: c.verification_status, source_count: c.source_count, needs_review: c.needs_review }
+      const a = [...(c.news_analyses as { id: string; editorial_title: string; generated_at: string; audit_status: string }[])].sort((x: Any, y: Any) => y.generated_at.localeCompare(x.generated_at))[0]
+      return { cluster_id: c.id, analysis_id: a.id, title: a.editorial_title, audit_status: a.audit_status, scope: c.scope, state: c.state, relevance_score: c.relevance_score, verification_status: c.verification_status, source_count: c.source_count, needs_review: c.needs_review }
     })
     .slice(0, 30)
   return { edition: ed, items: it, documents: must(docs, 'documentos') ?? [], candidates }
@@ -170,14 +170,14 @@ async function documentUrl(db: Db, id: string) {
 async function reviewQueue(db: Db) {
   const rows = must(
     await db.from('news_clusters')
-      .select('id, title, scope, state, category, relevance_score, verification_status, source_count, status, last_seen_at, news_analyses(id, status, validation_errors, generated_at)')
+      .select('id, title, scope, state, category, relevance_score, verification_status, source_count, status, last_seen_at, news_analyses(id, kind, status, validation_errors, audit_status, audit_report, generated_at)')
       .eq('needs_review', true).gte('last_seen_at', daysAgo(7)).not('status', 'in', '(rejected,discarded)')
       .order('relevance_score', { ascending: false }).limit(100),
     'fila',
   ) ?? []
   return {
     rows: rows.map((r: Any) => {
-      const latest = [...((r.news_analyses ?? []) as { id: string; status: string; validation_errors: unknown; generated_at: string }[])].sort((a: Any, b: Any) => b.generated_at.localeCompare(a.generated_at))[0] ?? null
+      const latest = [...((r.news_analyses ?? []) as { id: string; kind: string; status: string; validation_errors: unknown; generated_at: string }[])].filter((a: Any) => a.kind === 'analise').sort((a: Any, b: Any) => b.generated_at.localeCompare(a.generated_at))[0] ?? null
       const { news_analyses: _, ...rest } = r
       return { ...rest, analysis: latest }
     }),
@@ -190,7 +190,7 @@ async function cluster(db: Db, id: string) {
   const [members, verification, analyses, history] = await Promise.all([
     db.from('news').select('id, title, excerpt, original_url, published_at, news_sources!inner(name, is_primary, reliability_level)').eq('cluster_id', id).eq('status', 'clustered').order('published_at', { ascending: false }).limit(40),
     db.from('news_verifications').select('verification_status, confidence_level, analysis, independent_sources, needs_human_review, verified_at').eq('cluster_id', id).order('verified_at', { ascending: false }).limit(1).maybeSingle(),
-    db.from('news_analyses').select('*').eq('cluster_id', id).order('generated_at', { ascending: false }).limit(5),
+    db.from('news_analyses').select('*').eq('cluster_id', id).order('generated_at', { ascending: false }).limit(8),
     db.from('editorial_reviews').select('action, notes, changes, created_at').eq('target_type', 'cluster').eq('target_id', id).order('created_at', { ascending: false }).limit(20),
   ])
   return { cluster: c, members: must(members, 'matérias') ?? [], verification: must(verification, 'verificação'), analyses: must(analyses, 'análises') ?? [], history: must(history, 'histórico') ?? [] }
@@ -207,7 +207,7 @@ async function clusterDecide(db: Db, reviewer: string, id: string, decision: str
     await review(db, reviewer, 'cluster', id, 'reject', notes)
   } else if (decision === 'reanalyze') {
     // Análises atuais deixam de valer; a próxima rodada do robô gera outra (consome cota de IA)
-    must(await db.from('news_analyses').update({ status: 'superseded' }).eq('cluster_id', id).in('status', ['valid', 'invalid', 'edited']), 'invalidar análises')
+    must(await db.from('news_analyses').update({ status: 'superseded' }).eq('cluster_id', id).eq('kind', 'analise').in('status', ['valid', 'invalid', 'edited']), 'invalidar análises')
     must(await db.from('news_clusters').update({ status: 'verified', needs_review: false }).eq('id', id).not('status', 'in', '(rejected,discarded,published)'), 'reanálise')
     await review(db, reviewer, 'cluster', id, 'request_reanalysis', notes)
   } else throw new UserError('Decisão inválida.')
@@ -228,7 +228,9 @@ async function analysisEdit(db: Db, reviewer: string, id: string, changes: unkno
     throw new UserError('Para aproveitar uma análise reprovada, revise ao menos título, resumo e "O que aconteceu".')
   const { id: _id, generated_at: _g, ...base } = a
   const content = { ...(a.content ?? {}), edicao_manual: { campos: Object.keys(v.value.fields).concat(v.value.memorize ? ['memorize'] : []), em: new Date().toISOString() } }
-  const row = { ...base, ...v.value.fields, ...(v.value.memorize ? { memorize: v.value.memorize } : {}), status: 'edited', edited_by: reviewer, content, validation_errors: a.validation_errors }
+  // Texto mudou: a nova versão passa pela auditoria de veracidade de novo antes do PDF
+  const audit = { audit_status: 'pendente', audit_report: null, audit_model: null, audit_hash: null, audited_at: null }
+  const row = { ...base, ...v.value.fields, ...(v.value.memorize ? { memorize: v.value.memorize } : {}), ...audit, status: 'edited', edited_by: reviewer, content, validation_errors: a.validation_errors }
   const created = must(await db.from('news_analyses').insert(row).select('id').single(), 'nova versão')
   must(await db.from('news_analyses').update({ status: 'superseded' }).eq('id', id), 'versão anterior')
   // Edições que ainda não foram geradas passam a apontar para a versão editada
@@ -238,6 +240,27 @@ async function analysisEdit(db: Db, reviewer: string, id: string, changes: unkno
   const diff = Object.fromEntries(Object.keys(v.value.fields).map((k: Any) => [k, { antes: (a as Record<string, unknown>)[k], depois: (v.value.fields as Record<string, unknown>)[k] }]))
   await review(db, reviewer, 'analysis', created.id, 'edit', notes, { from_analysis: id, ...diff, ...(v.value.memorize ? { memorize: { antes: a.memorize, depois: v.value.memorize } } : {}) })
   return { ok: true, analysis_id: created.id }
+}
+
+/**
+ * Decisão do editor sobre a auditoria de veracidade:
+ * - "waive": libera o texto para o PDF mesmo reprovado/com erro (exige justificativa; fica registrado);
+ * - "reaudit": volta para a fila do auditor (ex.: depois de corrigir a fonte ou o texto).
+ */
+async function auditDecide(db: Db, reviewer: string, id: string, op: string, notes: string | null) {
+  const a = must(await db.from('news_analyses').select('id, status, kind, cluster_id, audit_status, audit_report').eq('id', id).maybeSingle(), 'análise')
+  if (!a) throw new UserError('Análise não encontrada.', 404)
+  if (!['valid', 'edited'].includes(a.status)) throw new UserError('Esta versão da análise não está mais em uso.')
+  if (op === 'waive') {
+    if (!notes || notes.trim().length < 10) throw new UserError('Explique por que a auditoria pode ser dispensada (mín. 10 caracteres).')
+    must(await db.from('news_analyses').update({ audit_status: 'dispensada', audited_at: new Date().toISOString() }).eq('id', id), 'dispensar auditoria')
+    if (a.kind === 'analise') must(await db.from('news_clusters').update({ needs_review: false }).eq('id', a.cluster_id).not('status', 'in', '(rejected,discarded)'), 'assunto')
+    await review(db, reviewer, 'analysis', id, 'waive_audit', notes, { antes: a.audit_status, problemas: (a.audit_report as Any)?.problems ?? [] })
+  } else if (op === 'reaudit') {
+    must(await db.from('news_analyses').update({ audit_status: 'pendente', audit_report: null, audit_hash: null, audited_at: null }).eq('id', id), 'auditar de novo')
+    await review(db, reviewer, 'analysis', id, 'request_audit', notes, { antes: a.audit_status })
+  } else throw new UserError('Operação inválida.')
+  return { ok: true }
 }
 
 /* ------------------------------ Fontes ------------------------------ */
@@ -365,6 +388,7 @@ Deno.serve(async (req) => {
       case 'cluster': return json(await cluster(db, uuid('cluster_id')))
       case 'cluster_decide': return json(await clusterDecide(db, user.id, uuid('cluster_id'), String(body.decision), notes))
       case 'analysis_edit': return json(await analysisEdit(db, user.id, uuid('analysis_id'), body.changes, notes))
+      case 'audit_decide': return json(await auditDecide(db, user.id, uuid('analysis_id'), String(body.op), notes))
       case 'sources': return json(await sources(db))
       case 'source_update': return json(await sourceUpdate(db, user.id, body))
       case 'source_create': return json(await sourceCreate(db, user.id, body.source))

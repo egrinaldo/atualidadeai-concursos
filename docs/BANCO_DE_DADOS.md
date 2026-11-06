@@ -216,7 +216,7 @@ Reversão documentada em `supabase/rollback/20261105200000_etapa2_estrutura_noti
 | `news_clusters` | Assunto/acontecimento que agrupa matérias de várias fontes; relevância e status editorial |
 | `news` | Notícias coletadas; `url_hash` único (deduplicação), `content_hash`, texto do feed por 30 dias |
 | `news_verifications` | Histórico de verificações por assunto (6 classificações, evidências, fontes independentes) |
-| `news_analyses` | Análises da IA (campos editoriais + JSON validado); reaproveitamento por `input_hash` |
+| `news_analyses` | Análises da IA (campos editoriais + JSON validado); reaproveitamento por `input_hash`. Migração 20: `kind` (`analise` \| `sintese_semanal` \| `sintese_mensal`), `period_meta` (história, datas, linha do tempo, fontes da síntese) e auditoria de veracidade (`audit_status` pendente/aprovada/reprovada/erro/dispensada, `audit_report`, `audit_model`, `audit_hash`, `audited_at`); gatilho `news_analyses_reset_audit_on_edit` zera a auditoria de toda versão editada. Ver `docs/AUDITORIA_E_REVISOES.md` |
 | `editorial_reviews` | Auditoria das decisões humanas |
 | `editions` / `edition_items` | Edição diária/semanal/mensal por UF e os itens por bloco (estado/nacional/internacional) |
 | `generated_documents` | PDF base por edição, com versão, checksum e resultado do QA |

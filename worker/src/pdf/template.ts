@@ -108,6 +108,8 @@ const list = (xs: string[]) => (xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}<
 function itemHtml(i: Item): string {
   const sections: string[] = []
   sections.push(`<div class="sec"><h4>O que aconteceu</h4>${para(i.whatHappened)}</div>`)
+  if (i.timeline.length)
+    sections.push(`<div class="sec tl"><h4>Linha do tempo</h4><ol>${i.timeline.map((t) => `<li><b>${esc(t.date)}</b><span>${esc(t.fact)}</span></li>`).join('')}</ol></div>`)
   if (i.context) sections.push(`<div class="sec"><h4>Contexto</h4>${para(i.context)}</div>`)
   if (i.background) sections.push(`<div class="sec"><h4>Antecedentes</h4>${para(i.background)}</div>`)
   for (const a of i.analyses) sections.push(`<div class="sec"><h4>${esc(a.label)}</h4>${para(a.text)}</div>`)
@@ -133,7 +135,7 @@ function itemHtml(i: Item): string {
     : ''
   return `<article class="item" id="item-${i.n}">
   <header class="item-h"><div class="item-n">${String(i.n).padStart(2, '0')}</div><div class="item-t">
-    <div class="badges"><span class="cat">${esc(i.category)}</span><span class="ver ${i.verification.tone}">${esc(i.verification.label)}</span></div>
+    <div class="badges"><span class="cat">${esc(i.category)}</span><span class="ver ${i.verification.tone}">${esc(i.verification.label)}</span>${i.followUp ? `<span class="fu">${esc(i.followUp)}</span>` : ''}</div>
     <h3>${esc(i.title)}</h3></div></header>
   <p class="lead">${esc(i.summary)}</p>
   ${sections.join('')}
@@ -186,6 +188,8 @@ ${faces}${BASE_CSS}
 .tag{font-size:6.5pt;background:${COLORS.warnBg};color:${COLORS.warn};padding:.3mm 1.5mm;border-radius:2mm;letter-spacing:.06em;margin-left:1mm}
 ul{padding-left:4.2mm}li{margin:.6mm 0}
 .muted{color:${COLORS.muted}}
+.tl ol{list-style:none;margin:1mm 0 0;padding:0;border-left:.6mm solid ${COLORS.brand100}}.tl li{position:relative;padding:0 0 1.6mm 4mm}.tl li:before{content:'';position:absolute;left:-1.35mm;top:1.3mm;width:2.1mm;height:2.1mm;border-radius:50%;background:${COLORS.brand600}}.tl b{display:inline-block;min-width:11mm;font-family:'Sora';font-size:8.5pt;color:${COLORS.brand600}}.tl span{font-size:9.5pt}
+.fu{font-size:7pt;font-weight:600;padding:.6mm 2mm;border-radius:9mm;background:${COLORS.signal50};color:#05677c}
 .memo{margin-top:4mm;background:${COLORS.signal50};border:1px solid #b9eefb;border-radius:2.5mm;padding:3.5mm 4.5mm;break-inside:avoid}
 .memo-h{font-family:'Sora';font-weight:700;font-size:9pt;color:#05677c;margin-bottom:1mm}
 .exam{margin-top:3.5mm;background:${COLORS.brand50};border-radius:2.5mm;padding:3.5mm 4.5mm;break-inside:avoid}

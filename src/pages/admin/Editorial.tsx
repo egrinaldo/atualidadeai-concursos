@@ -3,14 +3,19 @@ import { Alert } from '@/components/forms/Alert'
 import { Badge, Button } from '@/components/ui'
 import { shortDate } from '@/lib/admin'
 import {
+  auditLabels,
   blockLabels,
   editionStatusLabels,
   editionTypeLabels,
   editorialApi,
   fileSize,
   jobLabels,
+  kindLabels,
+  verdictLabels,
   verificationLabels,
+  type Analysis,
   type AnalysisChanges,
+  type AuditStatus,
   type ClusterDetail,
   type Dashboard,
   type EditionDetail,
@@ -153,6 +158,8 @@ export function EditorialTab() {
 
 function reviewReason(r: ReviewRow): string {
   const v = r.analysis?.validation_errors
+  if (r.analysis?.audit_status === 'reprovada') return `Auditoria de veracidade: ${r.analysis.audit_report?.problems?.[0]?.slice(0, 140) ?? 'reprovada'}`
+  if (r.analysis?.audit_status === 'erro') return 'Auditoria de veracidade não concluída'
   if (r.analysis?.status === 'invalid') return `Análise reprovada: ${v?.erros?.[0] ?? 'formato inválido'}`
   if (v?.avisos?.length) return v.avisos.filter((a) => !a.startsWith('corrigida após')).slice(0, 2).join(' · ') || 'Aviso da IA'
   if (r.verification_status === 'fontes_divergentes' || r.verification_status === 'contradita') return verificationLabels[r.verification_status]
@@ -264,7 +271,11 @@ function EditionModal({ id, onClose, onChanged, onOpenCluster }: { id: string; o
                           <p className="mt-0.5 text-xs text-slate-400">
                             nota {c.relevance_score ?? '—'} · {verificationLabels[c.verification_status ?? ''] ?? '—'} · {c.source_count} fonte(s)
                             {it.news_analyses.status === 'edited' && ' · editada'}
+                            {it.news_analyses.kind !== 'analise' && ` · ${kindLabels[it.news_analyses.kind]}${it.news_analyses.period_meta?.dates?.length ? ` (${it.news_analyses.period_meta.dates.length} dias)` : ''}`}
                           </p>
+                          <div className="mt-1">
+                            <AuditPill status={it.news_analyses.audit_status} />
+                          </div>
                         </div>
                         {editable && (
                           <div className="flex shrink-0 gap-1">
@@ -356,7 +367,8 @@ function ClusterModal({ id, onClose, onChanged }: { id: string; onClose: () => v
   const [notes, setNotes] = useState('')
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
-  const analysis = data?.analyses.find((a) => ['valid', 'edited', 'invalid'].includes(a.status)) ?? null
+  const analysis = data?.analyses.find((a) => (a.kind ?? 'analise') === 'analise' && ['valid', 'edited', 'invalid'].includes(a.status)) ?? null
+  const syntheses = data?.analyses.filter((a) => a.kind && a.kind !== 'analise' && ['valid', 'edited'].includes(a.status)) ?? []
 
   function startEdit() {
     if (!analysis) return
@@ -410,6 +422,27 @@ function ClusterModal({ id, onClose, onChanged }: { id: string; onClose: () => v
               </ul>
             </Box>
           ) : null}
+
+          {analysis && analysis.status !== 'invalid' && <AuditBox a={analysis} busy={act.busy} notes={notes} run={act.run} />}
+
+          {syntheses.map((sy) => (
+            <Box key={sy.id} title={`${kindLabels[sy.kind]} · ${sy.period_meta?.dates?.length ?? 0} dia(s)`}>
+              <p className="font-medium text-slate-100">{sy.editorial_title}</p>
+              <p className="mt-1 text-sm text-slate-300">{sy.summary}</p>
+              {!!sy.period_meta?.timeline?.length && (
+                <ol className="mt-2 space-y-0.5 text-xs text-slate-400">
+                  {sy.period_meta.timeline.map((t, i) => (
+                    <li key={i}>
+                      <b className="text-brand-300">{t.data}</b> {t.fato}
+                    </li>
+                  ))}
+                </ol>
+              )}
+              <div className="mt-3">
+                <AuditBox a={sy} busy={act.busy} notes={notes} run={act.run} compact />
+              </div>
+            </Box>
+          ))}
 
           {analysis && !editing && (
             <Box title={`Análise (${analysis.status === 'invalid' ? 'reprovada na validação' : analysis.status === 'edited' ? 'editada' : 'IA'} · ${analysis.model.split('/').pop()} · ${analysis.prompt_version})`}>
@@ -537,6 +570,71 @@ function ClusterModal({ id, onClose, onChanged }: { id: string; onClose: () => v
       )}
     </Modal>
   )
+}
+
+function AuditPill({ status }: { status: AuditStatus | undefined }) {
+  const s = auditLabels[status ?? 'pendente']
+  return (
+    <Badge tone={s.tone} className="whitespace-nowrap normal-case tracking-normal">
+      {s.label}
+    </Badge>
+  )
+}
+
+/** Resultado da auditoria de veracidade: afirmações não sustentadas, trechos citados e decisão do editor. */
+function AuditBox({ a, busy, notes, run, compact }: { a: Analysis; busy: boolean; notes: string; run: (fn: () => Promise<Loaded<unknown>>, ok: string) => Promise<void>; compact?: boolean }) {
+  const r = a.audit_report
+  const flagged = (r?.claims ?? []).filter((c) => c.verdict !== 'apoiada' && !c.field.includes('incorret'))
+  const body = (
+    <div className="space-y-3 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <AuditPill status={a.audit_status} />
+        {r?.summary && (
+          <span className="text-xs text-slate-400">
+            {r.summary.total} afirmações · {r.summary.apoiada} sustentadas{r.summary.parcial ? ` · ${r.summary.parcial} parciais` : ''}
+            {r.summary.sem_suporte ? ` · ${r.summary.sem_suporte} sem suporte` : ''}{r.summary.contradita ? ` · ${r.summary.contradita} contraditas` : ''}
+            {a.audit_model ? ` · ${a.audit_model.split('/').pop()}` : ''}
+          </span>
+        )}
+      </div>
+      {a.audit_status === 'pendente' && <p className="text-xs text-slate-400">O auditor confere este texto na próxima rodada do robô (e sempre antes do PDF).</p>}
+      {!!r?.problems?.length && (
+        <ul className="list-disc space-y-1 pl-5 text-amber-100">
+          {r.problems.map((p, i) => (
+            <li key={i}>{p}</li>
+          ))}
+        </ul>
+      )}
+      {!compact && !!flagged.length && (
+        <details className="rounded-lg border border-white/10 p-3">
+          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-slate-400">Afirmações não sustentadas ({flagged.length})</summary>
+          <ul className="mt-2 space-y-2 text-xs text-slate-300">
+            {flagged.map((c, i) => (
+              <li key={i}>
+                <b>{verdictLabels[c.verdict]}</b> · {c.field}: {c.claim}
+                {c.quote && <span className="block text-slate-500">Trecho citado{c.source ? ` (fonte ${c.source})` : ''}: “{c.quote}”{c.quoteFound ? '' : ' — não encontrado na fonte'}</span>}
+                {c.note && <span className="block text-slate-500">{c.note}</span>}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {(a.audit_status === 'reprovada' || a.audit_status === 'erro') && (
+          <Button size="sm" variant="secondary" disabled={busy || notes.trim().length < 10} onClick={() => run(() => editorialApi.auditDecide(a.id, 'waive', notes), 'Auditoria dispensada: o texto pode entrar no PDF (decisão registrada).')}>
+            Dispensar auditoria
+          </Button>
+        )}
+        {a.audit_status !== 'pendente' && (
+          <Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => editorialApi.auditDecide(a.id, 'reaudit', notes || undefined), 'Texto devolvido à fila do auditor.')}>
+            Auditar de novo
+          </Button>
+        )}
+      </div>
+      {(a.audit_status === 'reprovada' || a.audit_status === 'erro') && <p className="text-xs text-slate-500">Para dispensar, escreva a justificativa no campo “Observação” abaixo (mín. 10 caracteres). Melhor caminho: corrigir o texto em “Editar” — a nova versão é auditada de novo.</p>}
+    </div>
+  )
+  return compact ? body : <Box title="Auditoria de veracidade" tone={a.audit_status === 'reprovada' || a.audit_status === 'erro' ? 'warn' : undefined}>{body}</Box>
 }
 
 function Box({ title, children, tone }: { title: string; children: ReactNode; tone?: 'warn' }) {

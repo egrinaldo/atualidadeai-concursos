@@ -144,7 +144,7 @@ export type Validation = { ok: true; data: Analysis; warnings: string[] } | { ok
  *   consequências confirmadas, enunciado/comentário e alternativa correta das questões);
  * - aviso: número sem origem em contexto/antecedentes/análises (vai para revisão), referência fora das fontes (removida).
  */
-export function validateAnalysis(raw: string, input: AnalysisInput): Validation {
+export function validateAnalysis(raw: string, input: AnalysisInput, opts: { allowCopy?: boolean } = {}): Validation {
   let parsed: unknown
   try {
     parsed = extractJson(raw)
@@ -181,7 +181,8 @@ export function validateAnalysis(raw: string, input: AnalysisInput): Validation 
   const noAccents = unaccentedWords(prose)
   if (noAccents.length >= 3) errors.push(`texto sem acentuação (ex.: ${noAccents.slice(0, 5).join(', ')}): reescreva com a ortografia oficial`)
   const copied = copiedSpans([data.titulo_editorial, data.resumo, data.o_que_aconteceu, data.contexto, data.por_que_importa, ...data.memorizar, ...data.questoes.map((q) => q.enunciado)].join(' \n '), input.sources.map((s) => `${s.title}. ${s.text}`))
-  if (copied.length) errors.push(`trecho copiado da fonte (reescreva com suas palavras): "${copied[0].slice(0, 90)}…"`)
+  // Sínteses partem dos NOSSOS textos diários (já reescritos): repetir trechos deles não é cópia de veículo
+  if (copied.length && !opts.allowCopy) errors.push(`trecho copiado da fonte (reescreva com suas palavras): "${copied[0].slice(0, 90)}…"`)
   const names = unknownNames([data.titulo_editorial, data.resumo, data.o_que_aconteceu, ...data.memorizar].join(' \n '), input.sources.map((s) => `${s.title}. ${s.text}`))
   if (names.length) warnings.push(`nome não encontrado nas fontes (conferir grafia): ${names.slice(0, 5).join(', ')}`)
   const english = prose.match(/\b(General Assembly|Security Council|Secretary-General|Committee|Council)\b/g)

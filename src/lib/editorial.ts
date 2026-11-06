@@ -31,14 +31,32 @@ export type Dashboard = {
 }
 
 export type ClusterBrief = { id: string; scope: 'estadual' | 'nacional' | 'internacional'; state: string | null; category: string | null; relevance_score: number | null; verification_status: string | null; source_count: number; needs_review: boolean; status: string }
-export type EditionItem = { block: 'estado' | 'nacional' | 'internacional'; position: number; analysis_id: string; news_analyses: { id: string; status: string; editorial_title: string; summary: string; cluster_id: string; news_clusters: ClusterBrief } }
-export type Candidate = { cluster_id: string; analysis_id: string; title: string; scope: string; state: string | null; relevance_score: number | null; verification_status: string | null; source_count: number; needs_review: boolean }
+export type AuditStatus = 'pendente' | 'aprovada' | 'reprovada' | 'erro' | 'dispensada'
+export type AnalysisKind = 'analise' | 'sintese_semanal' | 'sintese_mensal'
+export type AuditClaim = { field: string; claim: string; verdict: 'apoiada' | 'parcial' | 'sem_suporte' | 'contradita'; source: number | null; quote: string | null; quoteFound: boolean; note: string | null }
+export type AuditReport = {
+  status?: 'aprovada' | 'reprovada'
+  claims?: AuditClaim[]
+  summary?: { total: number; apoiada: number; parcial: number; sem_suporte: number; contradita: number; quotes_not_found: number }
+  problems?: string[]
+  attempts?: number
+  reused?: boolean
+}
+export type PeriodMeta = { edition_type?: string; dates?: string[]; timeline?: { data: string; fato: string }[]; source_analysis_ids?: string[] }
+export type EditionItem = { block: 'estado' | 'nacional' | 'internacional'; position: number; analysis_id: string; news_analyses: { id: string; status: string; kind: AnalysisKind; audit_status: AuditStatus; audit_report: AuditReport | null; period_meta: PeriodMeta | null; editorial_title: string; summary: string; cluster_id: string; news_clusters: ClusterBrief } }
+export type Candidate = { cluster_id: string; analysis_id: string; title: string; audit_status?: AuditStatus; scope: string; state: string | null; relevance_score: number | null; verification_status: string | null; source_count: number; needs_review: boolean }
 export type EditionDetail = { edition: EditionRow & { period_start: string; period_end: string }; items: EditionItem[]; documents: DocumentRow[]; candidates: Candidate[] }
 
-export type ReviewRow = ClusterBrief & { title: string; last_seen_at: string; analysis: { id: string; status: string; validation_errors: { erros?: string[]; avisos?: string[] } | null } | null }
+export type ReviewRow = ClusterBrief & { title: string; last_seen_at: string; analysis: { id: string; kind: AnalysisKind; status: string; audit_status: AuditStatus; audit_report: AuditReport | null; validation_errors: { erros?: string[]; avisos?: string[] } | null } | null }
 export type Analysis = {
   id: string
   status: string
+  kind: AnalysisKind
+  audit_status: AuditStatus
+  audit_report: AuditReport | null
+  audit_model: string | null
+  audited_at: string | null
+  period_meta: PeriodMeta | null
   model: string
   prompt_version: string
   editorial_title: string | null
@@ -118,6 +136,7 @@ export const editorialApi = {
   cluster: (id: string) => ed<ClusterDetail>('cluster', { cluster_id: id }),
   decide: (id: string, decision: 'approve' | 'reject' | 'reanalyze', notes?: string) => ed<{ ok: true }>('cluster_decide', { cluster_id: id, decision, notes }),
   editAnalysis: (id: string, changes: AnalysisChanges, notes?: string) => ed<{ ok: true; analysis_id: string }>('analysis_edit', { analysis_id: id, changes, notes }),
+  auditDecide: (id: string, op: 'waive' | 'reaudit', notes?: string) => ed<{ ok: true }>('audit_decide', { analysis_id: id, op, notes }),
   sources: () => ed<{ rows: SourceRow[] }>('sources'),
   updateSource: (id: string, patch: { is_active?: boolean; reliability_level?: number; terms_notes?: string }) => ed<{ ok: true }>('source_update', { source_id: id, ...patch }),
   createSource: (source: NewSourceInput) => ed<{ ok: true; source_id: string }>('source_create', { source }),
@@ -144,8 +163,17 @@ export const verificationLabels: Record<string, string> = {
   contradita: 'Contradita',
   insuficiente: 'Insuficiente',
 }
+export const auditLabels: Record<AuditStatus, { label: string; tone: 'success' | 'warning' | 'neutral' | 'brand' | 'signal' }> = {
+  pendente: { label: 'Auditoria pendente', tone: 'neutral' },
+  aprovada: { label: 'Auditada', tone: 'success' },
+  reprovada: { label: 'Reprovada na auditoria', tone: 'warning' },
+  erro: { label: 'Auditoria falhou', tone: 'warning' },
+  dispensada: { label: 'Auditoria dispensada', tone: 'signal' },
+}
+export const kindLabels: Record<AnalysisKind, string> = { analise: 'Análise', sintese_semanal: 'Síntese semanal', sintese_mensal: 'Síntese mensal' }
+export const verdictLabels: Record<AuditClaim['verdict'], string> = { apoiada: 'Sustentada', parcial: 'Parcial', sem_suporte: 'Sem suporte', contradita: 'Contradita' }
 export const blockLabels: Record<string, string> = { estado: 'Estado', nacional: 'Brasil', internacional: 'Mundo' }
 export const jobLabels: Record<string, string> = {
-  collect: 'Coleta', triage: 'Triagem', cluster: 'Agrupamento', verify: 'Verificação', analyze: 'Análise (IA)', compose: 'Montagem da edição', render: 'Geração do PDF', healthcheck: 'Verificação de saúde',
+  collect: 'Coleta', triage: 'Triagem', cluster: 'Agrupamento', verify: 'Verificação', analyze: 'Análise (IA)', audit: 'Auditoria de veracidade', synthesize: 'Sínteses semanais/mensais', compose: 'Montagem da edição', render: 'Geração do PDF', healthcheck: 'Verificação de saúde',
 }
 export const fileSize = (b: number | null) => (b == null ? '—' : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`)
