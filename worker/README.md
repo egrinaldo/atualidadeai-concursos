@@ -19,8 +19,8 @@ npm test && npm run typecheck
 ## Comandos
 
 - `npm run job -- healthcheck` — testa conexão com o banco.
-- `npm run job -- tick collect,triage,cluster,verify` — enfileira cada etapa da janela de 3h atual e executa em ordem (usado pelo workflow).
-- `npm run job -- run triage` / `run cluster` / `run verify` — processa triagem, agrupamento ou verificação pendentes.
+- `npm run job -- tick collect,triage,cluster,verify,analyze` — enfileira cada etapa da janela de 3h atual e executa em ordem (usado pelo workflow).
+- `npm run job -- run triage` / `run cluster` / `run verify` / `run analyze` — processa a etapa pendente. A análise usa `NVIDIA_API_KEY` (sem ela, é ignorada). Detalhes: `docs/IA_NVIDIA.md`.
 - `npm run job -- enqueue collect` / `npm run job -- run collect` — enfileirar e processar manualmente.
 - Payload da coleta: `{"sourceId": "<uuid>", "force": true}` coleta uma fonte específica ignorando o intervalo.
 

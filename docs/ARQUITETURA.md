@@ -99,3 +99,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D54 | **Fonte independente = grupo editorial distinto** | Três editorias do mesmo veículo não confirmam um fato |
 | D55 | **Divergência numérica só no fato principal (título/resumo)** | Evita falsos alarmes com números de outras medidas no corpo do texto |
 | D56 | **Fonte única confiável entra sinalizada; divergência/contradição só após revisão** | Equilíbrio entre cobertura (poucas fontes no piloto) e segurança editorial |
+| D57 | **Provedor de IA atrás de uma interface (`AIProvider`)** | Trocar NVIDIA gratuita por provedor licenciado antes de clientes pagantes sem reescrever o worker |
+| D58 | **Modelo principal `nemotron-3.5-lightning`, reserva `nemotron-3-ultra`** | Únicos que responderam bem na conta; lightning é rápido e fiel às fontes |
+| D59 | **Toda saída da IA validada (schema + números ancorados nas fontes + acentuação), 1 correção no máximo** | Evita alucinação e gasto descontrolado de cota |
+| D60 | **IA só nos assuntos mais relevantes de cada bloco, com cota diária e reaproveitamento por hash** | Cabe no limite gratuito (60/dia) e não paga duas vezes pela mesma análise |

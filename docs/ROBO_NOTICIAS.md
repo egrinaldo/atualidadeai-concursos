@@ -18,7 +18,7 @@ Identificação do robô (User-Agent): `AtualidadeAI-Concursos-Bot/1.0 (+https:/
 
 ## Triagem e agrupamento (Subetapa 2.3)
 
-Rodam logo após a coleta, no mesmo workflow (`tick collect,triage,cluster,verify`). A verificação está em `docs/VERIFICACAO_INFORMACOES.md`. São **regras determinísticas e explicáveis, sem IA** — custo zero, resultado reproduzível. A IA (Subetapa 2.5) entra depois, só nos assuntos já selecionados.
+Rodam logo após a coleta, no mesmo workflow (`tick collect,triage,cluster,verify,analyze`). A verificação está em `docs/VERIFICACAO_INFORMACOES.md`. São **regras determinísticas e explicáveis, sem IA** — custo zero, resultado reproduzível. A IA (Subetapa 2.5) entra depois, só nos assuntos já selecionados.
 
 **Triagem** (`worker/src/triage/classify.ts`, regras em `rules.ts`), para cada notícia `collected`:
 
@@ -64,6 +64,6 @@ O cadastro pelo painel administrativo chega na Subetapa 2.7; até lá, por SQL (
 
 ## Operação
 
-- Rodar manualmente: GitHub → Actions → **worker-collect** → Run workflow. Local: `cd worker && npm run job -- tick collect,triage,cluster,verify`.
+- Rodar manualmente: GitHub → Actions → **worker-collect** → Run workflow. Local: `cd worker && npm run job -- tick collect,triage,cluster,verify,analyze`.
 - Diagnóstico: `select scope, state, relevance_score, source_count, title from news_clusters order by last_seen_at desc limit 50;` · `select * from source_fetch_logs order by created_at desc limit 50;` e `select name, last_success_at, consecutive_failures, last_error from news_sources where is_active;`
 - Retenção: texto original apagado após 30 dias; descartadas apagadas após 30 dias; logs de coleta após 90 dias.
