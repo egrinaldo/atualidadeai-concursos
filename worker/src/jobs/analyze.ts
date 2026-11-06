@@ -2,9 +2,10 @@ import { aiClient, dbUsageStore, type AIClient } from '../ai/client.ts'
 import { nvidiaProvider } from '../ai/nvidia.ts'
 import { AIError } from '../ai/types.ts'
 import { generateAnalysis, toAnalysisRow } from '../analysis/generate.ts'
+import { selectAll } from '../db/paginate.ts'
 import { buildInput, inputHash, PROMPT_VERSION, type AnalysisInput } from '../analysis/prompt.ts'
 import { selectForAnalysis, type Block, type Candidate, type SelectionPolicy } from '../analysis/select.ts'
-import type { Relevance } from '../triage/classify.ts'
+import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
 import type { JobContext } from './types.ts'
 
 /** Modelos verificados na conta NVIDIA em 05/11/2026 (ordem = preferência; o seguinte é usado se o anterior falhar). */
@@ -58,14 +59,13 @@ export async function analyzeJob(job: { id: string; payload: Record<string, unkn
   const jobId = job.id === 'direto' ? null : job.id
 
   const since = new Date(Date.now() - cfg.lookbackHours * 3_600_000).toISOString()
-  const { data: rows, error } = await ctx.db
-    .from('news_clusters')
-    .select('id, status, scope, state, category, relevance, relevance_score, verification_status, needs_review, source_count, news!inner(news_sources!inner(reliability_level))')
-    // Analisados também entram na disputa pelas vagas de cada bloco (senão cada rodada desceria na fila gastando cota)
-    .in('status', ['verified', 'analyzed'])
-    .gte('last_seen_at', since)
-    .limit(2000)
-  if (error) throw new Error(`assuntos: ${error.message}`)
+  const allowedRelevance = (['baixa', 'media', 'alta', 'muito_alta'] as Relevance[]).filter((r) => RELEVANCE_RANK[r] >= RELEVANCE_RANK[cfg.policy.minRelevance])
+  // Analisados também entram na disputa pelas vagas de cada bloco (senão cada rodada desceria na fila gastando cota)
+  const rows = await selectAll((from, to) =>
+    ctx.db.from('news_clusters')
+      .select('id, status, scope, state, category, relevance, relevance_score, verification_status, needs_review, source_count, news!inner(news_sources!inner(reliability_level))')
+      .in('status', ['verified', 'analyzed']).in('relevance', allowedRelevance).gte('last_seen_at', since).order('id').range(from, to),
+  ).catch((e) => { throw new Error(`assuntos: ${e.message}`) })
   type Row = Omit<Candidate, 'best_reliability'> & { status: string; category: string | null; source_count: number; news: { news_sources: { reliability_level: number } }[] }
   const clusters = new Map(((rows ?? []) as unknown as Row[]).map((r) => [r.id, r]))
   const cands: Candidate[] = [...clusters.values()].map((r) => ({ ...r, best_reliability: Math.max(...r.news.map((n) => n.news_sources.reliability_level)) }))
@@ -131,7 +131,7 @@ export async function analyzeJob(job: { id: string; payload: Record<string, unkn
       const { error: e2 } = await ctx.db.from('news_analyses').insert({ ...base, status: 'valid', ...toAnalysisRow(g.data, input), validation_errors: g.warnings.length ? { avisos: g.warnings } : null })
       if (e2) throw new Error(`gravar análise: ${e2.message}`)
       // Avisos (ex.: número sem fonte no contexto) mandam o assunto para revisão antes do PDF
-      await ctx.db.from('news_clusters').update({ status: 'analyzed', needs_review: g.warnings.some((w) => w.includes('sem origem')) }).eq('id', c.id)
+      await ctx.db.from('news_clusters').update({ status: 'analyzed', needs_review: g.warnings.some((w) => w.includes('sem origem') || w.startsWith('nome não encontrado')) }).eq('id', c.id)
       stats.analyzed++
     } else {
       const { error: e2 } = await ctx.db.from('news_analyses').insert({ ...base, status: 'invalid', content: { bruto: g.raw }, validation_errors: { erros: g.errors, avisos: g.warnings } })

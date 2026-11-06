@@ -8,8 +8,8 @@ Cada **assunto** (grupo de notícias sobre o mesmo fato) é verificado antes de 
 2. **Fonte oficial/primária** — órgão que é a origem do fato (IBGE, Câmara, Senado, STF, Banco Central, ONU…), marcada em `news_sources.is_primary`.
 3. **Números** — percentuais, valores em dinheiro (R$, €, US$) e quantidades ("27.279 vagas") de fontes independentes que falam da mesma coisa:
    - **coincidem** (arredondamentos até 5% aceitos em quantidades) → registrado como reforço;
-   - **divergem** → só quando ambos estão no título/resumo e com contexto muito parecido (os números do corpo do texto costumam medir outras coisas).
-4. **Desmentidos** explícitos ("desmente", "é falso", "boato", "fake news"…) no título de outra fonte do assunto. Termos genéricos como "nega" não contam ("STF nega pedido" é decisão, não desmentido).
+   - **divergem** → só quando ambos estão no **título** e com contexto muito parecido (resumo e corpo trazem outras medidas — receita × lucro × dívida — e só servem para confirmar coincidências). Abreviações "bi", "mi", "tri" são entendidas.
+4. **Desmentidos** explícitos ("desmente", "é falso", "boato", "fake news"…) no título de uma fonte de **outro grupo editorial** (matéria de um veículo *sobre* um boato não conta como desmentido). Termos genéricos como "nega" não contam ("STF nega pedido" é decisão, não desmentido).
 5. **Atribuição** — a quem a matéria atribui a informação ("segundo o IBGE", "de acordo com o Ministério da Saúde").
 
 ## Resultado (6 status)
@@ -34,6 +34,10 @@ Cada verificação grava em `news_verifications` (histórico): afirmações extr
 ## Reverificação
 
 Quando um assunto ganha matéria nova, o agrupamento atualiza `members_changed_at` e devolve o assunto verificado para `open`; a próxima rodada verifica de novo (o histórico guarda todas as versões). Assuntos sem mudança não são reverificados.
+
+## Com veículos de imprensa (06/11/2026)
+
+Com 29 veículos ativos, os assuntos **corroborados** por fontes independentes passaram de 5 para 28 na mesma janela; a maior parte dos assuntos de fonte única é agora de veículos com confiabilidade 4 (entram sinalizados como "fonte única") ou 3 (só entram se confirmados por outra fonte).
 
 ## Limitações conhecidas
 

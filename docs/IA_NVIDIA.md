@@ -31,14 +31,16 @@ A lista fica em `app_settings` → `ai.models` (`{"analysis": [...]}`); `NVIDIA_
 
 ## Prompt e validação (anti-alucinação)
 
-Prompt versionado (`analysis/prompt.ts`, versão atual `analise-v2`): usar só as fontes numeradas; nenhum número/data/nome fora delas; projeções separadas de fatos; neutralidade; português com acentuação; nomes de órgãos traduzidos; resposta só em JSON.
+Prompt versionado (`analysis/prompt.ts`, versão atual `analise-v3`; v3 proíbe copiar frases das fontes): usar só as fontes numeradas; nenhum número/data/nome fora delas; projeções separadas de fatos; neutralidade; português com acentuação; nomes de órgãos traduzidos; resposta só em JSON.
 
 Validação (`analysis/validate.ts`) de toda resposta:
 
 1. **Formato** (schema zod): todos os campos, tamanhos, 1–3 questões com 5 alternativas distintas e gabarito.
 2. **Números ancorados nas fontes**: em título, resumo, fatos, "memorizar", consequências confirmadas, enunciado, comentário e alternativa correta, todo número precisa constar no texto, título, URL ou data das fontes → senão é **erro**. Em contexto/análises vira **aviso** e o assunto vai para revisão humana. Distratores das questões podem ter números errados (é o objetivo deles).
 3. **Acentuação**: 3+ palavras comuns sem acento → erro. Nomes em inglês → aviso.
-4. **Referências**: só URLs das fontes; o resto é removido.
+4. **Cópia literal**: 14+ palavras seguidas idênticas a uma fonte (fora de aspas) → erro (o texto precisa ser próprio).
+5. **Grafia de nomes**: nome com grafia ausente das fontes mas quase igual a um nome delas ("Allana" × "Alliana"), ou fontes que divergem na grafia → aviso e revisão humana.
+6. **Referências**: só URLs das fontes; o resto é removido.
 
 Resposta inválida → os erros voltam ao modelo e ele corrige **uma** vez. Persistindo, a análise é gravada como `invalid` (com os erros) e o assunto vai para revisão — nada inválido segue para o PDF.
 

@@ -1,9 +1,10 @@
 import type { Relevance } from '../triage/classify.ts'
 import { VERIFIER, verifyCluster, type VerifyMember } from '../verify/verify.ts'
+import { selectAll } from '../db/paginate.ts'
 import { pool } from './triage.ts'
 import type { JobContext } from './types.ts'
 
-export const VERIFY_LIMITS = { lookbackDays: 7, batch: 400 }
+export const VERIFY_LIMITS = { lookbackDays: 7, batch: 1500 }
 
 type ClusterRow = { id: string; relevance: Relevance | null; verified_at: string | null; members_changed_at: string }
 type NewsRow = {
@@ -27,15 +28,11 @@ export const isStale = (c: Pick<ClusterRow, 'verified_at' | 'members_changed_at'
  */
 export async function verifyJob(_job: { payload: Record<string, unknown> }, ctx: JobContext) {
   const since = new Date(Date.now() - VERIFY_LIMITS.lookbackDays * 86_400_000).toISOString()
-  const { data, error } = await ctx.db
-    .from('news_clusters')
-    .select('id, relevance, verified_at, members_changed_at')
-    .in('status', ['open', 'verified'])
-    .gte('last_seen_at', since)
-    .order('relevance_score', { ascending: false, nullsFirst: false })
-    .limit(5000)
-  if (error) throw new Error(`assuntos: ${error.message}`)
-  const clusters = ((data ?? []) as ClusterRow[]).filter(isStale).slice(0, VERIFY_LIMITS.batch)
+  const all = await selectAll<ClusterRow & { relevance_score: number | null }>((from, to) =>
+    ctx.db.from('news_clusters').select('id, relevance, relevance_score, verified_at, members_changed_at').in('status', ['open', 'verified']).gte('last_seen_at', since).order('id').range(from, to),
+  ).catch((e) => { throw new Error(`assuntos: ${e.message}`) })
+  // Mais relevantes primeiro (o lote tem limite)
+  const clusters = all.filter(isStale).sort((a, b) => (b.relevance_score ?? -1) - (a.relevance_score ?? -1)).slice(0, VERIFY_LIMITS.batch)
   if (!clusters.length) return { verified: 0 }
 
   const members = new Map<string, VerifyMember[]>()

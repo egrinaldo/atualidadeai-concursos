@@ -52,11 +52,31 @@ delete from news_clusters c where not exists (select 1 from news n where n.clust
 
 Inativas, com o motivo registrado em `terms_notes`: Governo do Ceará (certificado HTTPS incompleto), Planalto (feed desatualizado), G1 e BBC News Brasil (uso comercial exige licença), CNN Brasil (robots.txt bloqueia o site), ONU News em português (robots.txt bloqueia o feed). Sem feed acessível: FMI, Banco Mundial, Diário do Nordeste, O Povo, Assembleia do Ceará, OCDE. Reuters/AP: serviços pagos de agência — não cadastrados.
 
+## Veículos de imprensa (Subetapa 2.5b — verificados em 06/11/2026)
+
+Além das fontes públicas, o robô lê **feeds e mapas de notícias** de veículos de imprensa, em **modo resumo** (`content_mode = 'summary'`):
+
+- só **título + resumo curto (até 400 caracteres)** — mesmo quando o feed traz a matéria inteira, o resto é descartado e nada do texto é guardado;
+- **nunca** acessa a página da matéria, não contorna paywall e respeita o robots.txt — inclusive do servidor de destino quando o feed redireciona (a CNN Brasil redireciona para um servidor que bloqueia robôs; por isso usamos o **mapa de notícias** dela, que o robots.txt libera para agregadores);
+- a IA escreve **texto próprio** a partir dos fatos e **cita veículo + link**; cópia literal de 14+ palavras é recusada na validação;
+- veículos do mesmo grupo (G1/O Globo/Valor; Folha/UOL; BBC Brasil/World) contam como **uma** fonte na verificação.
+
+| Situação | Veículos |
+| --- | --- |
+| **Ativos — nacionais** | G1 (Últimas, Política, Economia, Educação), O Globo, Valor, UOL (Notícias, Economia), Folha (Em cima da hora, Poder, Mercado), CNN Brasil (mapa de notícias, só títulos), Poder360, Veja, Jovem Pan, CartaCapital, InfoMoney, Conjur, Agência Gov (oficial) |
+| **Ativos — Ceará** | G1 Ceará, O Povo, CN7 |
+| **Ativos — internacionais** | G1 Mundo, Folha Mundo, BBC News Brasil, BBC World, DW Brasil, El País, Euronews, NPR |
+| **Inativos — termos proíbem robôs** | Estadão, Exame, Gazeta do Povo, Metrópoles, JOTA, RFI, France 24, The Guardian, The New York Times, Al Jazeera |
+| **Inativos — feed parado** | GloboNews (conteúdo sai nos feeds do G1), CNN internacional, Correio Braziliense |
+| **Sem feed** | Diário do Nordeste, Migalhas, Washington Post, Tribuna do Ceará |
+
+**Risco jurídico residual** (anotado em `terms_notes` de cada fonte): BBC, DW e Euronews restringem o conteúdo a uso pessoal/não comercial; UOL, Folha, Jovem Pan, InfoMoney, O Povo, CN7 e NPR têm termos não verificados (página inacessível a robôs ou não localizada). Fatos não têm direito autoral (Lei 9.610/98, art. 8º) e não reproduzimos texto, mas **antes de atender clientes pagantes** recomenda-se revisão jurídica e, se necessário, licenciamento — ou desativar a fonte (`update news_sources set is_active = false where name = '...'`).
+
 ## Regras para novas fontes
 
-1. Preferir API oficial → RSS/Atom → dados públicos estruturados. Raspagem de página só com permissão expressa.
+1. Preferir API oficial → RSS/Atom → mapa de notícias (sitemap) → dados públicos estruturados. Raspagem de página só com permissão expressa.
 2. Conferir `robots.txt` e termos de uso; registrar a conclusão em `terms_notes`.
-3. Veículos comerciais: só com autorização/licença para produto pago.
+3. Veículos de imprensa: modo resumo (`content_mode = 'summary'`); fica inativo se os termos proibirem robôs; registrar a leitura dos termos em `terms_notes`.
 4. Informar `allowed_hosts` (hosts exatos do feed e de seus redirecionamentos).
 5. Nunca contornar paywall, login, CAPTCHA ou bloqueio.
 

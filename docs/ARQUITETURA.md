@@ -103,3 +103,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D58 | **Modelo principal `nemotron-3.5-lightning`, reserva `nemotron-3-ultra`** | Únicos que responderam bem na conta; lightning é rápido e fiel às fontes |
 | D59 | **Toda saída da IA validada (schema + números ancorados nas fontes + acentuação), 1 correção no máximo** | Evita alucinação e gasto descontrolado de cota |
 | D60 | **IA só nos assuntos mais relevantes de cada bloco, com cota diária e reaproveitamento por hash** | Cabe no limite gratuito (60/dia) e não paga duas vezes pela mesma análise |
+| D61 | **Veículos de imprensa só por feed/mapa de notícias, em modo resumo** | Cobertura ampla sem reproduzir texto nem acessar a página da matéria |
+| D62 | **Veículo cujos termos proíbem robôs fica inativo** | Respeito contratual; motivo registrado na fonte |
+| D63 | **robots.txt conferido também no destino de redirecionamentos** | Feeds que redirecionam para servidores fechados a robôs não são coletados |
+| D64 | **IA proibida de copiar frases (14+ palavras) e checagem de grafia de nomes** | Texto próprio (direito autoral) e menos erros de nomes; casos duvidosos vão para revisão |

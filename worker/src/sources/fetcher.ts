@@ -24,6 +24,8 @@ export type FetchOptions = {
   timeoutMs?: number
   maxRedirects?: number
   accept?: string
+  /** Chamado antes de seguir cada redirecionamento (ex.: conferir o robots.txt do destino); lançar erro interrompe. */
+  beforeRedirect?: (to: URL) => Promise<void>
 }
 
 /** Resolve o nome e recusa qualquer IP interno (inclusive contra DNS rebinding: a validação ocorre na conexão). */
@@ -98,7 +100,9 @@ export async function safeFetch(rawUrl: string, options: FetchOptions): Promise<
     if ([301, 302, 303, 307, 308].includes(res.status)) {
       const loc = res.headers.location
       if (!loc || typeof loc !== 'string') throw new HttpError(res.status, 'redirecionamento sem destino')
-      url = new URL(loc, url)
+      const next = new URL(loc, url)
+      if (options.beforeRedirect) await options.beforeRedirect(next)
+      url = next
       continue
     }
     if (res.status === 304) return { status: 304, body: '', finalUrl: url.href, notModified: true, etag: options.etag ?? undefined, lastModified: options.lastModified ?? undefined }
