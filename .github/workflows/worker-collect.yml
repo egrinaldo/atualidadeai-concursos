@@ -1,4 +1,4 @@
-# Robô de coleta + triagem + agrupamento + verificação + análise por IA + auditoria de veracidade: a cada 3 horas (minuto 7, fora do horário de pico do agendador).
+# Robô de coleta + triagem + agrupamento + verificação + análise por IA + auditoria de veracidade + revisão automática: a cada 3 horas (minuto 7, fora do horário de pico do agendador).
 # Cada rodada é idempotente por janela de 3h (dedupe_key), então reexecuções não duplicam.
 name: worker-collect
 on:
@@ -26,7 +26,7 @@ jobs:
           cache: npm
           cache-dependency-path: worker/package-lock.json
       - run: npm ci
-      - run: npm run job -- tick collect,triage,cluster,verify,analyze,audit
+      - run: npm run job -- tick collect,triage,cluster,verify,analyze,audit,review
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}

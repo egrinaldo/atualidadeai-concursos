@@ -131,7 +131,34 @@ A etiqueta depois do `@` cria uma rodada própria na mesma janela de 3h e chega 
 - História com síntese mostra o box **"Linha do tempo"** e o selo "Acompanhado em N edições diárias (dd/mm a dd/mm)".
 - No painel, os itens mostram o tipo (síntese semanal/mensal) e a situação da auditoria.
 
-## 3. Configurações (migração 20)
+## 3. Revisão automática da fila (migração 21, job `review`)
+
+**Quando roda:**
+- a cada 3h, logo depois da auditoria;
+- às 22h12, antes de montar as edições.
+
+O robô decide cada assunto marcado "precisa de revisão" com regras fixas (`worker/src/review/decide.ts`). **Na dúvida, o assunto fica fora da edição.**
+
+| Situação | Decisão do robô |
+|---|---|
+| Fonte única não confirmada, informação insuficiente, fontes que se contradizem ou divergem | **Liberado da fila** (registro "Liberado"). Continua fora da edição pela regra de verificação; entra sozinho se outra fonte confirmar |
+| Texto auditado e aprovado (ou dispensado), com aviso da validação | **Liberado** para a edição: a auditoria já conferiu os fatos |
+| Auditoria pendente | Espera a próxima rodada |
+| Análise inválida ou reprovada na auditoria (mesmo após a correção automática) | **Nova análise do zero**, 1 vez por assunto (`review.max_reanalysis`). A nova também passa por validação e auditoria |
+| Falhou de novo | **Descartado** (fora das edições) |
+| Texto editado por pessoa e reprovado na auditoria | Fica com o editor |
+
+**Registro:** toda decisão vai para `editorial_reviews` com revisor vazio e nota "Robô: …".
+
+**No painel:** o quadro "Revisão automática — decisões do robô nas últimas 48h" mostra cada decisão. Para desfazer, basta abrir o assunto:
+- **Aprovar** desfaz um descarte;
+- **Pedir nova análise** e **Reprovar** funcionam como antes.
+
+**Desligar:** `review.auto = false` (a fila volta a ser manual).
+
+**Primeira execução (06/11):** 19 assuntos na fila, dos quais 15 liberados (8 de fonte única, 5 com informação insuficiente, 1 com fontes contraditórias e 1 com texto já auditado) e 4 com nova análise pedida. A fila ficou vazia.
+
+## 4. Configurações (migrações 20 e 21)
 
 | Chave | Padrão | O que faz |
 |---|---|---|
@@ -142,3 +169,5 @@ A etiqueta depois do `@` cria uma rodada própria na mesma janela de 3h e chega 
 | `synthesis.similarity_threshold` | `0.4` | Similaridade para juntar o mesmo assunto em dias diferentes. |
 | `ai.models.audit` / `.synthesis` | ultra → lightning / lightning → ultra | Modelos usados. |
 | `ai.daily_call_budget` | 60 → **120** | Só sobe se ainda estava no valor original. |
+| `review.auto` | `true` | O robô resolve a fila de revisão. |
+| `review.max_reanalysis` | `1` | Novas análises que o robô pede por assunto antes de descartar. |
