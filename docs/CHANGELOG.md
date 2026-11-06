@@ -2,6 +2,19 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.8: personalização, publicação e entrega
+
+### Adicionado
+- `personalize`: cópia por assinante ativo da UF, com nome e e-mail na capa e no rodapé e código da entrega nos metadados (pdf-lib).
+- `deliver`: publicação às 06h na área e e-mail opcional, um por assinante com os PDFs do dia em anexo; idempotente, com novas tentativas.
+- `cleanup`: cópias com mais de 7 dias, PDFs base com mais de 90 dias, pastas de contas excluídas e `apply_retention`.
+- Área do assinante: "Meus informativos" (`DocumentsPanel`), com download por link temporário.
+- Função `account`: ações `documents` e `document_url`; a exclusão de conta apaga as cópias; a exportação inclui as entregas.
+- Modelo de e-mail `renderEditionEmail`; migração 22; `docs/ENTREGA.md`; 6 testes.
+
+### Alterado
+- `worker-edition`: 04h35 `audit@pdf → render → personalize`; novo horário 05h57 `deliver → cleanup`; secrets do Resend.
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.7c: revisão automática da fila
 
 ### Adicionado

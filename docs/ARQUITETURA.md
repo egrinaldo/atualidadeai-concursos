@@ -121,3 +121,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D76 | **Revisões hierárquicas: semanal a partir das diárias, mensal a partir das semanais; sínteses em `news_analyses` (`kind`)** | Mantém a curadoria já feita; reaproveita PDF, auditoria e painel sem tabelas paralelas |
 | D77 | **Síntese parte só dos nossos textos já auditados e é auditada de novo; se falhar, usa o texto diário mais recente** | Sem fatos novos no resumo do período; a revisão nunca fica vazia |
 | D78 | **Fila de revisão resolvida pelo robô com regras fixas; na dúvida, fora da edição; decisões registradas e reversíveis** | Operação sem gargalo humano sem abrir mão da verificação e da auditoria |
+| D79 | **Personalização por carimbo (pdf-lib) sobre o PDF base, com código da entrega nos metadados** | Uma geração com Chromium por edição; cópia rastreável sem expor dados no caminho |
+| D80 | **Download só pela Edge Function, com link de 2 min da própria cópia** | Bucket privado; ninguém acessa a cópia de outro assinante |
+| D81 | **E-mail desligado por padrão, um por assinante por dia, idempotente, modo de teste por EMAIL_TEST_TO** | Envio real só com autorização; nada de e-mail duplicado |
+| D82 | **Limpeza diária no worker (7/90 dias, contas excluídas, apply_retention)** | Cumpre a retenção decidida e a LGPD sem depender de agendador no banco |

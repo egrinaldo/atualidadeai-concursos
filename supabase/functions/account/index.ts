@@ -4,6 +4,8 @@
  * Direitos do titular (LGPD):
  *   { action: "export" }                    → todos os dados pessoais do usuário (JSON)
  *   { action: "delete", password: "..." }   → exclui a conta
+ *   { action: "documents" }                 → informativos entregues ao assinante (área do assinante)
+ *   { action: "document_url", delivery_id } → link temporário (2 min) da cópia personalizada
  *
  * Exclusão:
  * - exige a senha atual (evita exclusão com sessão roubada ou esquecida aberta);
@@ -16,6 +18,9 @@
 import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
 import { errorMessage, json, preflight, requireEnv, tooManyRequests } from '../_shared/http.ts'
 import { MercadoPago } from '../_shared/mercadopago.ts'
+
+// deno-lint-ignore no-explicit-any
+type Any = any
 
 async function passwordMatches(email: string, password: string): Promise<boolean> {
   const res = await fetch(`${requireEnv('SUPABASE_URL')}/auth/v1/token?grant_type=password`, {
@@ -35,18 +40,63 @@ Deno.serve(async (req) => {
   const db = adminClient()
   const user = await userFromRequest(req, db)
   if (!user) return json({ error: 'Faça login.' }, 401)
-  if (await rateLimited(db, `account:${user.id}`, 10, 600)) return tooManyRequests()
-
-  const body = (await req.json().catch(() => ({}))) as { action?: string; password?: string }
+  const body = (await req.json().catch(() => ({}))) as { action?: string; password?: string; delivery_id?: string }
+  // Downloads da área têm limite próprio; exportar/excluir seguem o limite estrito
+  const docsAction = body.action === 'documents' || body.action === 'document_url'
+  if (await rateLimited(db, docsAction ? `account-docs:${user.id}` : `account:${user.id}`, docsAction ? 60 : 10, 600)) return tooManyRequests()
 
   try {
+    if (body.action === 'documents') {
+      const { data, error } = await db
+        .from('document_deliveries')
+        .select('id, status, sent_at, personalized_path, generated_documents!inner(version, page_count, file_size, editions!inner(edition_type, state, reference_date))')
+        .eq('user_id', user.id)
+        .eq('channel', 'area')
+        .eq('status', 'sent')
+        .order('sent_at', { ascending: false })
+        .limit(40)
+      if (error) throw new Error(error.message)
+      return json({
+        documents: (data ?? []).map((d: Any) => ({
+          id: d.id,
+          sent_at: d.sent_at,
+          available: !!d.personalized_path, // a cópia fica disponível por 7 dias
+          edition_type: d.generated_documents.editions.edition_type,
+          state: d.generated_documents.editions.state,
+          reference_date: d.generated_documents.editions.reference_date,
+          pages: d.generated_documents.page_count,
+          size: d.generated_documents.file_size,
+        })),
+      })
+    }
+
+    if (body.action === 'document_url') {
+      if (typeof body.delivery_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(body.delivery_id)) return json({ error: 'Informativo inválido.' }, 400)
+      const { data: d } = await db
+        .from('document_deliveries')
+        .select('personalized_path, generated_documents!inner(editions!inner(edition_type, state, reference_date))')
+        .eq('id', body.delivery_id)
+        .eq('user_id', user.id) // só a própria cópia
+        .eq('channel', 'area')
+        .eq('status', 'sent')
+        .maybeSingle()
+      if (!d) return json({ error: 'Informativo não encontrado.' }, 404)
+      if (!d.personalized_path) return json({ error: 'Este informativo não está mais disponível (as cópias ficam 7 dias).' }, 410)
+      const e = (d as Any).generated_documents.editions
+      const name = `informativo-${e.edition_type}-${e.state}-${e.reference_date}.pdf`
+      const { data: link, error } = await db.storage.from('documents').createSignedUrl(d.personalized_path, 120, { download: name })
+      if (error || !link) throw new Error(`link: ${error?.message}`)
+      return json({ url: link.signedUrl, expiresIn: 120 })
+    }
+
     if (body.action === 'export') {
-      const [profile, prefs, subs, pays, emails] = await Promise.all([
+      const [profile, prefs, subs, pays, emails, deliveries] = await Promise.all([
         db.from('profiles').select('full_name, email, state, city, terms_accepted_at, created_at, updated_at').eq('id', user.id).maybeSingle(),
         db.from('user_preferences').select('state, city, interests, created_at, updated_at').eq('user_id', user.id).maybeSingle(),
         db.from('subscriptions').select('status, started_at, next_payment_at, cancelled_at, created_at').eq('user_id', user.id).order('created_at'),
         db.from('payments').select('amount, currency, status, paid_at, created_at').eq('user_id', user.id).order('created_at'),
         db.from('email_log').select('kind, subject, status, created_at').eq('user_id', user.id).order('created_at'),
+        db.from('document_deliveries').select('channel, status, sent_at, created_at').eq('user_id', user.id).order('created_at'),
       ])
       const { data: lead } = await db.from('leads').select('name, email, state, city, source, created_at').eq('email', (user.email ?? '').toLowerCase()).maybeSingle()
       return json({
@@ -57,6 +107,7 @@ Deno.serve(async (req) => {
         subscriptions: subs.data ?? [],
         payments: pays.data ?? [],
         emails_sent: emails.data ?? [],
+        documents_delivered: deliveries.data ?? [],
         lead,
       })
     }
@@ -76,6 +127,9 @@ Deno.serve(async (req) => {
         if (s.external_subscription_id) await MercadoPago.updatePreapproval(s.external_subscription_id, { status: 'cancelled' })
       }
 
+      // Cópias personalizadas (têm nome e e-mail impressos)
+      const { data: files } = await db.storage.from('documents').list(`personalizados/${user.id}`, { limit: 1000 })
+      if (files?.length) await db.storage.from('documents').remove(files.map((f) => `personalizados/${user.id}/${f.name}`))
       await db.from('email_log').delete().eq('user_id', user.id)
       await db.from('leads').delete().eq('email', user.email.toLowerCase())
       // payments.user_id e subscription_id viram null (FK "on delete set null"); o restante cai em cascata

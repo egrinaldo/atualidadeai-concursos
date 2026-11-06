@@ -185,6 +185,29 @@ export function renderTransactional(kind: TransactionalKind, d: EmailData): Rend
   }
 }
 
+/** E-mail diário com o(s) informativo(s) do dia (enviado pelo worker, com os PDFs personalizados em anexo). */
+export function renderEditionEmail(d: { name?: string | null; siteUrl: string; dateLabel: string; stateName: string; items: string[]; attached: boolean }): RenderedEmail {
+  const ola = firstName(d.name) ? `Olá, ${firstName(d.name)}!` : 'Olá!'
+  const conta = `${d.siteUrl.replace(/\/+$/, '')}/conta`
+  const many = d.items.length > 1
+  return build(
+    `Seu informativo de ${d.dateLabel} — ${d.stateName}`,
+    many ? `${d.items.length} materiais de atualidades prontos para você.` : 'Seu material de atualidades está pronto.',
+    many ? 'Seus informativos chegaram' : 'Seu informativo chegou',
+    {
+      paragraphs: [
+        ola,
+        d.attached
+          ? `${many ? 'Os materiais de hoje estão' : 'O material de hoje está'} em anexo e também ${many ? 'ficam disponíveis' : 'fica disponível'} na sua área do assinante:`
+          : `${many ? 'Os materiais de hoje estão disponíveis' : 'O material de hoje está disponível'} na sua área do assinante:`,
+      ],
+      list: d.items,
+      cta: { label: 'Abrir minha área', url: conta },
+      note: 'O PDF é personalizado com seu nome e e-mail, para uso pessoal e intransferível. O conteúdo é verificado e auditado, mas não substitui o edital do seu concurso.',
+    },
+  )
+}
+
 /**
  * Modelos de autenticação aplicados ao Supabase Auth (Authentication → Emails).
  * Usam as variáveis do Supabase ({{ .ConfirmationURL }}), por isso `raw: true`.

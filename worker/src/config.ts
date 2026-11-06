@@ -11,6 +11,12 @@ const schema = z.object({
   NVIDIA_API_KEY: z.string().startsWith('nvapi-').optional(),
   NVIDIA_BASE_URL: z.string().url().default('https://integrate.api.nvidia.com/v1'),
   NVIDIA_MODEL: z.string().optional(),
+  // Entrega por e-mail (Resend). Sem a chave, nada é enviado; EMAIL_TEST_TO redireciona TODOS os envios (teste)
+  RESEND_API_KEY: z.string().startsWith('re_').optional(),
+  EMAIL_FROM: z.string().min(3).max(200).optional(),
+  EMAIL_REPLY_TO: z.string().email().optional(),
+  EMAIL_TEST_TO: z.string().email().optional(),
+  SITE_URL: z.string().url().default('https://atualidadeai-concursos.vercel.app'),
   WORKER_ID: z.string().min(1).max(100).optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 })
@@ -24,6 +30,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     SUPABASE_SECRET_KEY: env.SUPABASE_SECRET_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY,
     NVIDIA_MODEL: env.NVIDIA_MODEL || undefined,
     NVIDIA_API_KEY: env.NVIDIA_API_KEY || undefined,
+    RESEND_API_KEY: env.RESEND_API_KEY || undefined,
+    EMAIL_FROM: env.EMAIL_FROM || undefined,
+    EMAIL_REPLY_TO: env.EMAIL_REPLY_TO || undefined,
+    EMAIL_TEST_TO: env.EMAIL_TEST_TO || undefined,
+    SITE_URL: env.SITE_URL || env.VITE_SITE_URL || undefined,
   }
   const parsed = schema.safeParse(input)
   if (!parsed.success) {

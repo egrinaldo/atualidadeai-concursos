@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert } from '@/components/forms/Alert'
 import { AuthLayout } from '@/components/layout/AuthLayout'
+import { DocumentsPanel } from '@/components/account/DocumentsPanel'
 import { PrivacyPanel } from '@/components/account/PrivacyPanel'
 import { SubscriptionPanel } from '@/components/billing/SubscriptionPanel'
 import { Button, Icon } from '@/components/ui'
@@ -12,8 +13,7 @@ import { getSupabase } from '@/lib/supabase'
 import type { Profile } from '@/types/database'
 
 /**
- * Área do assinante — versão mínima da Etapa 1 (não é o dashboard completo).
- * Mostra os dados da conta e a situação da assinatura.
+ * Área do assinante: assinatura, informativos entregues (Subetapa 2.8) e dados da conta.
  */
 export function Conta() {
   const { session, loading } = useSession()
@@ -74,6 +74,8 @@ export function Conta() {
 
 
         <SubscriptionPanel accountEmail={session.user.email ?? ''} />
+
+        <DocumentsPanel />
 
         <section aria-labelledby="dados-title">
           <h2 id="dados-title" className="text-base font-semibold">
