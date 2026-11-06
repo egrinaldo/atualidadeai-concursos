@@ -4,7 +4,7 @@ import { isDue, toNewsRows, type Source } from '../src/jobs/collect.ts'
 import { safeFetch } from '../src/sources/fetcher.ts'
 import { hostAllowed, isBlockedIp } from '../src/sources/net.ts'
 import { canonicalUrl, contentFingerprint, htmlToText, parseDate } from '../src/sources/normalize.ts'
-import { parseFeed, parseIbge } from '../src/sources/parse.ts'
+import { parseFeed, parseIbge, parseNewsSitemap } from '../src/sources/parse.ts'
 import { isAllowed, parseRobots } from '../src/sources/robots.ts'
 
 test('SSRF: IPs internos, metadados de nuvem e reservados são bloqueados', () => {
@@ -114,4 +114,30 @@ test('agenda da fonte: intervalo normal e espera crescente após falhas (máx. 2
   assert.equal(isDue({ ...src, last_checked_at: at(6), consecutive_failures: 1 }, now), true)
   assert.equal(isDue({ ...src, last_checked_at: at(23), consecutive_failures: 10 }, now), false)
   assert.equal(isDue({ ...src, last_checked_at: at(24), consecutive_failures: 10 }, now), true)
+})
+
+test('mapa de notícias (Google News sitemap): título, data e link; sem resumo', () => {
+  const xml = `<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+    <url><loc>https://www.cnnbrasil.com.br/politica/a/</loc><news:news><news:publication><news:name>CNN Brasil</news:name></news:publication>
+      <news:publication_date>2026-11-05T22:04:05-03:00</news:publication_date><news:title>Senado aprova &lt;b&gt;projeto&lt;/b&gt; X</news:title></news:news></url>
+    <url><loc>https://www.cnnbrasil.com.br/sem-news/</loc></url>
+    <url><loc>javascript:alert(1)</loc><news:news><news:title>Mal</news:title></news:news></url>
+  </urlset>`
+  const items = parseNewsSitemap(xml)
+  assert.equal(items.length, 1)
+  assert.equal(items[0].title, 'Senado aprova projeto X')
+  assert.equal(items[0].publishedAt?.toISOString(), '2026-11-06T01:04:05.000Z')
+  assert.equal(items[0].summary, '')
+  assert.throws(() => parseNewsSitemap('<!DOCTYPE x [<!ENTITY a "b">]><urlset/>'))
+})
+
+test('modo resumo (veículos de imprensa): nunca guarda o texto da matéria, só resumo curto', () => {
+  const now = new Date('2026-11-05T12:00:00Z')
+  const longo = 'Frase da matéria. '.repeat(300)
+  const item = { title: 'Fato', url: 'https://x.org/a', publishedAt: new Date('2026-11-05T10:00:00Z'), summary: '', content: longo }
+  const [r] = toNewsRows({ ...src, content_mode: 'summary' }, [item], now)
+  assert.equal(r.original_content, null)
+  assert.ok(r.excerpt!.length <= 401, String(r.excerpt!.length))
+  const [full] = toNewsRows(src, [item], now) // fontes públicas continuam guardando o texto (apagado em 30 dias)
+  assert.ok((full.original_content ?? '').length > 1000)
 })

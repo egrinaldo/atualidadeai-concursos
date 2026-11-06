@@ -1,6 +1,6 @@
 import { safeFetch } from '../sources/fetcher.ts'
 import { canonicalUrl, contentFingerprint, excerpt, sha256 } from '../sources/normalize.ts'
-import { parseFeed, parseIbge, type RawItem } from '../sources/parse.ts'
+import { parseFeed, parseIbge, parseNewsSitemap, type RawItem } from '../sources/parse.ts'
 import { isAllowed, parseRobots, type RobotsRules } from '../sources/robots.ts'
 import type { JobContext } from './types.ts'
 
@@ -8,7 +8,9 @@ export type Source = {
   id: string
   name: string
   feed_url: string | null
-  source_type: 'rss' | 'atom' | 'api' | 'html'
+  source_type: 'rss' | 'atom' | 'api' | 'html' | 'sitemap'
+  /** 'full': guarda o texto do feed (fontes públicas); 'summary': só título + resumo curto (veículos de imprensa) */
+  content_mode?: 'full' | 'summary'
   api_kind: string | null
   scope: 'internacional' | 'nacional' | 'estadual'
   state: string | null
@@ -23,7 +25,7 @@ export type Source = {
   http_last_modified: string | null
 }
 
-export const LIMITS = { maxItemsPerSource: 50, maxAgeDays: 7, contentDedupeDays: 14, hostConcurrency: 4, minDelayMs: 2000, maxDelayMs: 15000 }
+export const LIMITS = { summaryChars: 400, maxItemsPerSource: 50, maxAgeDays: 7, contentDedupeDays: 14, hostConcurrency: 4, minDelayMs: 2000, maxDelayMs: 15000 }
 
 /** Fonte vence no intervalo configurado; após falhas seguidas, espera cresce (até 8× e no máx. 24h). */
 export function isDue(s: Pick<Source, 'last_checked_at' | 'fetch_interval_minutes' | 'consecutive_failures'>, now: Date): boolean {
@@ -53,7 +55,10 @@ export function toNewsRows(source: Source, items: RawItem[], now: Date) {
     let published = it.publishedAt
     if (published && published.getTime() > now.getTime() + 3_600_000) published = null // data no futuro: ignorar
     if (published && published.getTime() < oldest) continue // antiga demais
-    const body = it.content || it.summary
+    // Veículos de imprensa: só título + resumo curto (nunca o texto da matéria, mesmo que o feed traga)
+    const summaryOnly = source.content_mode === 'summary'
+    const lead = it.summary || it.content
+    const body = summaryOnly ? (lead ? excerpt(lead, LIMITS.summaryChars) : '') : it.content || it.summary
     rows.push({
       source_id: source.id,
       title: it.title.slice(0, 500),
@@ -61,8 +66,8 @@ export function toNewsRows(source: Source, items: RawItem[], now: Date) {
       canonical_url: canonical.slice(0, 2000),
       url_hash: sha256(canonical),
       content_hash: contentFingerprint(it.title, body),
-      original_content: body ? body.slice(0, 20_000) : null,
-      excerpt: (it.summary || it.content) ? excerpt(it.summary || it.content, 400) : null,
+      original_content: summaryOnly ? null : body ? body.slice(0, 20_000) : null,
+      excerpt: lead ? excerpt(lead, LIMITS.summaryChars) : null,
       author: it.author?.slice(0, 200) ?? null,
       language: source.language,
       published_at: published?.toISOString() ?? null,
@@ -77,6 +82,9 @@ export function toNewsRows(source: Source, items: RawItem[], now: Date) {
 }
 
 type SourceResult = { source: string; status: 'ok' | 'not_modified' | 'blocked' | 'error'; found?: number; inserted?: number; duplicates_content?: number; http_status?: number; error?: string; duration_ms: number }
+
+/** Bloqueio por robots.txt: não é falha da fonte (não aumenta o contador de falhas). */
+export class RobotsBlocked extends Error {}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -113,14 +121,22 @@ async function collectSource(source: Source, ctx: JobContext, robotsCache: Map<s
       if (robots.crawlDelaySec) crawlDelayMs = Math.min(Math.max(robots.crawlDelaySec * 1000, LIMITS.minDelayMs), LIMITS.maxDelayMs)
     }
 
-    const res = await safeFetch(source.feed_url, { allowedHosts: source.allowed_hosts, etag: source.http_etag, lastModified: source.http_last_modified })
+    // Redirecionamento para outro servidor: o robots.txt do DESTINO também precisa permitir
+    const beforeRedirect = source.source_type === 'api' ? undefined : async (to: URL) => {
+      if (to.origin === url.origin) return
+      const r = await robotsFor(to.origin, to.hostname, robotsCache)
+      if (r === 'unavailable') throw new Error(`robots.txt de ${to.hostname} indisponível: coleta adiada`)
+      if (!isAllowed(r, to.pathname + to.search)) throw new RobotsBlocked(`bloqueado pelo robots.txt de ${to.hostname} (destino do redirecionamento)`)
+      if (r.crawlDelaySec) crawlDelayMs = Math.min(Math.max(r.crawlDelaySec * 1000, crawlDelayMs), LIMITS.maxDelayMs)
+    }
+    const res = await safeFetch(source.feed_url, { allowedHosts: source.allowed_hosts, etag: source.http_etag, lastModified: source.http_last_modified, beforeRedirect })
     const health = { last_checked_at: now.toISOString(), last_success_at: now.toISOString(), last_error: null, consecutive_failures: 0, http_etag: res.etag ?? source.http_etag, http_last_modified: res.lastModified ?? source.http_last_modified }
     if (res.notModified) {
       await ctx.db.from('news_sources').update(health).eq('id', source.id)
       return { ...base, status: 'not_modified', http_status: 304, found: 0, inserted: 0, duration_ms: Date.now() - started, crawlDelayMs }
     }
 
-    const items = source.api_kind === 'ibge' ? parseIbge(res.body) : parseFeed(res.body)
+    const items = source.api_kind === 'ibge' ? parseIbge(res.body) : source.source_type === 'sitemap' ? parseNewsSitemap(res.body) : parseFeed(res.body)
     const rows = toNewsRows(source, items, now)
     let inserted: { id: string; content_hash: string | null }[] = []
     if (rows.length) {
@@ -148,6 +164,10 @@ async function collectSource(source: Source, ctx: JobContext, robotsCache: Map<s
     return { ...base, status: 'ok', http_status: res.status, found: items.length, inserted: inserted.length, duplicates_content: dupContent, duration_ms: Date.now() - started, crawlDelayMs }
   } catch (e) {
     const message = (e instanceof Error ? e.message : String(e)).slice(0, 1000)
+    if (e instanceof RobotsBlocked) {
+      await ctx.db.from('news_sources').update({ last_checked_at: now.toISOString(), last_error: message }).eq('id', source.id)
+      return { ...base, status: 'blocked', error: message, duration_ms: Date.now() - started, crawlDelayMs }
+    }
     await ctx.db
       .from('news_sources')
       .update({ last_checked_at: now.toISOString(), last_error: message, consecutive_failures: source.consecutive_failures + 1 })
@@ -158,15 +178,19 @@ async function collectSource(source: Source, ctx: JobContext, robotsCache: Map<s
 
 /**
  * Coleta: consulta as fontes ativas que venceram o intervalo, respeitando robots.txt,
- * crawl-delay e uma requisição por vez por servidor. Payload opcional: { sourceId, force }.
+ * crawl-delay e uma requisição por vez por servidor. Payload opcional: { sourceId | sourceIds[], force }.
  */
 export async function collect(job: { payload: Record<string, unknown>; id: string }, ctx: JobContext) {
   const now = new Date()
   const { data, error } = await ctx.db.from('news_sources').select('*').eq('is_active', true)
   if (error) throw new Error(`fontes: ${error.message}`)
-  const onlyId = typeof job.payload.sourceId === 'string' ? job.payload.sourceId : null
+  const onlyIds = new Set<string>([
+    ...(typeof job.payload.sourceId === 'string' ? [job.payload.sourceId] : []),
+    ...(Array.isArray(job.payload.sourceIds) ? job.payload.sourceIds.filter((x): x is string => typeof x === 'string') : []),
+  ])
+  const onlyId = onlyIds.size ? onlyIds : null
   const force = job.payload.force === true
-  const sources = ((data ?? []) as Source[]).filter((s) => (onlyId ? s.id === onlyId : force || isDue(s, now)))
+  const sources = ((data ?? []) as Source[]).filter((s) => (onlyId ? onlyId.has(s.id) : force || isDue(s, now)))
 
   // Agrupa por servidor: um servidor por vez recebe requisições, com pausa entre elas
   const byHost = new Map<string, Source[]>()

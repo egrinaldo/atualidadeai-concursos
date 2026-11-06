@@ -73,6 +73,30 @@ export function parseFeed(xml: string): RawItem[] {
   return items.filter((i) => i.title.length > 0)
 }
 
+/**
+ * Mapa de notícias (padrão Google News sitemap: <urlset><url><loc>…<news:news><news:title>…).
+ * Muitos veículos o publicam justamente para robôs de agregadores; traz só título, data e link.
+ */
+export function parseNewsSitemap(xml: string): RawItem[] {
+  if (/<!DOCTYPE[^>]*\[|<!ENTITY/i.test(xml.slice(0, 5000))) throw new Error('sitemap com DTD/entidades declaradas recusado')
+  const parser = new XMLParser({ ignoreAttributes: true, processEntities: false, htmlEntities: false, trimValues: true, parseTagValue: false, isArray: (name) => name === 'url' })
+  const doc = parser.parse(xml)
+  const items: RawItem[] = []
+  for (const u of asArray(doc?.urlset?.url) as Record<string, unknown>[]) {
+    const url = text(u.loc).trim()
+    const news = u['news:news'] as Record<string, unknown> | undefined
+    if (!news || !/^https?:\/\//.test(url)) continue
+    items.push({
+      title: htmlToText(text(news['news:title'])),
+      url,
+      publishedAt: parseDate(text(news['news:publication_date'])),
+      summary: '', // o sitemap não traz resumo
+      content: '',
+    })
+  }
+  return items.filter((i) => i.title.length > 0)
+}
+
 /** API de notícias do IBGE (servicodados.ibge.gov.br/api/v3/noticias). */
 export function parseIbge(json: string): RawItem[] {
   const data = JSON.parse(json) as { items?: Record<string, unknown>[] }

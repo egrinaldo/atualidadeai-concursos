@@ -49,10 +49,12 @@ export function verifyCluster(members: VerifyMember[], relevance: Relevance | nu
   const groupOf = (id: string) => members.find((m) => m.id === id)!.group_key
 
   const claims = members.flatMap((m) => {
-    const lead = extractClaims(m.id, `${m.title}. ${m.excerpt ?? ''}`, m.language, true)
-    const leadKeys = new Set(lead.map((c) => `${c.kind}|${c.unit}|${c.value}`))
-    const body = extractClaims(m.id, (m.content ?? '').slice(0, 3000), m.language, false).filter((c) => !leadKeys.has(`${c.kind}|${c.unit}|${c.value}`))
-    return [...lead, ...body]
+    // Divergência só entre números dos TÍTULOS (o fato principal); resumo e corpo trazem outras medidas
+    // (receita × lucro × dívida) e servem só para confirmar coincidências
+    const lead = extractClaims(m.id, m.title, m.language, true)
+    const seen = new Set(lead.map((c) => `${c.kind}|${c.unit}|${c.value}`))
+    const rest = extractClaims(m.id, `${m.excerpt ?? ''}. ${(m.content ?? '').slice(0, 3000)}`, m.language, false).filter((c) => !seen.has(`${c.kind}|${c.unit}|${c.value}`))
+    return [...lead, ...rest]
   })
   const comparisons = compareClaims(claims, groupOf)
   const agree = comparisons.filter((c) => c.relation === 'coincide')
@@ -65,11 +67,14 @@ export function verifyCluster(members: VerifyMember[], relevance: Relevance | nu
   const notes: string[] = []
   const contradictory = new Set<string>()
 
-  if (denials.length && members.length > denials.length) {
+  // Desmentido só conta se vier de um grupo editorial diferente das matérias que afirmam o fato
+  const assertingGroups = new Set(members.filter((m) => !denials.includes(m)).map((m) => m.group_key))
+  const crossDenials = denials.filter((d) => [...assertingGroups].some((g) => g !== d.group_key))
+  if (crossDenials.length) {
     status = 'contradita'
     confidence = 'baixa'
-    for (const d of denials) contradictory.add(d.id)
-    notes.push(`Há desmentido explícito em ${denials.map((d) => d.source_name).join(', ')}.`)
+    for (const d of crossDenials) contradictory.add(d.id)
+    notes.push(`Há desmentido explícito em ${[...new Set(crossDenials.map((d) => d.source_name))].join(', ')}.`)
   } else if (diverge.length) {
     status = 'fontes_divergentes'
     confidence = 'baixa'

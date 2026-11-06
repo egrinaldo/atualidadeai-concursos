@@ -11,7 +11,7 @@ export type Claim = {
   lead: boolean // veio do título/resumo (fato principal) e não do corpo do texto
 }
 
-const SCALE: Record<string, number> = { mil: 1e3, milhao: 1e6, milhoes: 1e6, bilhao: 1e9, bilhoes: 1e9, trilhao: 1e12, trilhoes: 1e12, million: 1e6, billion: 1e9, trillion: 1e12, thousand: 1e3 }
+const SCALE: Record<string, number> = { bi: 1e9, mi: 1e6, tri: 1e12, mil: 1e3, milhao: 1e6, milhoes: 1e6, bilhao: 1e9, bilhoes: 1e9, trilhao: 1e12, trilhoes: 1e12, million: 1e6, billion: 1e9, trillion: 1e12, thousand: 1e3 }
 const COUNTED = 'vagas|pessoas|mortes|mortos|vitimas|doses|casas|domicilios|prisoes|presos|servidores|participantes|paises|estados|municipios|empregos|familias|alunos|estudantes|candidatos|inscritos|leitos|hectares|toneladas|deaths|people|countries|jobs'
 
 /** "27.279" → 27279; "13,75" → 13.75; "1.8" (inglês) → 1.8; "1,000" (inglês) → 1000. */
@@ -44,7 +44,7 @@ export function extractClaims(newsId: string, text: string, language = 'pt', lea
   }
   for (const m of f.matchAll(/(-?\d+(?:[.,]\d+)*)\s?%/g))
     push({ news_id: newsId, kind: 'percentual', value: Math.abs(parseNumber(m[1], en)), unit: '%', text: m[0], context: contextAround(f, m.index!, m[0].length), lead })
-  for (const m of f.matchAll(/(r\$|€|us\$|\$)\s?(\d+(?:[.,]\d+)*)(?:\s?(mil|milhao|milhoes|bilhao|bilhoes|trilhao|trilhoes|million|billion|trillion|thousand)\b)?/g)) {
+  for (const m of f.matchAll(/(r\$|€|us\$|\$)\s?(\d+(?:[.,]\d+)*)(?:\s?(mil|milhao|milhoes|bilhao|bilhoes|trilhao|trilhoes|million|billion|trillion|thousand|bi|mi|tri)\b)?/g)) {
     const unit = m[1] === 'r$' ? 'BRL' : m[1] === '€' ? 'EUR' : 'USD'
     push({ news_id: newsId, kind: 'valor_monetario', value: parseNumber(m[2], en) * (SCALE[m[3] ?? ''] ?? 1), unit, text: m[0], context: contextAround(f, m.index!, m[0].length), lead })
   }

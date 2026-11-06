@@ -107,3 +107,18 @@ test('fila: verifica assunto novo ou alterado depois da última verificação', 
   assert.equal(isStale({ verified_at: '2026-11-05T11:00:00Z', members_changed_at: '2026-11-05T10:00:00Z' }), false)
   assert.equal(isStale({ verified_at: '2026-11-05T09:00:00Z', members_changed_at: '2026-11-05T10:00:00Z' }), true)
 })
+
+test('desmentido do mesmo veículo (matéria sobre um boato) não é contradição', () => {
+  const v = verifyCluster([m({ id: 'a', title: 'Who could be behind hoax bomb threats to European air travel?', group_key: 'bbc' }), m({ id: 'b', title: 'Hoax bomb threats disrupt flights', group_key: 'bbc' })], 'media')
+  assert.notEqual(v.verification_status, 'contradita')
+})
+
+test('divergência: números diferentes no RESUMO (outras medidas) não geram alerta; só nos títulos', () => {
+  const v = verifyCluster([
+    m({ id: 'a', title: 'Lucro da Sabesp cai 36% no 3º tri', excerpt: 'Receita líquida somou R$ 1,1 bi; dívida de R$ 20 bilhões e lucro de R$ 1,39 bilhão.', group_key: 'valor' }),
+    m({ id: 'b', title: 'Lucro da Sabesp cai 36% no terceiro trimestre', excerpt: 'O lucro líquido foi de R$ 1,39 bilhão, com receita de R$ 6,2 bilhões.', group_key: 'folha' }),
+  ], 'alta')
+  assert.notEqual(v.verification_status, 'fontes_divergentes')
+  assert.ok(v.analysis.includes('Números coincidem'))
+  assert.deepEqual(extractClaims('x', 'receita de R$ 1,1 bi').map((c) => c.value), [1.1e9])
+})

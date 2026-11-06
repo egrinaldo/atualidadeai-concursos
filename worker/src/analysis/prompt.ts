@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-export const PROMPT_VERSION = 'analise-v2' // v2: acentuação obrigatória e tradução de nomes de órgãos
+export const PROMPT_VERSION = 'analise-v3' // v3: proibido copiar frases das fontes (veículos de imprensa); v2: acentuação e nomes traduzidos
 
 export type AnalysisSource = {
   n: number // número da fonte no prompt ([1], [2]…)
@@ -49,6 +49,8 @@ REGRAS OBRIGATÓRIAS
 5. Não opine nem tome partido. Apresente posições divergentes, se houver nas fontes.
 6. Fontes em inglês: escreva tudo em português, traduzindo também nomes de órgãos e cargos (General Assembly → Assembleia Geral; Security Council → Conselho de Segurança; Secretary-General → secretário-geral).
 9. Use a ortografia oficial com acentuação completa (não, também, público, econômico, saúde…).
+10. NÃO copie frases das fontes: reescreva tudo com suas palavras, em linguagem didática. Só nomes, números e citações curtas entre aspas, atribuídas a quem disse, podem ser literais.
+11. Fontes de veículos de imprensa (não oficiais) servem como registro do fato: cite o veículo; prefira a fonte oficial quando houver.
 7. "referencias" contém apenas URLs das fontes fornecidas.
 8. Responda APENAS com um objeto JSON válido, sem texto antes ou depois, sem markdown.`
 
