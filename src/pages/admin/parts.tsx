@@ -89,7 +89,7 @@ export function Table({ head, children, empty }: { head: string[]; children: Rea
 
 export const td = 'px-5 py-3 align-middle sm:px-6'
 
-export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+export function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
@@ -105,7 +105,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="h-full w-full max-w-xl overflow-y-auto border-l border-white/10 bg-navy-900 p-5 shadow-card sm:p-7"
+        className={cn('h-full w-full overflow-y-auto border-l border-white/10 bg-navy-900 p-5 shadow-card sm:p-7', wide ? 'max-w-3xl' : 'max-w-xl')}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-start justify-between gap-4">

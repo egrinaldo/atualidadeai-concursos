@@ -267,3 +267,9 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - `app_settings`: `edition.items_per_block` (diária/semanal/mensal por bloco) e `edition.template_version`.
 - Índices: `editions (reference_date, state, edition_type)` e `generated_documents (edition_id, version)`.
 - Reversão: `supabase/rollback/20261106080000_etapa2_edicoes_pdf.down.sql`. Fluxo: `docs/GERACAO_PDF.md`.
+
+## Migração 19 — Etapa 2.7 (painel editorial)
+
+- `editorial_reviews`: novos alvos (`setting`) e ações (`hold`, `add_item`, `remove_item`, `move_item`, `create`, `update`).
+- Índices: decisões por revisor; assuntos aguardando revisão.
+- Reversão: `supabase/rollback/20261106100000_etapa2_painel_editorial.down.sql`. Uso: `docs/PAINEL_EDITORIAL.md`.

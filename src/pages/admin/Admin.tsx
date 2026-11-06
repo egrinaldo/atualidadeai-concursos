@@ -18,15 +18,19 @@ import {
 } from '@/lib/admin'
 import { signOut } from '@/lib/auth'
 import { cn } from '@/utils/cn'
+import { EditorialTab, RobotTab, SourcesTab } from './Editorial'
 import { MfaGate } from './Mfa'
 import { inputClass, Kpi, Modal, Panel, RevenueChart, StatusBadge, Table, td } from './parts'
 
-type Tab = 'geral' | 'assinantes' | 'pagamentos' | 'leads'
+type Tab = 'geral' | 'assinantes' | 'pagamentos' | 'leads' | 'editorial' | 'fontes' | 'robo'
 const tabs: { id: Tab; label: string }[] = [
   { id: 'geral', label: 'Visão geral' },
   { id: 'assinantes', label: 'Assinantes' },
   { id: 'pagamentos', label: 'Pagamentos' },
   { id: 'leads', label: 'Leads' },
+  { id: 'editorial', label: 'Editorial' },
+  { id: 'fontes', label: 'Fontes' },
+  { id: 'robo', label: 'Robô' },
 ]
 
 function initialTab(): Tab {
@@ -133,13 +137,18 @@ export function Admin() {
 
       <main className="py-8">
         <Container className="space-y-6">
-          <Alert tone="warning">
-            <strong>Ambiente de teste.</strong> Os pagamentos exibidos vêm do sandbox do Mercado Pago e não representam receita real.
-          </Alert>
+          {['geral', 'assinantes', 'pagamentos'].includes(tab) && (
+            <Alert tone="warning">
+              <strong>Ambiente de teste.</strong> Os pagamentos exibidos vêm do sandbox do Mercado Pago e não representam receita real.
+            </Alert>
+          )}
           {tab === 'geral' && <OverviewTab />}
           {tab === 'assinantes' && <SubscribersTab />}
           {tab === 'pagamentos' && <PaymentsTab />}
           {tab === 'leads' && <LeadsTab />}
+          {tab === 'editorial' && <EditorialTab />}
+          {tab === 'fontes' && <SourcesTab />}
+          {tab === 'robo' && <RobotTab />}
         </Container>
       </main>
     </div>

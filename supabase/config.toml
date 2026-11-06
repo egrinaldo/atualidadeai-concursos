@@ -33,3 +33,7 @@ verify_jwt = true
 # Direitos do titular (LGPD): exportar dados e excluir conta. Exige login.
 [functions.account]
 verify_jwt = true
+
+# Painel editorial (administrador + MFA verificados dentro da função)
+[functions.editorial]
+verify_jwt = true

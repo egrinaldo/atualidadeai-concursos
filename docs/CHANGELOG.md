@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.7: painel editorial
+
+### Adicionado
+- Abas **Editorial**, **Fontes** e **Robô** no `/admin` (`src/pages/admin/Editorial.tsx`, `src/lib/editorial.ts`).
+- Edge Function `editorial` (administrador + MFA, limite de requisições): edições (aprovar/reter/gerar de novo, incluir/remover/reordenar assuntos, baixar PDF por link temporário), fila de revisão (aprovar, editar com versão, pedir nova análise, reprovar), fontes (ativar/desativar, confiabilidade, cadastro validado), configurações validadas e monitoramento do robô.
+- Migração 19; `docs/PAINEL_EDITORIAL.md`; 7 testes Deno da validação.
+
+### Alterado
+- `Modal` do painel aceita largura maior (`wide`); aviso de sandbox aparece só nas abas financeiras.
+- Workflows usam `actions/checkout@v5` e `actions/setup-node@v5` (Node 24).
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.6: geração dos PDFs
 
 ### Adicionado
