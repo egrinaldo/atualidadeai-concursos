@@ -5,6 +5,9 @@ import { clusterJob } from './cluster.ts'
 import { collect } from './collect.ts'
 import { composeJob } from './compose.ts'
 import { healthcheck } from './healthcheck.ts'
+import { cleanupJob } from './cleanup.ts'
+import { deliverJob } from './deliver.ts'
+import { personalizeJob } from './personalize.ts'
 import { renderJob } from './render.ts'
 import { reviewJob } from './review.ts'
 import { synthesizeJob } from './synthesize.ts'
@@ -22,6 +25,9 @@ export const handlers: Partial<Record<JobType, JobHandler>> = {
   analyze: analyzeJob,
   audit: auditJob,
   review: reviewJob,
+  personalize: personalizeJob,
+  deliver: deliverJob,
+  cleanup: cleanupJob,
   synthesize: synthesizeJob,
   compose: composeJob,
   render: renderJob,
