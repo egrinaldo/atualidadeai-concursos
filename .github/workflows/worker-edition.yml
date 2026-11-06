@@ -29,8 +29,8 @@ jobs:
     env:
       STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || 'render') }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
