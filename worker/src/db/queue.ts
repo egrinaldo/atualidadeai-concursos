@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export const JOB_TYPES = ['healthcheck', 'collect', 'triage', 'cluster', 'verify', 'analyze', 'compose', 'render', 'personalize', 'deliver', 'cleanup'] as const
+export const JOB_TYPES = ['healthcheck', 'collect', 'triage', 'cluster', 'verify', 'analyze', 'audit', 'synthesize', 'compose', 'render', 'personalize', 'deliver', 'cleanup'] as const
 export type JobType = (typeof JOB_TYPES)[number]
 
 export type Job = {

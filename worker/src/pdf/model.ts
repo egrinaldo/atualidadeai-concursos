@@ -29,6 +29,9 @@ export type Item = {
   approaches: string[]
   questions: Question[]
   references: Reference[]
+  audit: string // situação da auditoria de veracidade (só "aprovada"/"dispensada" seguem para o PDF)
+  timeline: { date: string; fact: string }[] // sínteses semanais/mensais
+  followUp: string | null // "Acompanhado em 3 edições (03/11 a 06/11)"
 }
 
 export type Block = { key: BlockKey; title: string; subtitle: string; items: Item[] }
@@ -90,6 +93,8 @@ export type SourceRow = {
   exam_approaches: string[]
   questions: { enunciado: string; alternativas: Record<string, string>; gabarito: string; comentario: string }[]
   refs: { url: string; source: string | null; title: string | null; official: boolean }[]
+  audit_status?: string
+  period_meta?: { timeline?: { data: string; fato: string }[]; dates?: string[] } | null
 }
 
 const isHttp = (u: string) => /^https?:\/\//i.test(u)
@@ -128,7 +133,17 @@ export function toItem(r: SourceRow, n: number, questionStart: number): Item {
       comment: q.comentario,
     })),
     references,
+    audit: r.audit_status ?? 'pendente',
+    timeline: (r.period_meta?.timeline ?? []).map((t) => ({ date: t.data, fact: t.fato })),
+    followUp: followUp(r.period_meta?.dates),
   }
+}
+
+const dm = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`
+function followUp(dates: string[] | undefined): string | null {
+  if (!dates || dates.length < 2) return null
+  const s = [...dates].sort()
+  return `Acompanhado em ${s.length} edições diárias (${dm(s[0])} a ${dm(s.at(-1)!)})`
 }
 
 /** Monta o documento a partir das linhas já ordenadas por bloco. */

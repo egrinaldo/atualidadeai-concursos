@@ -1,10 +1,12 @@
 import type { JobType } from '../db/queue.ts'
 import { analyzeJob } from './analyze.ts'
+import { auditJob } from './audit.ts'
 import { clusterJob } from './cluster.ts'
 import { collect } from './collect.ts'
 import { composeJob } from './compose.ts'
 import { healthcheck } from './healthcheck.ts'
 import { renderJob } from './render.ts'
+import { synthesizeJob } from './synthesize.ts'
 import { triageJob } from './triage.ts'
 import { verifyJob } from './verify.ts'
 import type { JobHandler } from './types.ts'
@@ -17,6 +19,8 @@ export const handlers: Partial<Record<JobType, JobHandler>> = {
   cluster: clusterJob,
   verify: verifyJob,
   analyze: analyzeJob,
+  audit: auditJob,
+  synthesize: synthesizeJob,
   compose: composeJob,
   render: renderJob,
 }

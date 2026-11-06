@@ -37,3 +37,6 @@ desktop.ini
 
 # Amostras de PDF baixadas para conferência (não versionar)
 .amostras/
+
+# Arquivos entregues pelo Claude no app (cópias locais, não versionar)
+Claude outputs/
