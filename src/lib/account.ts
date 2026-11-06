@@ -18,3 +18,14 @@ export function downloadJson(filename: string, data: unknown) {
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+/** Informativos entregues ao assinante (cópias personalizadas, disponíveis por 7 dias). */
+export type MyDocument = { id: string; sent_at: string; available: boolean; edition_type: 'diaria' | 'semanal' | 'mensal'; state: string; reference_date: string; pages: number | null; size: number | null }
+
+export function myDocuments() {
+  return call<{ documents: MyDocument[] }>('account', { action: 'documents' })
+}
+
+export function myDocumentUrl(deliveryId: string) {
+  return call<{ url: string; expiresIn: number }>('account', { action: 'document_url', delivery_id: deliveryId })
+}

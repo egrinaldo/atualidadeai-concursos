@@ -1,19 +1,21 @@
 # Edições do informativo (horários de Brasília = UTC−3):
 #   22h12 — monta a diária do dia seguinte (após o fechamento das 22h); às segundas/dia 1, gera as sínteses
 #           das revisões semanal/mensal a partir das edições anteriores, audita e monta as revisões
-#   04h35 — audita o que ainda estiver pendente nas edições e gera os PDFs base (após o prazo de revisão das 04h30);
-#           a publicação às 06h chega na Subetapa 2.8
+#   04h35 — audita o que ainda estiver pendente nas edições, gera os PDFs base (após o prazo de revisão das 04h30)
+#           e prepara as cópias personalizadas (nome + e-mail) de cada assinante
+#   05h57 — publica às 06h (área do assinante + e-mail, se ligado) e faz a limpeza (cópias 7 dias, base 90 dias)
 name: worker-edition
 on:
   schedule:
     - cron: '12 1 * * *'   # 22h12 em Brasília
     - cron: '35 7 * * *'   # 04h35 em Brasília
+    - cron: '57 8 * * *'   # 05h57 em Brasília (o job espera dar 06h)
   workflow_dispatch:
     inputs:
       step:
         description: 'Etapa a executar'
         type: choice
-        options: [compose, render]
+        options: [compose, render, deliver]
         default: compose
 permissions:
   contents: read
@@ -29,10 +31,11 @@ jobs:
       run:
         working-directory: worker
     env:
-      STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || 'render') }}
+      STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || (github.event.schedule == '57 8 * * *' && 'deliver' || 'render')) }}
       # Etapas de cada passo (tipo@etiqueta = rodada própria na mesma janela)
       COMPOSE_STEPS: audit@edicao,review@edicao,compose@diaria,synthesize,audit@periodo,compose@periodo
-      RENDER_STEPS: audit@pdf,render
+      RENDER_STEPS: audit@pdf,render,personalize
+      DELIVER_STEPS: deliver,cleanup
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -44,9 +47,21 @@ jobs:
       - name: Instalar Chromium (só para gerar PDF)
         if: env.STEP == 'render'
         run: npx playwright install --with-deps chromium
-      - run: npm run job -- tick "$([ "$STEP" = compose ] && echo "$COMPOSE_STEPS" || echo "$RENDER_STEPS")"
+      - run: |
+          case "$STEP" in
+            compose) STEPS="$COMPOSE_STEPS" ;;
+            deliver) STEPS="$DELIVER_STEPS" ;;
+            *) STEPS="$RENDER_STEPS" ;;
+          esac
+          npm run job -- tick "$STEPS"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           # Auditoria e sínteses usam a IA; sem a chave, nada não auditado chega ao PDF
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          # Entrega por e-mail (só envia com delivery.email_enabled = true); EMAIL_TEST_TO redireciona tudo (teste)
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_REPLY_TO: ${{ secrets.EMAIL_REPLY_TO }}
+          EMAIL_TEST_TO: ${{ secrets.EMAIL_TEST_TO }}
+          SITE_URL: ${{ vars.SITE_URL }}
