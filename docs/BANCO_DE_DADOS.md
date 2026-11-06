@@ -248,3 +248,9 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - Índices da fila de verificação e da fila de revisão.
 - `app_settings`: `verification.edition_statuses`, `verification.single_source_min_reliability` (4).
 - Reversão: `supabase/rollback/20261106020000_etapa2_verificacao.down.sql`. Regras: `docs/VERIFICACAO_INFORMACOES.md`.
+
+## Migração 16 — Etapa 2.5 (IA)
+
+- `app_settings`: `ai.models` preenchido com os modelos verificados (só se estava vazio), `ai.analysis_per_block`, `ai.max_calls_per_run` (6), `ai.lookback_hours` (36).
+- Índices: `ai_usage_logs (created_at)` para a cota diária; `news_analyses (cluster_id, input_hash, prompt_version, status)` para reaproveitamento.
+- Reversão: `supabase/rollback/20261106040000_etapa2_ia.down.sql`. Detalhes: `docs/IA_NVIDIA.md`.

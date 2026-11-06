@@ -300,7 +300,8 @@ Local: `cd worker && npm ci && npm test` · `npm run job -- healthcheck` (com as
 
 ### 8.1 Coleta agendada (Subetapa 2.2)
 
-- Workflow `.github/workflows/worker-collect.yml`: cron `7 */3 * * *` (UTC) + execução manual. Executa coleta, triagem, agrupamento e verificação (`tick collect,triage,cluster,verify`).
+- Workflow `.github/workflows/worker-collect.yml`: cron `7 */3 * * *` (UTC) + execução manual. Executa coleta, triagem, agrupamento, verificação e análise por IA (`tick collect,triage,cluster,verify,analyze`).
 - Usa os segredos `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (Settings → Secrets and variables → Actions).
 - O GitHub só executa agendamentos do branch padrão (`main`): o robô passa a rodar sozinho depois do merge.
+- Segredo `NVIDIA_API_KEY` (mesma tela) habilita a análise por IA; sem ele a etapa é ignorada. Modelos e limites em `app_settings` (`ai.*`) — ver `docs/IA_NVIDIA.md`.
 - Detalhes: `docs/ROBO_NOTICIAS.md`.

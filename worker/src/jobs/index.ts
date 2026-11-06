@@ -1,4 +1,5 @@
 import type { JobType } from '../db/queue.ts'
+import { analyzeJob } from './analyze.ts'
 import { clusterJob } from './cluster.ts'
 import { collect } from './collect.ts'
 import { healthcheck } from './healthcheck.ts'
@@ -13,4 +14,5 @@ export const handlers: Partial<Record<JobType, JobHandler>> = {
   triage: triageJob,
   cluster: clusterJob,
   verify: verifyJob,
+  analyze: analyzeJob,
 }
