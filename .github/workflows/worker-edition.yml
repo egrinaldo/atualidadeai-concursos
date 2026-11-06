@@ -31,7 +31,7 @@ jobs:
     env:
       STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || 'render') }}
       # Etapas de cada passo (tipo@etiqueta = rodada própria na mesma janela)
-      COMPOSE_STEPS: compose@diaria,synthesize,audit@edicao,compose@periodo
+      COMPOSE_STEPS: audit@edicao,review@edicao,compose@diaria,synthesize,audit@periodo,compose@periodo
       RENDER_STEPS: audit@pdf,render
     steps:
       - uses: actions/checkout@v5

@@ -16,6 +16,7 @@ import {
   type Analysis,
   type AnalysisChanges,
   type AuditStatus,
+  type RobotDecision,
   type ClusterDetail,
   type Dashboard,
   type EditionDetail,
@@ -83,7 +84,7 @@ const Feedback = ({ msg }: { msg: { tone: 'success' | 'error'; text: string } | 
 
 export function EditorialTab() {
   const dash = useLoad<Dashboard>(editorialApi.dashboard)
-  const queue = useLoad<{ rows: ReviewRow[] }>(editorialApi.reviewQueue)
+  const queue = useLoad<{ rows: ReviewRow[]; robot: RobotDecision[] }>(editorialApi.reviewQueue)
   const [edition, setEdition] = useState<string | null>(null)
   const [cluster, setCluster] = useState<string | null>(null)
   const reloadAll = () => {
@@ -150,10 +151,45 @@ export function EditorialTab() {
         )}
       </Panel>
 
+      <Panel title={`Revisão automática — decisões do robô nas últimas 48h${queue.data ? ` (${queue.data.robot.length})` : ''}`}>
+        <p className="mb-3 text-sm text-slate-400">
+          O robô resolve a fila sozinho com regras conservadoras: na dúvida, o assunto fica fora da edição. Para desfazer, abra o assunto e use Aprovar, Pedir nova análise ou Reprovar.
+        </p>
+        {queue.data && (
+          <Table head={['Quando', 'Assunto', 'Decisão', 'Motivo', '']} empty={!queue.data.robot.length}>
+            {queue.data.robot.map((r, i) => (
+              <tr key={i} className="border-t border-white/5">
+                <td className={cn(td, 'whitespace-nowrap text-xs text-slate-400')}>{shortDate(r.created_at, true)}</td>
+                <td className={cn(td, 'max-w-sm')}>
+                  <p className="line-clamp-2 text-white">{r.cluster?.title ?? '—'}</p>
+                </td>
+                <td className={td}>
+                  <Badge tone={robotActionLabels[r.action]?.tone ?? 'neutral'} className="whitespace-nowrap normal-case tracking-normal">
+                    {robotActionLabels[r.action]?.label ?? r.action}
+                  </Badge>
+                </td>
+                <td className={cn(td, 'max-w-md text-xs text-slate-400')}>{r.notes?.replace(/^Robô:\s*/, '')}</td>
+                <td className={cn(td, 'text-right')}>
+                  <Button size="sm" variant="ghost" onClick={() => setCluster(r.cluster_id)}>
+                    Abrir
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </Table>
+        )}
+      </Panel>
+
       {edition && <EditionModal id={edition} onClose={() => setEdition(null)} onChanged={reloadAll} onOpenCluster={setCluster} />}
       {cluster && <ClusterModal id={cluster} onClose={() => setCluster(null)} onChanged={reloadAll} />}
     </div>
   )
+}
+
+const robotActionLabels: Record<string, { label: string; tone: 'success' | 'warning' | 'neutral' | 'brand' | 'signal' }> = {
+  approve: { label: 'Liberado', tone: 'success' },
+  request_reanalysis: { label: 'Nova análise', tone: 'brand' },
+  reject: { label: 'Descartado', tone: 'warning' },
 }
 
 function reviewReason(r: ReviewRow): string {
@@ -559,7 +595,7 @@ function ClusterModal({ id, onClose, onChanged }: { id: string; onClose: () => v
               <ul className="space-y-1 text-xs text-slate-400">
                 {data.history.map((h, i) => (
                   <li key={i}>
-                    {shortDate(h.created_at, true)} · {h.action}
+                    {shortDate(h.created_at, true)} · {h.notes?.startsWith('Robô:') ? 'robô · ' : ''}{h.action}
                     {h.notes ? ` · ${h.notes}` : ''}
                   </li>
                 ))}

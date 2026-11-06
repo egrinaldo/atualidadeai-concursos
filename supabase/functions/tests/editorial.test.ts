@@ -82,6 +82,8 @@ Deno.test('configurações: lista fechada e validação de cada valor', () => {
   assert(!validateSetting('audit.max_per_run', 0).ok)
   assert(validateSetting('synthesis.similarity_threshold', 0.4).ok)
   assert(!validateSetting('synthesis.similarity_threshold', 0.1).ok)
+  assert(validateSetting('review.auto', true).ok)
+  assert(!validateSetting('review.max_reanalysis', 5).ok)
   assert(!validateSetting('ai.analysis_per_block', { estado: 5, nacional: 6, internacional: 4, extra: 1 }).ok)
 })
 

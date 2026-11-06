@@ -165,6 +165,8 @@ export const SETTINGS: Record<string, { label: string; help: string; check: (v: 
   'audit.enabled': { label: 'Auditoria de veracidade ligada', help: 'true ou false (desligada, nenhum texto novo chega ao PDF sem dispensa do editor)', check: (v) => typeof v === 'boolean' },
   'audit.max_per_run': { label: 'Auditorias por rodada do robô', help: 'Inteiro de 1 a 20 (antes do PDF o limite é maior)', check: (v) => int(v, 1, 20) },
   'audit.auto_correct': { label: 'Correção automática após auditoria', help: 'true ou false — texto da IA reprovado volta ao redator uma vez com os problemas', check: (v) => typeof v === 'boolean' },
+  'review.auto': { label: 'Revisão automática da fila', help: 'true ou false — o robô decide a fila de revisão (na dúvida, o assunto fica fora da edição)', check: (v) => typeof v === 'boolean' },
+  'review.max_reanalysis': { label: 'Novas análises pedidas pelo robô por assunto', help: 'Inteiro de 0 a 3 (depois disso o assunto é descartado)', check: (v) => int(v, 0, 3) },
   'synthesis.max_calls_per_run': { label: 'Sínteses por rodada (semanal/mensal)', help: 'Inteiro de 0 a 40', check: (v) => int(v, 0, 40) },
   'synthesis.similarity_threshold': { label: 'Limiar para juntar o mesmo assunto em dias diferentes', help: 'Número de 0,25 a 0,8 (padrão 0,4)', check: (v) => typeof v === 'number' && v >= 0.25 && v <= 0.8 },
   'triage.min_relevance_for_edition': { label: 'Relevância mínima para entrar na edição', help: 'baixa, media, alta ou muito_alta', check: (v) => ['baixa', 'media', 'alta', 'muito_alta'].includes(v as string) },
