@@ -1,5 +1,5 @@
 import { safeFetch } from '../sources/fetcher.ts'
-import { canonicalUrl, contentFingerprint, excerpt, sha256 } from '../sources/normalize.ts'
+import { canonicalUrl, contentFingerprint, excerpt, safeSlice, sha256 } from '../sources/normalize.ts'
 import { parseFeed, parseIbge, parseNewsSitemap, type RawItem } from '../sources/parse.ts'
 import { isAllowed, parseRobots, type RobotsRules } from '../sources/robots.ts'
 import type { JobContext } from './types.ts'
@@ -61,12 +61,12 @@ export function toNewsRows(source: Source, items: RawItem[], now: Date) {
     const body = summaryOnly ? (lead ? excerpt(lead, LIMITS.summaryChars) : '') : it.content || it.summary
     rows.push({
       source_id: source.id,
-      title: it.title.slice(0, 500),
+      title: safeSlice(it.title, 500),
       original_url: it.url.slice(0, 2000),
       canonical_url: canonical.slice(0, 2000),
       url_hash: sha256(canonical),
       content_hash: contentFingerprint(it.title, body),
-      original_content: summaryOnly ? null : body ? body.slice(0, 20_000) : null,
+      original_content: summaryOnly ? null : body ? safeSlice(body, 20_000) : null,
       excerpt: lead ? excerpt(lead, LIMITS.summaryChars) : null,
       author: it.author?.slice(0, 200) ?? null,
       language: source.language,

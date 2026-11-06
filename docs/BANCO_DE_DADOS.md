@@ -261,3 +261,9 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - Novo tipo de fonte `sitemap` (mapa de notícias no padrão Google News).
 - 24 grupos editoriais novos; 41 fontes de imprensa cadastradas (29 ativas, 14 inativas com motivo em `terms_notes`, incluindo as já existentes de G1/BBC/CNN Brasil atualizadas).
 - Reversão: `supabase/rollback/20261106060000_etapa2_veiculos_imprensa.down.sql` (desativa os veículos; notícias já coletadas são preservadas).
+
+## Migração 18 — Etapa 2.6 (edições e PDFs)
+
+- `app_settings`: `edition.items_per_block` (diária/semanal/mensal por bloco) e `edition.template_version`.
+- Índices: `editions (reference_date, state, edition_type)` e `generated_documents (edition_id, version)`.
+- Reversão: `supabase/rollback/20261106080000_etapa2_edicoes_pdf.down.sql`. Fluxo: `docs/GERACAO_PDF.md`.

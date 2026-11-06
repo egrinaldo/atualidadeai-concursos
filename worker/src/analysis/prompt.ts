@@ -1,3 +1,4 @@
+import { safeSlice } from '../sources/normalize.ts'
 import { createHash } from 'node:crypto'
 
 export const PROMPT_VERSION = 'analise-v3' // v3: proibido copiar frases das fontes (veículos de imprensa); v2: acentuação e nomes traduzidos
@@ -27,7 +28,7 @@ const MAX_SOURCES = 6
 export function buildInput(base: Omit<AnalysisInput, 'sources'>, sources: Omit<AnalysisSource, 'n'>[]): AnalysisInput {
   return {
     ...base,
-    sources: sources.slice(0, MAX_SOURCES).map((s, i) => ({ ...s, n: i + 1, text: s.text.replace(/\s+/g, ' ').trim().slice(0, MAX_SOURCE_CHARS) })),
+    sources: sources.slice(0, MAX_SOURCES).map((s, i) => ({ ...s, n: i + 1, text: safeSlice(s.text.replace(/\s+/g, ' ').trim(), MAX_SOURCE_CHARS) })),
   }
 }
 

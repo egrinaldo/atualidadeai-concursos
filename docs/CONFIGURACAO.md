@@ -303,5 +303,6 @@ Local: `cd worker && npm ci && npm test` · `npm run job -- healthcheck` (com as
 - Workflow `.github/workflows/worker-collect.yml`: cron `7 */3 * * *` (UTC) + execução manual. Executa coleta, triagem, agrupamento, verificação e análise por IA (`tick collect,triage,cluster,verify,analyze`).
 - Usa os segredos `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (Settings → Secrets and variables → Actions).
 - O GitHub só executa agendamentos do branch padrão (`main`): o robô passa a rodar sozinho depois do merge.
+- Workflow `worker-edition.yml`: monta as edições às 22h12 e gera os PDFs às 04h35 (Brasília); instala o Chromium só na geração. Ver `docs/GERACAO_PDF.md`.
 - Segredo `NVIDIA_API_KEY` (mesma tela) habilita a análise por IA; sem ele a etapa é ignorada. Modelos e limites em `app_settings` (`ai.*`) — ver `docs/IA_NVIDIA.md`.
 - Detalhes: `docs/ROBO_NOTICIAS.md`.
