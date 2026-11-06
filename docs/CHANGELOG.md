@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.5: camada de IA (NVIDIA NIM)
+
+### Adicionado
+- Abstração de provedor de IA, implementação NVIDIA NIM, cota diária, registro de uso e troca automática de modelo (`worker/src/ai/`).
+- Análise didática por assunto com prompt versionado (`analise-v2`), validação por schema, ancoragem de números nas fontes, checagem de acentuação e uma correção automática (`worker/src/analysis/`).
+- Job `analyze` com seleção por bloco (estado → nacional → internacional), reaproveitamento por hash e limite por rodada; workflow roda `...,verify,analyze` com `NVIDIA_API_KEY`.
+- Migração 16 + reversão; `docs/IA_NVIDIA.md`; 14 testes novos (63 no total).
+
+### Alterado
+- Assunto analisado que ganha matéria volta para verificação/reanálise.
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.4: verificação das informações
 
 ### Adicionado

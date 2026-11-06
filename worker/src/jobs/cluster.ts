@@ -98,8 +98,8 @@ export async function clusterJob(_job: { payload: Record<string, unknown> }, ctx
     // members_changed_at sinaliza para a verificação (2.4) que o assunto precisa ser verificado de novo
     const { error } = await ctx.db.from('news_clusters').update({ ...aggregateCluster(byCluster.get(id)!.map(toMember)), members_changed_at: now, updated_at: now }).eq('id', id)
     if (error) failed++
-    // Assunto já verificado que ganhou matéria volta para a fila de verificação
-    const { error: e2 } = await ctx.db.from('news_clusters').update({ status: 'open' }).eq('id', id).eq('status', 'verified')
+    // Assunto já verificado/analisado que ganhou matéria volta para a fila (verificação e, depois, nova análise)
+    const { error: e2 } = await ctx.db.from('news_clusters').update({ status: 'open' }).eq('id', id).in('status', ['verified', 'analyzed'])
     if (e2) failed++
   })
   if (failed) throw new Error(`agrupamento: ${failed} gravações falharam`)
