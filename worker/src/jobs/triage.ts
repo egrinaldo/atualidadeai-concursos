@@ -13,6 +13,7 @@ export async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>
 
 type Row = {
   id: string
+  original_url: string
   title: string
   excerpt: string | null
   language: string
@@ -41,7 +42,7 @@ export async function triageJob(job: { payload: Record<string, unknown> }, ctx: 
 async function triageBatch(_job: { payload: Record<string, unknown> }, ctx: JobContext) {
   const { data, error } = await ctx.db
     .from('news')
-    .select('id, title, excerpt, language, scope, state, category, news_sources!inner(scope, state, default_category, reliability_level, is_primary, language)')
+    .select('id, title, excerpt, original_url, language, scope, state, category, news_sources!inner(scope, state, default_category, reliability_level, is_primary, language)')
     .eq('status', 'collected')
     .order('collected_at', { ascending: true })
     .limit(TRIAGE_BATCH)
@@ -51,7 +52,7 @@ async function triageBatch(_job: { payload: Record<string, unknown> }, ctx: JobC
   const counts = { triaged: 0, discarded: 0, muito_alta: 0, alta: 0, media: 0, baixa: 0, reclassified_scope: 0, errors: 0 }
 
   await pool(rows, 8, async (r) => {
-    const res = triage({ ...r, source: r.news_sources })
+    const res = triage({ ...r, url: r.original_url, source: r.news_sources })
     const update = res.discard
       ? { status: 'discarded', discard_reason: res.reason, language: res.language, triaged_at: now }
       : {

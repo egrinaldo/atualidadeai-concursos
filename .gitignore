@@ -33,3 +33,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+
+# Amostras de PDF baixadas para conferência (não versionar)
+.amostras/

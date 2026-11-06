@@ -61,9 +61,19 @@ export function contentFingerprint(title: string, text: string): string {
   return sha256(norm(title) + '|' + norm(text).slice(0, 2000))
 }
 
+/** Remove metades soltas de caracteres especiais (emoji etc.) — JSON com elas é rejeitado pelo banco. */
+export function dropLoneSurrogates(s: string): string {
+  return s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
+}
+
+/** Corta em até `max` unidades sem partir caracteres especiais ao meio. */
+export function safeSlice(s: string, max: number): string {
+  return dropLoneSurrogates(s.slice(0, max))
+}
+
 export function excerpt(text: string, max = 400): string {
-  if (text.length <= max) return text
-  const cut = text.slice(0, max)
+  if (text.length <= max) return dropLoneSurrogates(text)
+  const cut = safeSlice(text, max)
   return cut.slice(0, Math.max(cut.lastIndexOf(' '), max - 40)).trim() + '…'
 }
 

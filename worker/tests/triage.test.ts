@@ -160,3 +160,19 @@ test('assunto: um estado → estadual; estados diferentes → nacional', () => {
   const varios = aggregateCluster([member({ scope: 'estadual', state: 'SP' }), member({ id: '2', scope: 'estadual', state: 'MT' })])
   assert.deepEqual([varios.scope, varios.state], ['nacional', null])
 })
+
+test('alcance: veículo estadual (O Povo) publica mundo e Brasil — decide pela seção/conteúdo; órgão oficial fica no estado', () => {
+  const opovo: Src = { ...estadualCE, is_primary: false, reliability_level: 4 }
+  const mundo = kept(triage({ ...input('O que a China espera de cúpula com Trump e Putin sobre a Ucrânia?', opovo), url: 'https://www.opovo.com.br/noticias/mundo/2026/11/06/china.html' }))
+  assert.equal(mundo.scope, 'internacional')
+  const semSecao = kept(triage({ ...input('Latino-americanos mudam voto e rejeitam Trump nas eleições dos EUA', opovo), url: 'https://www.opovo.com.br/noticias/2026/11/06/x.html' }))
+  assert.equal(semSecao.scope, 'internacional')
+  const brasil = kept(triage({ ...input('Governo anuncia reajuste do salário mínimo para 2027', opovo), url: 'https://www.opovo.com.br/noticias/brasil/2026/11/06/x.html' }))
+  assert.equal(brasil.scope, 'nacional')
+  const local = kept(triage({ ...input('Prefeitura de Fortaleza amplia horário de postos de saúde', opovo), url: 'https://www.opovo.com.br/noticias/fortaleza/2026/11/06/x.html' }))
+  assert.deepEqual([local.scope, local.state], ['estadual', 'CE'])
+  const mp = kept(triage({ ...input('MP firma acordo com Buenos Aires contra violência nos estádios', estadualCE), url: 'https://mpce.mp.br/mundo/x/' }))
+  assert.equal(mp.scope, 'estadual') // órgão oficial: mesmo citando o exterior
+  const g1mundo = kept(triage({ ...input('Presidente do Paraguai renuncia', nacional), url: 'https://g1.globo.com/mundo/noticia/2026/11/05/x.ghtml' }))
+  assert.equal(g1mundo.scope, 'internacional')
+})

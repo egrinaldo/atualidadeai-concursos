@@ -26,7 +26,7 @@ Rodam logo após a coleta, no mesmo workflow (`tick collect,triage,cluster,verif
 2. **Ruído descartado** com motivo (`discard_reason`): áudio/vídeo sem texto, boletins diários, registros de sessão, avisos de expediente, títulos vazios.
 3. **Relevância 0–100**: base 30, mais pontos para pautas de prova (lei aprovada/sancionada, MP, decisão do STF, indicadores oficiais, eleições, organismos internacionais, saúde pública, clima, direitos), menos para pauta institucional (homenagens, eventos, cursos, divulgação, esporte, discursos). Fonte oficial +4. Faixas: **muito alta** ≥ 70, **alta** ≥ 50, **média** ≥ 35, **baixa** < 35. Cada regra aplicada fica em `triage_reasons`.
 4. **Categoria** (17 de `news_categories`) por palavras-chave; sem sinal → padrão da fonte.
-5. **Alcance/UF**: vem da fonte. Notícia de fonte nacional sobre **um único estado** vai para o bloco desse estado (exceto lei federal); sobre fato **no exterior** sem envolvimento brasileiro vai para internacional.
+5. **Alcance/UF**: vem da fonte. Veículo de imprensa estadual (O Povo, CN7) que não cita o próprio estado vai para Mundo (fato no exterior ou seção `/mundo/`) ou Brasil (seção `/brasil/`); órgão oficial do estado fica sempre no bloco do estado. Notícia de fonte nacional sobre **um único estado** vai para o bloco desse estado (exceto lei federal); sobre fato **no exterior** sem envolvimento brasileiro vai para internacional.
 
 **Agrupamento** (`worker/src/triage/cluster.ts`): notícias sobre o mesmo fato viram um **assunto** (`news_clusters`):
 

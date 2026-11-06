@@ -107,3 +107,7 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D62 | **Veículo cujos termos proíbem robôs fica inativo** | Respeito contratual; motivo registrado na fonte |
 | D63 | **robots.txt conferido também no destino de redirecionamentos** | Feeds que redirecionam para servidores fechados a robôs não são coletados |
 | D64 | **IA proibida de copiar frases (14+ palavras) e checagem de grafia de nomes** | Texto próprio (direito autoral) e menos erros de nomes; casos duvidosos vão para revisão |
+| D65 | **PDF por template HTML/CSS próprio + Chromium (Playwright) no GitHub Actions** | Gratuito, qualidade tipográfica, mesma identidade do site |
+| D66 | **Capa e miolo renderizados separadamente e unidos com pdf-lib** | Capa de página inteira sem cabeçalho/rodapé; pdf-lib também fará a personalização (2.8) |
+| D67 | **Fontes embutidas (OFL) e PDF base sem dado pessoal, validado por QA** | Resultado reprodutível; LGPD: personalização só na cópia do assinante |
+| D68 | **Alcance de veículo estadual decidido pela seção/conteúdo** | O Povo publica Ceará, Brasil e mundo no mesmo feed |
