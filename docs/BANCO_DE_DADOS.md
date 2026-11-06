@@ -254,3 +254,10 @@ Storage: bucket **privado** `documents` (somente PDF, até 20 MB). Retenção am
 - `app_settings`: `ai.models` preenchido com os modelos verificados (só se estava vazio), `ai.analysis_per_block`, `ai.max_calls_per_run` (6), `ai.lookback_hours` (36).
 - Índices: `ai_usage_logs (created_at)` para a cota diária; `news_analyses (cluster_id, input_hash, prompt_version, status)` para reaproveitamento.
 - Reversão: `supabase/rollback/20261106040000_etapa2_ia.down.sql`. Detalhes: `docs/IA_NVIDIA.md`.
+
+## Migração 17 — Etapa 2.5b (veículos de imprensa)
+
+- `news_sources.content_mode` (`full` | `summary`): no modo resumo só título + resumo de até 400 caracteres são gravados (`original_content` fica nulo).
+- Novo tipo de fonte `sitemap` (mapa de notícias no padrão Google News).
+- 24 grupos editoriais novos; 41 fontes de imprensa cadastradas (29 ativas, 14 inativas com motivo em `terms_notes`, incluindo as já existentes de G1/BBC/CNN Brasil atualizadas).
+- Reversão: `supabase/rollback/20261106060000_etapa2_veiculos_imprensa.down.sql` (desativa os veículos; notícias já coletadas são preservadas).

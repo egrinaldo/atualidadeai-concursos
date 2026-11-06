@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.5b: veículos de imprensa
+
+### Adicionado
+- 29 veículos de imprensa ativos (G1, O Globo, Valor, UOL, Folha, CNN Brasil, Poder360, Veja, Jovem Pan, CartaCapital, InfoMoney, Conjur, G1 Ceará, O Povo, CN7, BBC, DW, El País, Euronews, NPR) e Agência Gov, em modo resumo; 14 inativos com motivo (termos proíbem robôs ou feed parado).
+- Mapa de notícias (Google News sitemap) como tipo de fonte; `content_mode` nas fontes (migração 17).
+- Validação da IA: proibição de cópia literal e checagem de grafia de nomes; prompt `analise-v3`.
+- Paginação das consultas (> 1.000 linhas) e processamento em lotes na triagem/agrupamento.
+
+### Corrigido
+- robots.txt agora é conferido também no destino de redirecionamentos.
+- Verificação: desmentido só de outro grupo editorial; divergência numérica só entre títulos; "bi/mi/tri" reconhecidos.
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.5: camada de IA (NVIDIA NIM)
 
 ### Adicionado

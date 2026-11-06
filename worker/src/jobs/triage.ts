@@ -26,7 +26,19 @@ type Row = {
  * Triagem: classifica as notícias recém-coletadas (idioma, alcance/UF, categoria, relevância 0–100 com motivos)
  * e descarta o que não é notícia para o produto. Determinística — não usa IA.
  */
-export async function triageJob(_job: { payload: Record<string, unknown> }, ctx: JobContext) {
+export async function triageJob(job: { payload: Record<string, unknown> }, ctx: JobContext) {
+  // Volume alto: repete em lotes até esvaziar (máx. 8 lotes por rodada)
+  const total: Record<string, number | boolean> = {}
+  for (let i = 0; i < 8; i++) {
+    const r = await triageBatch(job, ctx)
+    for (const [k, v] of Object.entries(r)) if (typeof v === 'number') total[k] = Number(total[k] ?? 0) + v
+    total.more_pending = r.more_pending
+    if (!r.more_pending) break
+  }
+  return total
+}
+
+async function triageBatch(_job: { payload: Record<string, unknown> }, ctx: JobContext) {
   const { data, error } = await ctx.db
     .from('news')
     .select('id, title, excerpt, language, scope, state, category, news_sources!inner(scope, state, default_category, reliability_level, is_primary, language)')

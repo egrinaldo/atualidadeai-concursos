@@ -6,7 +6,7 @@ import { AIError, type AIProvider, type ChatRequest } from '../src/ai/types.ts'
 import { generateAnalysis, toAnalysisRow } from '../src/analysis/generate.ts'
 import { buildInput, buildMessages, inputHash, type AnalysisInput } from '../src/analysis/prompt.ts'
 import { selectForAnalysis, type Candidate, type SelectionPolicy } from '../src/analysis/select.ts'
-import { numbersIn, unaccentedWords, validateAnalysis } from '../src/analysis/validate.ts'
+import { copiedSpans, numbersIn, unaccentedWords, unknownNames, validateAnalysis } from '../src/analysis/validate.ts'
 
 const input: AnalysisInput = buildInput(
   { block: 'nacional', state: null, category: 'economia', verification: { status: 'corroborada', independent_sources: 2, summary: '2 fontes.' } },
@@ -67,6 +67,27 @@ test('validação: texto sem acentuação é recusado; acentuado passa', () => {
   assert.equal(sem.ok, false)
   if (!sem.ok) assert.ok(sem.errors.some((e) => e.startsWith('texto sem acentuação')))
   assert.deepEqual(unaccentedWords('Não houve decisão; a situação econômica é pública.'), [])
+})
+
+test('validação: cópia literal da fonte é recusada; citação entre aspas e reescrita passam', () => {
+  const src = 'A produção industrial recuou 0,8% em setembro, quarta queda em cinco meses. No ano, acumula alta de 0,4%.'
+  const copia = 'Segundo o IBGE a produção industrial recuou 0,8% em setembro, quarta queda em cinco meses. No ano, acumula alta.'
+  assert.equal(copiedSpans(copia, [src]).length, 1)
+  assert.deepEqual(copiedSpans('O IBGE disse: "a produção industrial recuou 0,8% em setembro, quarta queda em cinco meses. No ano, acumula alta".', [src]), [])
+  assert.deepEqual(copiedSpans('A indústria encolheu 0,8% em setembro e já soma quatro recuos nos últimos cinco meses.', [src]), [])
+  const bad = validateAnalysis(JSON.stringify({ ...good, o_que_aconteceu: copia }), input)
+  assert.equal(bad.ok, false)
+  if (!bad.ok) assert.ok(bad.errors.some((e) => e.startsWith('trecho copiado')))
+})
+
+test('validação: nome de pessoa com grafia diferente das fontes vira aviso (revisão)', () => {
+  const fontes = ['Quem é Pedro Alliana, vice-presidente do Paraguai que vai assumir após renúncia de Santiago Peña']
+  assert.deepEqual(unknownNames('O vice Pedro Allana assume após a saída de Santiago Peña.', fontes), ['Allana (fontes: alliana)'])
+  assert.deepEqual(unknownNames('Pedro Alliana assume; a Assembleia Geral da ONU, o Comitê de Política Monetária e o Banco Central comentaram.', fontes), [])
+  assert.deepEqual(unknownNames('No Ceará, a Polícia Civil prendeu o suspeito em Acaraú.', ['MP do Ceará e as Polícias Militar e Civil prendem suspeito em Acaraú']), [])
+  assert.deepEqual(unknownNames('O vice Pedro Allana assume.', ['Vice Pedro Allana assume', 'Quem é Pedro Alliana, o vice']), ['Allana (fontes divergem: allana / alliana)'])
+  assert.deepEqual(unknownNames('O Senado aprovou e o senador votou.', ['O Senado aprovou; o senador votou contra a Senadora']), [])
+  assert.deepEqual(unknownNames('O Painel de Especialistas e a Assembleia Geral debateram.', ['The Panel of Experts and the General Assembly discussed the report on Yemen sanctions']), [])
 })
 
 test('validação: formato inválido e JSON quebrado', () => {
