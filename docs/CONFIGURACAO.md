@@ -211,7 +211,7 @@ Secrets usados pelas Edge Functions: `RESEND_API_KEY`, `EMAIL_FROM` (opcional), 
 | Branch | Uso | Publicação na Vercel |
 | --- | --- | --- |
 | `develop` | Todas as alterações entram aqui primeiro | Endereço de **prévia** (não afeta o site principal) |
-| `main` | Somente código já conferido na prévia | **Produção** — `https://atualidadeai-concursos.vercel.app` |
+| `main` | Somente código já conferido na prévia | **Produção** — `https://www.atualidadeaiconcursos.com.br` |
 
 ```powershell
 # trabalhar sempre na develop
@@ -232,7 +232,7 @@ Recomendado: *Settings → Branches* → regra para `main` exigindo Pull Request
 | Item | Valor |
 | --- | --- |
 | Projeto | `atualidadeai-concursos` (plano **Hobby**) |
-| Produção | `https://atualidadeai-concursos.vercel.app` (branch `main`) |
+| Produção | `https://www.atualidadeaiconcursos.com.br` (branch `main`; domínio próprio desde 07/11/2026 — o endereço `.vercel.app` não responde mais) |
 | Prévias | uma por branch/commit, ex.: `atualidadeai-concursos-git-develop-<conta>.vercel.app` |
 | Framework / build / saída | definidos no `vercel.json`: Vite · `npm run build` · `dist` · `npm install` |
 
@@ -247,7 +247,7 @@ Marque **Production** e **Preview** em todas:
 | `VITE_SUPABASE_URL` | URL do projeto Supabase (sem `/rest/v1`) |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | chave pública (anon/publishable) |
 | `VITE_MERCADO_PAGO_PUBLIC_KEY` | Public Key do Mercado Pago |
-| `VITE_SITE_URL` | `https://atualidadeai-concursos.vercel.app` |
+| `VITE_SITE_URL` | `https://www.atualidadeaiconcursos.com.br` |
 
 **Nunca** cadastre na Vercel Access Token, segredo do webhook, chave do Resend, service_role ou dados do banco: eles ficam somente nos *Secrets* do Supabase. O build falha de propósito se uma chave secreta for colocada numa variável `VITE_`.
 
@@ -257,9 +257,9 @@ Alterou uma variável? Ela só vale após novo deploy: **Deployments → ⋯ →
 
 | Onde | Valor |
 | --- | --- |
-| Secret `SITE_URL` (Edge Functions) | `https://atualidadeai-concursos.vercel.app` — retorno do checkout |
-| Auth → Site URL | `https://atualidadeai-concursos.vercel.app` |
-| Auth → Redirect URLs | **somente endereços exatos**: `https://atualidadeai-concursos.vercel.app/**` e `http://localhost:5173/**` |
+| Secret `SITE_URL` (Edge Functions) | `https://www.atualidadeaiconcursos.com.br` — retorno do checkout |
+| Auth → Site URL | `https://www.atualidadeaiconcursos.com.br` |
+| Auth → Redirect URLs | **somente endereços exatos**: `https://www.atualidadeaiconcursos.com.br/**`, `https://atualidadeaiconcursos.com.br/**`, `https://atualidadeai-concursos.vercel.app/**` e `http://localhost:5173/**` |
 
 Comando (reexecutável; sem `SITE_URLS` usa produção + localhost): `npm run auth:email`.
 

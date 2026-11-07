@@ -2,7 +2,7 @@
 
 Plataforma por assinatura que entrega a candidatos de concursos públicos atualidades regionais, nacionais e internacionais, organizadas com inteligência artificial e disponibilizadas em PDFs diários, semanais e mensais.
 
-> **Status:** Etapa 1 concluída + painel administrativo + auditoria de segurança (v0.9.0) — publicada em https://atualidadeai-concursos.vercel.app com Mercado Pago em **ambiente de teste**. Fluxo de alterações: `develop` → Pull Request → `main` ([docs/CONFIGURACAO.md §6](docs/CONFIGURACAO.md)). Veja [docs/CHANGELOG.md](docs/CHANGELOG.md).
+> **Status:** Etapa 1 concluída + painel administrativo + auditoria de segurança (v0.9.0) — publicada em https://www.atualidadeaiconcursos.com.br com Mercado Pago em **ambiente de teste**. Fluxo de alterações: `develop` → Pull Request → `main` ([docs/CONFIGURACAO.md §6](docs/CONFIGURACAO.md)). Veja [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 ## Stack
 
