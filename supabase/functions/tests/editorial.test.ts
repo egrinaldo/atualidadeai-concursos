@@ -2,6 +2,7 @@
  * Testes da validação do painel editorial (sem rede).
  * Executar:  npm run test:functions
  */
+import { providerBusy } from '../_shared/http.ts'
 import { cleanText, EDITION_TRANSITIONS, publicHttpsUrl, validateAnalysisEdit, validateNewSource, validateSetting } from '../editorial/validate.ts'
 
 function assert(cond: unknown, msg = 'falhou') {
@@ -92,4 +93,11 @@ Deno.test('edições: transições permitidas ao editor', () => {
   assert(!EDITION_TRANSITIONS.approve.includes('published'))
   assert(EDITION_TRANSITIONS.regenerate.includes('generated'))
   assert(!EDITION_TRANSITIONS.hold.includes('published'))
+})
+
+Deno.test('Mercado Pago 429 vira 503 com Retry-After e mensagem clara', async () => {
+  const r = providerBusy()
+  assert(r.status === 503)
+  assert(r.headers.get('Retry-After') === '30')
+  assert(/muitos pedidos/.test((await r.json()).error))
 })

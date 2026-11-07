@@ -6,8 +6,8 @@
  * retornado pela API.
  */
 import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
-import { errorMessage, json, preflight, tooManyRequests } from '../_shared/http.ts'
-import { MercadoPago } from '../_shared/mercadopago.ts'
+import { errorMessage, json, preflight, providerBusy, tooManyRequests } from '../_shared/http.ts'
+import { MercadoPago, MercadoPagoError } from '../_shared/mercadopago.ts'
 import { applyPreapproval } from '../_shared/sync.ts'
 
 Deno.serve(async (req) => {
@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
     const msg = errorMessage(e)
     console.error('[mp-cancel-subscription]', msg)
     await logEvent(admin, { source: 'sync', topic: 'preapproval', action: 'cancel', resource_id: sub.external_subscription_id, status: 'failed', error: msg })
+    if (e instanceof MercadoPagoError && e.status === 429) return providerBusy()
     return json({ error: 'Não foi possível cancelar agora. Tente novamente em instantes.' }, 502)
   }
 })

@@ -2,12 +2,34 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Etapa 2 · Subetapa 2.9: endurecimento antes das vendas
+
+### Adicionado
+- **Agendador confiável** (migração 24): pg_cron + pg_net disparam os workflows do GitHub nos horários certos.
+  - `dispatch_workflow`, `dispatch_log`, `dispatch_recent`; token do GitHub guardado no Vault.
+  - O agendador do GitHub fica como reserva. Rodadas das edições únicas por dia (`TICK_SLOT=edition`).
+- **Verificação diária** (`healthcheck@diario`, depois das 06h). Confere:
+  - edições publicadas e tarefas com falha;
+  - coleta parada e fontes quebradas;
+  - e-mails com falha, disparos recusados e erros da IA.
+
+  Manda e-mail de alerta aos administradores **só** quando há problema.
+- **Anti-robô Cloudflare Turnstile** (`useCaptcha`) no cadastro, login, recuperação e reenvio de confirmação. Ligado só com `VITE_TURNSTILE_SITE_KEY` + CAPTCHA no Supabase Auth; CSP liberada para `challenges.cloudflare.com`.
+- **Dependabot** semanal (Actions e npm).
+- `docs/OPERACAO.md`: rotina, ativações, checklist antes de vender e o que fazer quando algo dá errado.
+- **Administradores recebem os informativos** como um cliente (`delivery.include_admins`, migração 23).
+
+### Alterado
+- Actions fixadas por SHA (`checkout` v5.1.0, `setup-node` v5.0.0).
+- Mercado Pago 429 → 503 com `Retry-After` em criar/cancelar assinatura.
+- Publicação "atrasada": se o PDF fica pronto depois das 06h, publica na hora (`deliver@atrasado`).
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.8: personalização, publicação e entrega
 
 ### Adicionado
 - `personalize`: cópia por assinante ativo da UF, com nome e e-mail na capa e no rodapé e código da entrega nos metadados (pdf-lib).
 - `deliver`: publicação às 06h na área e e-mail opcional, um por assinante com os PDFs do dia em anexo; idempotente, com novas tentativas.
-- `cleanup`: cópias com mais de 7 dias, PDFs base com mais de 90 dias, pastas de contas excluídas e `apply_retention`.
+- `cleanup`: cópias com mais de 7 dias, PDFs base com mais de 90 dias e pastas de contas excluídas.
 - Área do assinante: "Meus informativos" (`DocumentsPanel`), com download por link temporário.
 - Função `account`: ações `documents` e `document_url`; a exclusão de conta apaga as cópias; a exportação inclui as entregas.
 - Modelo de e-mail `renderEditionEmail`; migração 22; `docs/ENTREGA.md`; 6 testes.
