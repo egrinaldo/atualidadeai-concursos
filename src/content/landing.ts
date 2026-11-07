@@ -197,7 +197,7 @@ export const pdfDemo = {
   title: 'Veja como o material',
   titleHighlight: 'é organizado.',
   description:
-    'Cada assunto segue a mesma estrutura, do fato à questão comentada. Os trechos ao lado são de edições reais (Ceará, 06 e 07/11/2026).',
+    'Todo assunto segue o mesmo caminho: o fato, por que ele importa, o que memorizar e uma questão comentada para fixar.',
   sections: [
     { label: 'O que aconteceu', text: 'Resumo objetivo do fato, com data, conferido nas fontes e auditado antes de publicar.' },
     { label: 'Por que importa para a prova', text: 'Relação com disciplinas e assuntos frequentes em editais.' },
