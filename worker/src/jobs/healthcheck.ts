@@ -63,9 +63,13 @@ export async function collectProblems(ctx: JobContext, today: string): Promise<s
   // 5. Agendador do Supabase: disparos recusados pelo GitHub (204 = aceito)
   const { data: disp, error: dErr } = await ctx.db.rpc('dispatch_recent', { p_hours: 24 })
   if (!dErr) {
-    // Resposta ainda não chegou (status nulo há menos de 5 min) não conta
-    const bad = ((disp ?? []) as { created: string; status_code: number | null; error: string | null }[]).filter((d) => d.status_code !== 204 && !(d.status_code == null && d.created > new Date(Date.now() - 5 * 60_000).toISOString()))
-    if (bad.length) problems.push(`Agendador: ${bad.length} disparo(s) recusado(s) pelo GitHub (ex.: ${bad[0].status_code ?? 'sem resposta'} ${String(bad[0].error ?? '').slice(0, 100)}) — token vencido?`)
+    // A resposta do GitHub é copiada para dispatch_log a cada 10 min (o pg_net apaga as respostas após 6h).
+    // Sem resposta há mais de 30 min = o pedido não chegou ao GitHub; código ≠ 204 = recusado.
+    const rows = (disp ?? []) as { created: string; status_code: number | null; error: string | null }[]
+    const refused = rows.filter((d) => d.status_code != null && d.status_code !== 204)
+    const lost = rows.filter((d) => d.status_code == null && d.created < new Date(Date.now() - 30 * 60_000).toISOString())
+    if (refused.length) problems.push(`Agendador: ${refused.length} disparo(s) recusado(s) pelo GitHub (ex.: HTTP ${refused[0].status_code} ${String(refused[0].error ?? '').slice(0, 100)}) — token vencido ou sem permissão?`)
+    if (lost.length) problems.push(`Agendador: ${lost.length} disparo(s) sem resposta do GitHub (falha de rede no Supabase) — confira se o robô rodou em GitHub → Actions`)
   }
 
   // 6. IA: cota quase no fim ou muitos erros
