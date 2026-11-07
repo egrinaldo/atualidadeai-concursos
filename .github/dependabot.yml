@@ -1,0 +1,14 @@
+# Atualizações de segurança: abre PRs semanais (nada é aplicado sem revisão e merge)
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /worker
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5

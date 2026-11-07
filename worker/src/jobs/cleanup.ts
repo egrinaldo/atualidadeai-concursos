@@ -9,14 +9,14 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString
  * - cópias personalizadas com mais de `delivery.personalized_days` (7) dias: arquivo apagado, registro da
  *   entrega mantido (sem o caminho);
  * - PDFs base com mais de `delivery.base_days` (90) dias: arquivo apagado, documento marcado "deleted";
- * - pastas personalizadas de contas excluídas;
- * - retenção do banco (apply_retention: logs, eventos, notícias antigas…).
+ * - pastas personalizadas de contas excluídas.
+ * (A retenção do banco — apply_retention — já roda no próprio Supabase pelo pg_cron "lgpd-retencao", 03h41.)
  */
 export async function cleanupJob(_job: { id: string; payload: Record<string, unknown> }, ctx: JobContext) {
   const get = await loadSettings(ctx)
   const personalDays = Math.max(1, Number(get('delivery.personalized_days', 7)))
   const baseDays = Math.max(30, Number(get('delivery.base_days', 90)))
-  const stats = { personalized_removed: 0, base_removed: 0, orphan_removed: 0, retention: 'ok' as string }
+  const stats = { personalized_removed: 0, base_removed: 0, orphan_removed: 0 }
 
   // 1. Cópias personalizadas vencidas
   for (;;) {
@@ -60,9 +60,6 @@ export async function cleanupJob(_job: { id: string; payload: Record<string, unk
     }
   }
 
-  // 4. Retenção do banco
-  const { error: e4 } = await ctx.db.rpc('apply_retention')
-  if (e4) stats.retention = `falhou: ${e4.message}`
   ctx.log.info('limpeza', stats)
   return stats
 }

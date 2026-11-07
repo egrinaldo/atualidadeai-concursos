@@ -7,7 +7,7 @@
  * NÃO ativa nada: a ativação só ocorre após consulta à API (webhook/sync).
  */
 import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
-import { errorMessage, json, preflight, requireEnv, tooManyRequests } from '../_shared/http.ts'
+import { errorMessage, json, preflight, providerBusy, requireEnv, tooManyRequests } from '../_shared/http.ts'
 import { billingToMp } from '../_shared/mapping.ts'
 import { MercadoPago, MercadoPagoError } from '../_shared/mercadopago.ts'
 
@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
     if (createdSubId) await admin.from('subscriptions').delete().eq('id', createdSubId).eq('status', 'pending')
     await logEvent(admin, { source: 'checkout', topic: 'preapproval', action: 'create', status: 'failed', error: msg })
     console.error('[mp-create-subscription]', msg)
+    if (e instanceof MercadoPagoError && e.status === 429) return providerBusy()
     const status = e instanceof MercadoPagoError && e.status < 500 ? 400 : 502
     return json({ error: 'Não foi possível iniciar o pagamento. Tente novamente em instantes.' }, status)
   }

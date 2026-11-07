@@ -20,10 +20,10 @@ Complementa `SEGURANCA_AUDITORIA.md` e `SEGURANCA_CORRECOES.md` (05/11/2026).
 | CORS `*` nas Edge Functions (I1) | Aceito | Autenticação por cabeçalho Bearer; pode ser restrito ao domínio quando houver domínio próprio |
 | Dicas de GRANT nas mensagens de erro do PostgREST (I2) | Aceito | Não expõe dados; só nomes de tabelas |
 | Sessão em `localStorage` (I3) | Aceito (padrão Supabase) | CSP estrita sem scripts de terceiros; manter a CSP ao adicionar bibliotecas |
-| CAPTCHA ausente (V04) | Pendente | Limites de e-mail do Auth (60/h) e de `capture_lead` reduzem o impacto |
+| CAPTCHA ausente (V04) | **Implementado (2.9), aguarda chaves** | `useCaptcha` (Turnstile) no cadastro/login/recuperação; ativar conforme OPERACAO.md §2.2 |
 | Prévias da Vercel | Não verificado (conector desconectado) | Confirmar em Vercel → Settings → Deployment Protection que "Vercel Authentication" está ativo para prévias |
 | Verificação de senhas vazadas (I8) | Requer plano pago do Supabase | Ativar ao migrar de plano |
-| Mercado Pago 429 mostrado como erro genérico | Melhoria | Tratar `429` do provedor como 503 "tente em instantes" em `mp-create-subscription` |
+| Mercado Pago 429 mostrado como erro genérico | **Resolvido (2.9)** | 429 do provedor vira 503 com `Retry-After` em criar/cancelar |
 
 ## 3. Checklist antes de cobranças reais
 

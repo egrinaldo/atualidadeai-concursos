@@ -4,6 +4,7 @@ import { PasswordField, TextField } from '@/components/forms/Field'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button } from '@/components/ui'
 import { isAdmin } from '@/lib/admin'
+import { useCaptcha } from '@/components/forms/Captcha'
 import { getSession, resendConfirmation, signIn } from '@/lib/auth'
 import { validateEmail } from '@/lib/validation'
 
@@ -43,6 +44,7 @@ export function Entrar() {
   const [serverError, setServerError] = useState<{ message: string; code?: string } | null>(null)
   const [info, setInfo] = useState<string | null>(params.get('senha') === 'redefinida' ? 'Senha alterada. Entre com a nova senha.' : null)
   const [submitting, setSubmitting] = useState(false)
+  const captcha = useCaptcha()
 
   // Já logado? Vai direto para a área certa (assinante ou administrador).
   useEffect(() => {
@@ -56,8 +58,10 @@ export function Entrar() {
     const e = { email: validateEmail(email) ?? undefined, password: password ? undefined : 'Informe sua senha.' }
     setErrors(e)
     if (e.email || e.password) return
+    if (captcha.required && !captcha.token) return setServerError({ message: captcha.missingMessage })
     setSubmitting(true)
-    const r = await signIn(email, password)
+    const r = await signIn(email, password, captcha.token)
+    captcha.reset()
     if (r.ok) {
       window.location.assign(await destination(requested))
       return
@@ -67,7 +71,8 @@ export function Entrar() {
   }
 
   async function resend() {
-    const r = await resendConfirmation(email)
+    const r = await resendConfirmation(email, captcha.token)
+    captcha.reset()
     setServerError(null)
     setInfo(r.ok ? 'Enviamos um novo link de confirmação para o seu e-mail.' : r.message)
   }
@@ -121,6 +126,7 @@ export function Entrar() {
             Esqueci minha senha
           </a>
         </div>
+        {captcha.widget}
         <Button type="submit" size="lg" className="w-full" disabled={submitting} aria-busy={submitting}>
           {submitting ? 'Entrando…' : 'Entrar'}
         </Button>

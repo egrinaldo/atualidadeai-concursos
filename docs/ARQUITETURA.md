@@ -124,4 +124,8 @@ Assinante /conta ──► link temporário do PDF individual (nome/e-mail no ro
 | D79 | **Personalização por carimbo (pdf-lib) sobre o PDF base, com código da entrega nos metadados** | Uma geração com Chromium por edição; cópia rastreável sem expor dados no caminho |
 | D80 | **Download só pela Edge Function, com link de 2 min da própria cópia** | Bucket privado; ninguém acessa a cópia de outro assinante |
 | D81 | **E-mail desligado por padrão, um por assinante por dia, idempotente, modo de teste por EMAIL_TEST_TO** | Envio real só com autorização; nada de e-mail duplicado |
-| D82 | **Limpeza diária no worker (7/90 dias, contas excluídas, apply_retention)** | Cumpre a retenção decidida e a LGPD sem depender de agendador no banco |
+| D82 | **Limpeza diária no worker (7/90 dias, contas excluídas); retenção do banco segue no pg_cron** | Cumpre a retenção decidida e a LGPD sem depender de agendador no banco |
+| D83 | **Horários disparados pelo Supabase (pg_cron → API do GitHub); agendador do GitHub como reserva; rodadas idempotentes por dia de edição** | O agendador do GitHub atrasou 2h e pulou execuções em 06/11 |
+| D84 | **Alerta operacional por e-mail só quando algo falha** | Silêncio = tudo certo; sem caixa cheia de "está tudo bem" |
+| D85 | **Turnstile em pontas casadas (site + Supabase Auth), ligado por chave** | Ligar só uma ponta trava o login ou não protege nada |
+| D86 | **Actions por SHA + Dependabot** | Tag móvel pode ser trocada por código malicioso; atualização revisada em PR |

@@ -25,13 +25,14 @@ export type SignUpResult =
   | { ok: true; needsConfirmation: boolean }
   | { ok: false; message: string; code?: string }
 
-export async function signUp(input: SignUpInput): Promise<SignUpResult> {
+export async function signUp(input: SignUpInput, captchaToken?: string | null): Promise<SignUpResult> {
   const supabase = getSupabase()
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),
     password: input.password,
     options: {
       emailRedirectTo: `${origin()}/confirmar-email`,
+      ...(captchaToken ? { captchaToken } : {}),
       // Lidos pelo trigger handle_new_user para criar perfil e preferências
       data: {
         full_name: input.fullName,
@@ -50,26 +51,27 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   return { ok: true, needsConfirmation: !data.session }
 }
 
-export async function signIn(email: string, password: string): Promise<AuthResult> {
-  const { error } = await getSupabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+export async function signIn(email: string, password: string, captchaToken?: string | null): Promise<AuthResult> {
+  const { error } = await getSupabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password, ...(captchaToken ? { options: { captchaToken } } : {}) })
   return error ? { ok: false, message: translateAuthError(error), code: error.code } : { ok: true }
 }
 
-export async function resendConfirmation(email: string): Promise<AuthResult> {
+export async function resendConfirmation(email: string, captchaToken?: string | null): Promise<AuthResult> {
   const { error } = await getSupabase().auth.resend({
     type: 'signup',
     email: email.trim().toLowerCase(),
-    options: { emailRedirectTo: `${origin()}/confirmar-email` },
+    options: { emailRedirectTo: `${origin()}/confirmar-email`, ...(captchaToken ? { captchaToken } : {}) },
   })
   return error ? { ok: false, message: translateAuthError(error), code: error.code } : { ok: true }
 }
 
 /** Sempre responde de forma genérica para não revelar quais e-mails existem. */
-export async function requestPasswordReset(email: string): Promise<AuthResult> {
+export async function requestPasswordReset(email: string, captchaToken?: string | null): Promise<AuthResult> {
   const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
     redirectTo: `${origin()}/redefinir-senha`,
+    ...(captchaToken ? { captchaToken } : {}),
   })
-  if (error && ['over_email_send_rate_limit', 'over_request_rate_limit', 'email_address_not_authorized'].includes(error.code ?? ''))
+  if (error && ['over_email_send_rate_limit', 'over_request_rate_limit', 'email_address_not_authorized', 'captcha_failed'].includes(error.code ?? ''))
     return { ok: false, message: translateAuthError(error), code: error.code }
   return { ok: true }
 }
@@ -132,6 +134,7 @@ const messages: Record<string, string> = {
   email_address_not_authorized:
     'Não foi possível enviar o e-mail de confirmação para este endereço no momento. O envio de e-mails está em configuração; tente novamente mais tarde.',
   over_email_send_rate_limit: 'Muitos e-mails enviados em pouco tempo. Aguarde alguns minutos e tente novamente.',
+  captcha_failed: 'A verificação anti-robô falhou ou expirou. Aguarde a caixa de verificação e tente de novo.',
   over_request_rate_limit: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.',
   signup_disabled: 'Novos cadastros estão temporariamente indisponíveis.',
   session_not_found: 'Sua sessão expirou. Entre novamente.',

@@ -35,3 +35,11 @@ export function errorMessage(e: unknown): string {
   const m = e instanceof Error ? e.message : String(e)
   return m.replace(/(APP_USR|TEST)-[\w-]{10,}/g, '[token]').slice(0, 500)
 }
+
+/** Provedor (Mercado Pago) pediu para esperar (HTTP 429): responde 503 "tente em instantes" com Retry-After. */
+export function providerBusy(retryAfterSeconds = 30): Response {
+  return new Response(JSON.stringify({ error: 'O Mercado Pago está recebendo muitos pedidos agora. Tente novamente em alguns segundos.' }), {
+    status: 503,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': String(retryAfterSeconds) },
+  })
+}
