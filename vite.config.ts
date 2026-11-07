@@ -34,8 +34,13 @@ function assertNoSecretsInPublicEnv(mode: string) {
 // Isso dispensa PostCSS, conforme diretriz do projeto.
 export default defineConfig(({ mode }) => {
   assertNoSecretsInPublicEnv(mode)
+  // Chave PÚBLICA do Turnstile: aceita VITE_TURNSTILE_SITE_KEY ou TURNSTILE_SITE_KEY (a Vercel pode recusar o
+  // prefixo VITE_). Só esta variável sem prefixo vai para o navegador — nunca a chave secreta.
+  const all = loadEnv(mode, process.cwd(), '')
+  const turnstileSiteKey = (all.VITE_TURNSTILE_SITE_KEY || all.TURNSTILE_SITE_KEY || '').trim()
 
   return {
+    define: { 'import.meta.env.VITE_TURNSTILE_SITE_KEY': JSON.stringify(turnstileSiteKey) },
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
