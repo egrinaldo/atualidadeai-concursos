@@ -208,6 +208,21 @@ export function renderEditionEmail(d: { name?: string | null; siteUrl: string; d
   )
 }
 
+/** Alerta operacional para os administradores (só é enviado quando há problema). */
+export function renderOpsAlertEmail(d: { siteUrl: string; dateLabel: string; problems: string[] }): RenderedEmail {
+  return build(
+    `⚠ Robô do informativo: ${d.problems.length} ponto(s) de atenção em ${d.dateLabel}`,
+    d.problems[0]?.slice(0, 90) ?? 'Verificação diária',
+    'Verificação diária do robô',
+    {
+      paragraphs: ['A verificação automática das 06h encontrou:'],
+      list: d.problems.slice(0, 15),
+      cta: { label: 'Abrir o painel', url: `${d.siteUrl.replace(/\/+$/, '')}/admin` },
+      note: 'Este e-mail só é enviado quando algo precisa de atenção. Detalhes em Painel → Robô.',
+    },
+  )
+}
+
 /**
  * Modelos de autenticação aplicados ao Supabase Auth (Authentication → Emails).
  * Usam as variáveis do Supabase ({{ .ConfirmationURL }}), por isso `raw: true`.

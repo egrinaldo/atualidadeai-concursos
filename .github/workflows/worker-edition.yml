@@ -3,7 +3,9 @@
 #           das revisões semanal/mensal a partir das edições anteriores, audita e monta as revisões
 #   04h35 — audita o que ainda estiver pendente nas edições, gera os PDFs base (após o prazo de revisão das 04h30)
 #           e prepara as cópias personalizadas (nome + e-mail) de cada assinante
-#   05h57 — publica às 06h (área do assinante + e-mail, se ligado) e faz a limpeza (cópias 7 dias, base 90 dias)
+#   05h57 — publica às 06h (área do assinante + e-mail, se ligado), faz a limpeza (cópias 7 dias, base 90 dias)
+#           e o alerta operacional (e-mail aos administradores só se algo falhou)
+# Disparo: Supabase pg_cron → API do GitHub (no horário) e, como reserva, o agendador do próprio GitHub.
 name: worker-edition
 on:
   schedule:
@@ -17,6 +19,10 @@ on:
         type: choice
         options: [compose, render, deliver]
         default: compose
+      origem:
+        description: 'Quem disparou (agendador = Supabase pg_cron; manual = você)'
+        type: string
+        default: manual
 permissions:
   contents: read
 concurrency:
@@ -36,10 +42,13 @@ jobs:
       COMPOSE_STEPS: audit@edicao,review@edicao,compose@diaria,synthesize,audit@periodo,compose@periodo
       # deliver@atrasado: só publica se já passou das 06h (agendamento do GitHub atrasado)
       RENDER_STEPS: audit@pdf,render,personalize,deliver@atrasado
-      DELIVER_STEPS: deliver,cleanup
+      DELIVER_STEPS: deliver,cleanup,healthcheck@diario
+      # Disparo agendado (GitHub ou Supabase): rodadas idempotentes POR DIA DE EDIÇÃO — o disparo duplo
+      # (os dois agendadores) ou atrasado não repete trabalho. Manual: sempre roda.
+      TICK_SLOT: ${{ (github.event_name == 'schedule' || inputs.origem == 'agendador') && 'edition' || 'manual' }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: npm

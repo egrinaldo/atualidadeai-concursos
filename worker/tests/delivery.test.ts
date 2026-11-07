@@ -87,3 +87,11 @@ test('publicação: nunca antes das 06h; depois das 06h (agendamento atrasado) p
   assert.ok(_test.minutesToSix(new Date('2026-11-07T08:55:00Z')) <= 10) // 05h55: espera até 06h
   assert.ok(_test.minutesToSix(new Date('2026-11-07T10:30:00Z')) < 0) // 07h30: atrasado → publica já
 })
+
+test('alerta operacional: lista os problemas e aponta para o painel', async () => {
+  const { renderOpsAlertEmail } = await import('../../supabase/functions/_shared/email/templates.ts')
+  const m = renderOpsAlertEmail({ siteUrl: 'https://site.com', dateLabel: '07/11', problems: ['Edição diária de CE de hoje não foi montada', 'Tarefa "render" falhou 1x'] })
+  assert.match(m.subject, /2 ponto\(s\) de atenção em 07\/11/)
+  assert.match(m.html, /https:\/\/site\.com\/admin/)
+  assert.match(m.text, /- Tarefa "render" falhou 1x/)
+})

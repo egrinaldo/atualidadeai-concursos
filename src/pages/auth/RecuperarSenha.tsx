@@ -3,6 +3,7 @@ import { Alert } from '@/components/forms/Alert'
 import { TextField } from '@/components/forms/Field'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button } from '@/components/ui'
+import { useCaptcha } from '@/components/forms/Captcha'
 import { requestPasswordReset } from '@/lib/auth'
 import { validateEmail } from '@/lib/validation'
 
@@ -13,14 +14,18 @@ export function RecuperarSenha() {
   const [sent, setSent] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
+  const captcha = useCaptcha()
+
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault()
     setServerError(null)
     const e = validateEmail(email)
     setError(e ?? undefined)
     if (e) return
+    if (captcha.required && !captcha.token) return setServerError(captcha.missingMessage)
     setSubmitting(true)
-    const r = await requestPasswordReset(email)
+    const r = await requestPasswordReset(email, captcha.token)
+    captcha.reset()
     setSubmitting(false)
     if (r.ok) setSent(true)
     else setServerError(r.message)
@@ -56,6 +61,7 @@ export function RecuperarSenha() {
             onChange={(e) => setEmail(e.target.value)}
             error={error}
           />
+          {captcha.widget}
           <Button type="submit" size="lg" className="w-full" disabled={submitting} aria-busy={submitting}>
             {submitting ? 'Enviando…' : 'Enviar link'}
           </Button>

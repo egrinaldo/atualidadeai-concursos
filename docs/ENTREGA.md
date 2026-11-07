@@ -54,7 +54,7 @@ Personalização, publicação às 06h, área do assinante, e-mail e limpeza.
 - **Cópias personalizadas com mais de 7 dias** (`delivery.personalized_days`): o arquivo é apagado; o registro da entrega continua, sem o caminho.
 - **PDFs base com mais de 90 dias** (`delivery.base_days`): o arquivo é apagado e o documento fica com status `deleted`.
 - **Contas excluídas:** pastas personalizadas de contas que não existem mais são apagadas.
-- **Retenção do banco:** `apply_retention()`. Antes não havia quem a executasse; a migração 22 deu permissão ao worker.
+- A retenção do banco (`apply_retention()`) já roda no Supabase pelo pg_cron `lgpd-retencao`, às 03h41.
 
 ## Espaço em disco
 
@@ -75,4 +75,4 @@ Personalização, publicação às 06h, área do assinante, e-mail e limpeza.
 - **Personalização:** 1 cópia (911 KB) em 4,9 s, conferida visualmente (capa e rodapé).
 - **Publicação:** edição 06/11 publicada, v2 `published` e v1 `superseded`; entrega na área `sent`.
 - **E-mail:** 1 envio real só para o endereço de teste, com o PDF em anexo, autorizado. Depois o e-mail foi desligado de novo.
-- **Limpeza:** depois de excluído o assinante de teste, a pasta dele foi apagada (1 arquivo). `apply_retention` rodou sem erro.
+- **Limpeza:** depois de excluído o assinante de teste, a pasta dele foi apagada (1 arquivo).

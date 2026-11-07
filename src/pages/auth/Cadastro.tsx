@@ -6,6 +6,7 @@ import { Button, Icon } from '@/components/ui'
 import { planFeatures, planPriceLabel, plan } from '@/content/plans'
 import { UFS } from '@/data/ufs'
 import { useMunicipios } from '@/hooks/useMunicipios'
+import { useCaptcha } from '@/components/forms/Captcha'
 import { resendConfirmation, signUp } from '@/lib/auth'
 import { captureLead } from '@/lib/leads'
 import {
@@ -44,6 +45,7 @@ export function Cadastro() {
   const [errors, setErrors] = useState<FieldErrors<Key>>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<{ message: string; code?: string } | null>(null)
+  const captcha = useCaptcha()
   const [doneEmail, setDoneEmail] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const municipios = useMunicipios(form.state)
@@ -114,6 +116,10 @@ export function Cadastro() {
       return
     }
 
+    if (captcha.required && !captcha.token) {
+      setServerError({ message: captcha.missingMessage })
+      return
+    }
     setSubmitting(true)
     const payload = {
       fullName: normalizeSpaces(form.fullName),
@@ -122,7 +128,8 @@ export function Cadastro() {
       state: form.state,
       city: normalizeSpaces(form.city),
     }
-    const result = await signUp(payload)
+    const result = await signUp(payload, captcha.token)
+    captcha.reset()
     // O lead é registrado mesmo que a confirmação de e-mail não seja concluída,
     // exceto quando o e-mail foi recusado ou já pertence a uma conta.
     if (result.ok || !['email_address_invalid', 'user_already_exists', 'email_exists', 'validation_failed'].includes(result.code ?? '')) {
@@ -299,6 +306,7 @@ export function Cadastro() {
           .
         </Checkbox>
 
+        {captcha.widget}
         <Button type="submit" size="lg" className="w-full" disabled={submitting} aria-busy={submitting}>
           {submitting ? 'Criando conta…' : 'Criar conta'}
           {!submitting && <Icon name="arrowRight" className="size-4.5" />}
@@ -337,6 +345,7 @@ function ConfirmeSeuEmail({ email }: { email: string }) {
   const [cooldown, setCooldown] = useState(60)
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
   const [sending, setSending] = useState(false)
+  const captcha = useCaptcha()
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -346,7 +355,8 @@ function ConfirmeSeuEmail({ email }: { email: string }) {
 
   async function resend() {
     setSending(true)
-    const r = await resendConfirmation(email)
+    const r = await resendConfirmation(email, captcha.token)
+    captcha.reset()
     setSending(false)
     setFeedback(r.ok ? { tone: 'success', text: 'E-mail reenviado.' } : { tone: 'error', text: r.message })
     setCooldown(60)
@@ -368,6 +378,7 @@ function ConfirmeSeuEmail({ email }: { email: string }) {
           link novo é enviado: entre normalmente ou use “Esqueci minha senha”.
         </Alert>
         {feedback && <Alert tone={feedback.tone}>{feedback.text}</Alert>}
+        {cooldown <= 0 && captcha.widget}
         <Button variant="secondary" className="w-full" disabled={cooldown > 0 || sending} onClick={resend}>
           {sending ? 'Reenviando…' : cooldown > 0 ? `Reenviar e-mail em ${cooldown}s` : 'Reenviar e-mail'}
         </Button>
