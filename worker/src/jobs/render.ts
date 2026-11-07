@@ -5,7 +5,7 @@ import { qaEdition } from '../pdf/qa.ts'
 import { renderEditionPdf } from '../pdf/render.ts'
 import type { JobContext } from './types.ts'
 
-type Edition = { id: string; edition_type: EditionType; state: string; reference_date: string; period_start: string; period_end: string; current_version: number; status: string }
+type Edition = { id: string; edition_type: EditionType; state: string; reference_date: string; period_start: string; period_end: string; current_version: number; status: string; summary?: { updates?: Record<string, string> } | null }
 type ItemRow = {
   block: BlockKey
   position: number
@@ -29,7 +29,7 @@ const ANALYSIS_COLS =
  */
 export async function renderJob(job: { payload: Record<string, unknown> }, ctx: JobContext) {
   const referenceDate = typeof job.payload.referenceDate === 'string' ? job.payload.referenceDate : brtDate(new Date())
-  let q = ctx.db.from('editions').select('id, edition_type, state, reference_date, period_start, period_end, current_version, status').in('status', ['in_review', 'approved'])
+  let q = ctx.db.from('editions').select('id, edition_type, state, reference_date, period_start, period_end, current_version, status, summary').in('status', ['in_review', 'approved'])
   q = typeof job.payload.editionId === 'string' ? q.eq('id', job.payload.editionId) : q.eq('reference_date', referenceDate)
   const { data: editions, error } = await q
   if (error) throw new Error(`edições: ${error.message}`)
@@ -53,7 +53,7 @@ export async function renderJob(job: { payload: Record<string, unknown> }, ctx: 
             excluded.push(`${a.editorial_title} (${a.audit_status})`)
             continue
           }
-          byBlock[it.block].push({ ...a, refs: a.references, category: a.news_clusters.category, verification_status: a.news_clusters.verification_status, source_count: a.news_clusters.source_count })
+          byBlock[it.block].push({ ...a, update_of: ed.summary?.updates?.[a.id] ?? null, refs: a.references, category: a.news_clusters.category, verification_status: a.news_clusters.verification_status, source_count: a.news_clusters.source_count })
         }
         const doc = buildDoc({ type: ed.edition_type, state: ed.state, referenceDate: ed.reference_date, periodStart: ed.period_start, periodEnd: ed.period_end }, byBlock)
         const out = await renderEditionPdf(doc, { browser: browser as never })

@@ -2,6 +2,14 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Diária sem repetição
+
+### Corrigido
+- A diária de 07/11 repetiu 7 dos 14 assuntos da de 06/11. A janela de 12h antes do período, sem checar edições anteriores, deixava voltar o que já tinha saído.
+- **Agora:** assunto já publicado numa diária dos últimos 10 dias só volta se houve **fato novo**: matérias depois do fim do período daquela edição **e** um texto novo. Nesse caso volta com o selo "Atualização — assunto publicado em DD/MM, com fatos novos".
+- O mesmo fato agrupado em outro assunto, com título e resumo quase iguais aos de uma diária dos últimos 3 dias, também fica de fora (`edition.repeat_similarity`, padrão 0,6).
+- `worker/src/pdf/repeats.ts` + 5 testes. Simulação com os dados reais de 07/11: sairiam exatamente os 7 repetidos.
+
 ## [Não publicado] — Domínio próprio
 
 ### Alterado

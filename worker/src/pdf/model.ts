@@ -95,6 +95,8 @@ export type SourceRow = {
   refs: { url: string; source: string | null; title: string | null; official: boolean }[]
   audit_status?: string
   period_meta?: { timeline?: { data: string; fato: string }[]; dates?: string[] } | null
+  /** Diária: assunto já publicado em outra data que voltou por ter fato novo (AAAA-MM-DD da edição anterior) */
+  update_of?: string | null
 }
 
 const isHttp = (u: string) => /^https?:\/\//i.test(u)
@@ -135,7 +137,7 @@ export function toItem(r: SourceRow, n: number, questionStart: number): Item {
     references,
     audit: r.audit_status ?? 'pendente',
     timeline: (r.period_meta?.timeline ?? []).map((t) => ({ date: t.data, fact: t.fato })),
-    followUp: followUp(r.period_meta?.dates),
+    followUp: r.update_of ? `Atualização — assunto publicado em ${dm(r.update_of)}, com fatos novos` : followUp(r.period_meta?.dates),
   }
 }
 

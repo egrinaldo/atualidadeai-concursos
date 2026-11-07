@@ -18,6 +18,7 @@ Workflow: `.github/workflows/worker-edition.yml` (pode ser disparado à mão esc
 
 - **Janela**: diária = 24h até o fechamento das 22h da véspera (+12h de tolerância); semanal = 7 dias; mensal = mês anterior.
 - **Assuntos**: analisados (análise válida), elegíveis pela política de verificação, **sem revisão pendente**, relevância ≥ média; os de maior nota em cada bloco.
+- **Sem repetição (diária)**: assunto já publicado numa diária dos últimos 10 dias só volta com fato novo (matérias depois do período daquela edição + texto novo), marcado "Atualização — assunto publicado em DD/MM". Título e resumo quase iguais aos de uma diária dos últimos 3 dias também ficam de fora (`edition.repeat_similarity`, padrão 0,6). Por isso a diária pode ter **menos itens** que o máximo do bloco: só entra o que é novo.
 - **Ordem fixa**: Estado (UF da edição) → Brasil → Mundo. Quantidades em `app_settings` → `edition.items_per_block` (diária 5/6/4; semanal 8/10/6; mensal 10/14/8).
 - Grava `editions` (status `in_review`) e `edition_items`. Edição já gerada/publicada não é alterada (salvo `{"force": true}`).
 
