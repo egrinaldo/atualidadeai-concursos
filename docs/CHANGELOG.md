@@ -2,6 +2,18 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Ilustrações com trechos reais
+
+### Alterado
+- **Página inicial:** as ilustrações do PDF tinham barras vazias e "tema fictício". Agora mostram **trechos reais** das edições publicadas (Ceará, 06 e 07/11/2026). Os textos ficam em `src/content/samples.ts`.
+  - **Topo:** o Copom mantendo a Selic, com "Por que importa para a prova".
+  - **Demonstração:** a crise no Paraguai com linha do tempo (05/11 → 06/11), "Para memorizar" e fontes, montada com fatos reais das diárias.
+  - **Cartões menores:** títulos reais do diário e o conteúdo da mensal.
+- **Seção de demonstração:** passa a listar as partes reais do PDF (o que aconteceu, por que importa, para memorizar, questões comentadas e fontes, linha do tempo).
+- **Perguntas frequentes:**
+  - novas: como evitamos informação errada, quando e onde chegam os PDFs, se é possível compartilhar;
+  - o "Em breve teremos um canal de atendimento" deu lugar ao e-mail de contato.
+
 ## [Não publicado] — Site só com estadual, nacional e internacional
 
 ### Alterado
