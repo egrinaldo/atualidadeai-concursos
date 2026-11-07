@@ -39,7 +39,7 @@ const fromMatch = from.match(/^(.*)<(.+)>$/)
 const senderName = (fromMatch?.[1] ?? 'AtualidadeAI Concursos').trim()
 const senderEmail = (fromMatch?.[2] ?? from).trim()
 
-const sites = (Deno.env.get('SITE_URLS') ?? 'https://atualidadeai-concursos.vercel.app,http://localhost:5173')
+const sites = (Deno.env.get('SITE_URLS') ?? 'https://www.atualidadeaiconcursos.com.br,https://atualidadeaiconcursos.com.br,https://atualidadeai-concursos.vercel.app,http://localhost:5173')
   .split(',')
   .map((s) => s.trim().replace(/\/+$/, ''))
   .filter(Boolean)

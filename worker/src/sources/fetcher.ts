@@ -5,7 +5,7 @@ import zlib from 'node:zlib'
 import { HttpError } from '../lib/retry.ts'
 import { hostAllowed, isBlockedIp } from './net.ts'
 
-export const USER_AGENT = 'AtualidadeAI-Concursos-Bot/1.0 (+https://atualidadeai-concursos.vercel.app; atualidadeaiconcursos@gmail.com)'
+export const USER_AGENT = 'AtualidadeAI-Concursos-Bot/1.0 (+https://www.atualidadeaiconcursos.com.br; atualidadeaiconcursos@gmail.com)'
 
 export type FetchResult = {
   status: number

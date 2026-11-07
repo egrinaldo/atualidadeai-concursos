@@ -98,7 +98,7 @@ h1 em{font-style:normal;color:${COLORS.signal400}}
 <div class="stat"><div class="v">3</div><div class="l">blocos: estado, Brasil e mundo</div></div></div>
 <div class="toc">${toc}</div>
 <div class="personal"><div class="l">Exemplar de uso pessoal e intransferível</div></div>
-<div class="foot"><span>Fontes oficiais e veículos citados · texto próprio verificado</span><span>atualidadeai-concursos.vercel.app</span></div>
+<div class="foot"><span>Fontes oficiais e veículos citados · texto próprio verificado</span><span>atualidadeaiconcursos.com.br</span></div>
 </section></body></html>`
 }
 
