@@ -9,6 +9,13 @@ import type { JobContext } from './types.ts'
 const MAX_ATTACH_BYTES = 15 * 1024 * 1024 // acima disso o e-mail vai só com o link da área
 const MAX_EMAIL_ATTEMPTS = 3
 
+/** Minutos que faltam para as 06h de hoje (Brasília); negativo depois das 06h. */
+function minutesToSix(now = new Date()) {
+  const brt = new Date(now.getTime() - 3 * 3_600_000)
+  const six = Date.UTC(brt.getUTCFullYear(), brt.getUTCMonth(), brt.getUTCDate(), 6) + 3 * 3_600_000
+  return (six - now.getTime()) / 60_000
+}
+
 /** Espera até 06h (Brasília) se o agendamento disparar alguns minutos antes. */
 async function waitUntilSix(now = new Date(), sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))) {
   const brt = new Date(now.getTime() - 3 * 3_600_000)
@@ -24,7 +31,12 @@ async function waitUntilSix(now = new Date(), sleep = (ms: number) => new Promis
  * Payload opcional: { referenceDate, noWait, emailOnly }.
  */
 export async function deliverJob(job: { id: string; payload: Record<string, unknown> }, ctx: JobContext, deps?: { fetch?: typeof fetch }) {
-  if (job.payload.noWait !== true) await waitUntilSix()
+  // Nunca publica antes das 06h. Também roda logo após a geração dos PDFs ("deliver@atrasado"): se o agendador
+  // do GitHub atrasar e o PDF ficar pronto depois das 06h, a publicação sai na hora, sem esperar o dia seguinte.
+  if (job.payload.noWait !== true) {
+    if (minutesToSix() > 10) return { skipped: 'antes das 06h — a publicação fica para o horário das 06h' }
+    await waitUntilSix()
+  }
   const referenceDate = typeof job.payload.referenceDate === 'string' ? job.payload.referenceDate : brtDate(new Date())
   if (!/^\d{4}-\d{2}-\d{2}$/.test(referenceDate)) throw new Error(`data inválida: ${referenceDate}`)
   const get = await loadSettings(ctx)
@@ -129,4 +141,4 @@ async function sendEmails(ctx: JobContext, referenceDate: string, docs: DocInfo[
   }
 }
 
-export const _test = { waitUntilSix }
+export const _test = { waitUntilSix, minutesToSix }

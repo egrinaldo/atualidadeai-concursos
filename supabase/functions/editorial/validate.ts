@@ -167,6 +167,7 @@ export const SETTINGS: Record<string, { label: string; help: string; check: (v: 
   'audit.auto_correct': { label: 'Correção automática após auditoria', help: 'true ou false — texto da IA reprovado volta ao redator uma vez com os problemas', check: (v) => typeof v === 'boolean' },
   'review.auto': { label: 'Revisão automática da fila', help: 'true ou false — o robô decide a fila de revisão (na dúvida, o assunto fica fora da edição)', check: (v) => typeof v === 'boolean' },
   'review.max_reanalysis': { label: 'Novas análises pedidas pelo robô por assunto', help: 'Inteiro de 0 a 3 (depois disso o assunto é descartado)', check: (v) => int(v, 0, 3) },
+  'delivery.include_admins': { label: 'Administradores recebem os informativos', help: 'true ou false — PDF personalizado e e-mail iguais aos de um cliente', check: (v) => typeof v === 'boolean' },
   'synthesis.max_calls_per_run': { label: 'Sínteses por rodada (semanal/mensal)', help: 'Inteiro de 0 a 40', check: (v) => int(v, 0, 40) },
   'synthesis.similarity_threshold': { label: 'Limiar para juntar o mesmo assunto em dias diferentes', help: 'Número de 0,25 a 0,8 (padrão 0,4)', check: (v) => typeof v === 'number' && v >= 0.25 && v <= 0.8 },
   'triage.min_relevance_for_edition': { label: 'Relevância mínima para entrar na edição', help: 'baixa, media, alta ou muito_alta', check: (v) => ['baixa', 'media', 'alta', 'muito_alta'].includes(v as string) },
