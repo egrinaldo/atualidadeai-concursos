@@ -33,9 +33,9 @@ export const hero = {
 
 /** Fatos do produto (não são métricas de uso). */
 export const highlights: { icon: IconName; value: string; label: string }[] = [
-  { icon: 'layers', value: '3 níveis', label: 'Regional, nacional e internacional' },
+  { icon: 'layers', value: '3 níveis', label: 'Estadual, nacional e internacional' },
   { icon: 'fileText', value: '3 formatos', label: 'PDF diário, semanal e mensal' },
-  { icon: 'mapPin', value: '27 UFs', label: 'Atualidades do seu estado e cidade' },
+  { icon: 'mapPin', value: '27 UFs', label: 'Atualidades do seu estado' },
 ]
 
 export const problems = {
@@ -57,8 +57,8 @@ export const problems = {
     },
     {
       icon: 'mapPin',
-      title: 'Regionais esquecidas',
-      text: 'Concursos estaduais e municipais cobram fatos locais que quase nenhum material organiza.',
+      title: 'Estaduais esquecidas',
+      text: 'Concursos estaduais cobram fatos do estado que quase nenhum material organiza.',
     },
     {
       icon: 'inbox',
@@ -85,8 +85,8 @@ export const benefits = {
     },
     {
       icon: 'mapPin',
-      title: 'Personalizado por região',
-      text: 'Você escolhe estado e cidade e recebe também o que aconteceu perto de você.',
+      title: 'Personalizado por estado',
+      text: 'Você escolhe seu estado e recebe também o que aconteceu nele, além do Brasil e do mundo.',
     },
     {
       icon: 'calendarRange',
@@ -114,7 +114,7 @@ export const howItWorks = {
     {
       icon: 'mapPin',
       title: 'Você se cadastra',
-      text: 'Assina e informa estado e cidade para personalizar as atualidades regionais.',
+      text: 'Assina e informa seu estado para personalizar as atualidades estaduais.',
     },
     {
       icon: 'search',
@@ -141,10 +141,10 @@ export const coverage = {
   levels: [
     {
       icon: 'building',
-      tag: 'Regional',
-      title: 'Seu estado e sua cidade',
-      text: 'O que bancas de concursos estaduais e municipais costumam cobrar e quase ninguém organiza.',
-      topics: ['Governo e políticas estaduais', 'Economia regional', 'Infraestrutura e serviços', 'Meio ambiente local'],
+      tag: 'Estadual',
+      title: 'O seu estado',
+      text: 'O que bancas de concursos estaduais costumam cobrar e quase ninguém organiza.',
+      topics: ['Governo e políticas estaduais', 'Economia do estado', 'Infraestrutura e serviços públicos', 'Meio ambiente no estado'],
     },
     {
       icon: 'flag',
@@ -173,7 +173,7 @@ export const materials = {
       cadence: 'Diário',
       title: 'Material diário',
       text: 'Os acontecimentos mais relevantes do dia, com contexto e relação com provas.',
-      bullets: ['Leitura rápida', 'Regional, nacional e internacional', 'Pontos de atenção para prova'],
+      bullets: ['Leitura rápida', 'Estadual, nacional e internacional', 'Pontos de atenção para prova'],
     },
     {
       icon: 'calendar',
@@ -214,12 +214,12 @@ export const faq = {
     {
       question: 'O que eu recebo ao assinar?',
       answer:
-        'Acesso aos materiais em PDF: diário, compilado semanal e compilado mensal, com atualidades regionais (do estado e da cidade escolhidos), nacionais e internacionais.',
+        'Acesso aos materiais em PDF: diário, compilado semanal e compilado mensal, com atualidades do estado escolhido, nacionais e internacionais.',
     },
     {
-      question: 'Como funcionam as atualidades regionais?',
+      question: 'Como funcionam as atualidades estaduais?',
       answer:
-        'No cadastro você informa seu estado e sua cidade. O material passa a incluir acontecimentos relevantes dessa região, além dos destaques nacionais e internacionais.',
+        'No cadastro você informa seu estado. O material passa a incluir os acontecimentos relevantes desse estado, além dos destaques nacionais e internacionais.',
     },
     {
       question: 'O material substitui meus livros ou cursos?',

@@ -48,7 +48,7 @@ export function Hero() {
 
           <div className="absolute -bottom-5 -left-2 hidden items-center gap-2 rounded-xl border border-white/10 bg-navy-900/95 px-3.5 py-2.5 text-xs font-semibold text-slate-200 shadow-card backdrop-blur sm:flex">
             <Icon name="mapPin" className="size-4 text-signal-400" />
-            Inclui o seu estado e a sua cidade
+            Inclui as atualidades do seu estado
           </div>
         </div>
       </Container>
