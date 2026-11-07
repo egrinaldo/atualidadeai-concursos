@@ -81,3 +81,9 @@ test('publicação: espera dar 06h se disparar até 10 min antes; fora disso nã
   await _test.waitUntilSix(new Date('2026-11-07T07:35:00Z'), sleep) // 04h35
   assert.equal(waits.length, 1)
 })
+
+test('publicação: nunca antes das 06h; depois das 06h (agendamento atrasado) publica na hora', () => {
+  assert.ok(_test.minutesToSix(new Date('2026-11-07T07:40:00Z')) > 10) // 04h40: render no horário → não publica
+  assert.ok(_test.minutesToSix(new Date('2026-11-07T08:55:00Z')) <= 10) // 05h55: espera até 06h
+  assert.ok(_test.minutesToSix(new Date('2026-11-07T10:30:00Z')) < 0) // 07h30: atrasado → publica já
+})

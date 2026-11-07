@@ -1,6 +1,7 @@
 import { activeSubscribers, currentDocument, deliveryCode, personalizedPath } from '../delivery/recipients.ts'
 import { brtDate } from '../pdf/edition.ts'
 import { personalizePdf } from '../pdf/personalize.ts'
+import { loadSettings } from './compose.ts'
 import type { JobContext } from './types.ts'
 
 /**
@@ -14,7 +15,8 @@ export async function personalizeJob(job: { id: string; payload: Record<string, 
 
   const { data: eds, error } = await ctx.db.from('editions').select('id, edition_type, state, status').eq('reference_date', referenceDate).in('status', ['generated', 'published'])
   if (error) throw new Error(`edições: ${error.message}`)
-  let subs = await activeSubscribers(ctx)
+  const get = await loadSettings(ctx)
+  let subs = await activeSubscribers(ctx, { includeAdmins: get<boolean>('delivery.include_admins', true) !== false })
   if (Array.isArray(job.payload.userIds)) subs = subs.filter((s) => (job.payload.userIds as string[]).includes(s.id))
   const stats = { referenceDate, editions: eds?.length ?? 0, subscribers: subs.length, without_state: subs.filter((s) => !s.state).length, prepared: 0, already: 0, failed: 0 }
 

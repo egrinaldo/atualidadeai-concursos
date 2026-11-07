@@ -3,11 +3,19 @@ import type { JobContext } from '../jobs/types.ts'
 
 export type Subscriber = { id: string; name: string; email: string; state: string | null }
 
-/** Assinantes com assinatura ATIVA (a mesma regra de acesso da área do assinante). */
-export async function activeSubscribers(ctx: JobContext): Promise<Subscriber[]> {
+/**
+ * Destinatários: assinantes com assinatura ATIVA (a mesma regra de acesso da área do assinante) e, com
+ * `delivery.include_admins` (padrão: sim), os administradores — recebem igual a um cliente, para conferir.
+ */
+export async function activeSubscribers(ctx: JobContext, opts: { includeAdmins?: boolean } = {}): Promise<Subscriber[]> {
   const { data: subs, error } = await ctx.db.from('subscriptions').select('user_id').eq('status', 'active').limit(10000)
   if (error) throw new Error(`assinaturas: ${error.message}`)
   const ids = [...new Set((subs ?? []).map((s) => s.user_id as string))]
+  if (opts.includeAdmins !== false) {
+    const { data: admins, error: e1 } = await ctx.db.from('admins').select('user_id')
+    if (e1) throw new Error(`administradores: ${e1.message}`)
+    for (const a of admins ?? []) if (!ids.includes(a.user_id)) ids.push(a.user_id)
+  }
   const out: Subscriber[] = []
   for (let i = 0; i < ids.length; i += 200) {
     const { data, error: e2 } = await ctx.db.from('profiles').select('id, full_name, email, state').in('id', ids.slice(i, i + 200))
