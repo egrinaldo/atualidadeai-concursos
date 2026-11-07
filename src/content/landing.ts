@@ -197,12 +197,13 @@ export const pdfDemo = {
   title: 'Veja como o material',
   titleHighlight: 'é organizado.',
   description:
-    'Ilustração da estrutura dos PDFs. Os temas abaixo são exemplos fictícios usados apenas para mostrar o formato.',
+    'Cada assunto segue a mesma estrutura, do fato à questão comentada. Os trechos ao lado são de edições reais (Ceará, 06 e 07/11/2026).',
   sections: [
-    { label: 'O que aconteceu', text: 'Resumo objetivo do fato, com data e fonte.' },
-    { label: 'Contexto', text: 'Antecedentes e conceitos necessários para entender o tema.' },
+    { label: 'O que aconteceu', text: 'Resumo objetivo do fato, com data, conferido nas fontes e auditado antes de publicar.' },
     { label: 'Por que importa para a prova', text: 'Relação com disciplinas e assuntos frequentes em editais.' },
-    { label: 'Pontos de atenção', text: 'Termos, números e nomes que merecem ser memorizados.' },
+    { label: 'Para memorizar', text: 'Números, nomes e datas que costumam virar alternativa de prova.' },
+    { label: 'Questões comentadas e fontes', text: 'Questões de fixação com gabarito comentado e os links das fontes oficiais e veículos.' },
+    { label: 'Linha do tempo (semanal e mensal)', text: 'Assuntos que se desenrolam em vários dias viram uma história só, em ordem cronológica.' },
   ],
 }
 
@@ -230,6 +231,21 @@ export const faq = {
       question: 'Como a inteligência artificial é usada?',
       answer:
         'A IA ajuda a monitorar fontes de notícias, identificar acontecimentos relevantes e organizar o conteúdo com foco em concursos. Os materiais indicam as fontes consultadas.',
+    },
+    {
+      question: 'Como vocês evitam informação errada?',
+      answer:
+        'Cada assunto é conferido em mais de uma etapa: as notícias são cruzadas entre fontes, e um segundo modelo de IA audita o texto pronto, exigindo para cada afirmação um trecho literal da fonte. O que não passa fica fora do PDF. Todo assunto traz os links das fontes consultadas.',
+    },
+    {
+      question: 'Quando e onde recebo os PDFs?',
+      answer:
+        'O informativo diário sai todos os dias às 6h; a revisão semanal, às segundas; a mensal, no dia 1º. Os PDFs ficam na sua área do assinante e chegam também por e-mail.',
+    },
+    {
+      question: 'Posso compartilhar o PDF?',
+      answer:
+        'Não. Cada PDF é personalizado com o nome e o e-mail do assinante e é de uso pessoal e intransferível, conforme os Termos de Uso.',
     },
     {
       question: 'Quanto custa?',

@@ -1,3 +1,4 @@
+import { site } from '@/config/site'
 import { Container, Icon, Reveal, SectionHeading } from '@/components/ui'
 import { faq } from '@/content/landing'
 
@@ -14,7 +15,7 @@ export function Faq() {
           eyebrow={faq.eyebrow}
           title={faq.title}
           highlight={faq.titleHighlight}
-          description="Não encontrou sua dúvida? Em breve teremos um canal de atendimento."
+          description={`Não encontrou sua dúvida? Escreva para ${site.contactEmail}.`}
           className="lg:sticky lg:top-32 lg:self-start"
         />
 

@@ -44,7 +44,7 @@ export function Hero() {
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
           <div className="absolute inset-x-6 -top-4 h-full rotate-3 rounded-2xl border border-white/5 bg-navy-800/60" aria-hidden />
           <div className="absolute inset-x-3 -top-2 h-full rotate-[1.5deg] rounded-2xl border border-white/5 bg-navy-800/80" aria-hidden />
-          <PdfMock title="Atualidades do dia" edition="Edição ilustrativa" className="relative" />
+          <PdfMock variant="daily" className="relative" />
 
           <div className="absolute -bottom-5 -left-2 hidden items-center gap-2 rounded-xl border border-white/10 bg-navy-900/95 px-3.5 py-2.5 text-xs font-semibold text-slate-200 shadow-card backdrop-blur sm:flex">
             <Icon name="mapPin" className="size-4 text-signal-400" />
