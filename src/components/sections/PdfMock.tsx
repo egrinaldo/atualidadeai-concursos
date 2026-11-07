@@ -12,7 +12,7 @@ type PdfMockProps = {
 }
 
 const levelTags = [
-  { label: 'Regional', className: 'bg-signal-400/15 text-signal-300' },
+  { label: 'Estadual', className: 'bg-signal-400/15 text-signal-300' },
   { label: 'Nacional', className: 'bg-brand-500/20 text-brand-200' },
   { label: 'Internacional', className: 'bg-white/10 text-slate-200' },
 ]

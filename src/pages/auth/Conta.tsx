@@ -86,7 +86,6 @@ export function Conta() {
               ['Nome', profile?.full_name || '—'],
               ['E-mail', session.user.email ?? '—'],
               ['Estado', profile?.state ? ufName(profile.state) : '—'],
-              ['Cidade', profile?.city || '—'],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4 px-4 py-3">
                 <dt className="text-slate-400">{k}</dt>

@@ -1,18 +1,16 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Alert } from '@/components/forms/Alert'
 import { Checkbox, PasswordField, SelectField, TextField } from '@/components/forms/Field'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button, Icon } from '@/components/ui'
 import { planFeatures, planPriceLabel, plan } from '@/content/plans'
 import { UFS } from '@/data/ufs'
-import { useMunicipios } from '@/hooks/useMunicipios'
 import { useCaptcha } from '@/components/forms/Captcha'
 import { resendConfirmation, signUp } from '@/lib/auth'
 import { captureLead } from '@/lib/leads'
 import {
   normalizeSpaces,
   passwordStrength,
-  validateCity,
   validateEmail,
   validateFullName,
   validatePassword,
@@ -28,13 +26,12 @@ type Form = {
   password: string
   confirmation: string
   state: string
-  city: string
   terms: boolean
 }
 type Key = keyof Form
 
-const empty: Form = { fullName: '', email: '', password: '', confirmation: '', state: '', city: '', terms: false }
-const ORDER: Key[] = ['fullName', 'email', 'password', 'confirmation', 'state', 'city', 'terms']
+const empty: Form = { fullName: '', email: '', password: '', confirmation: '', state: '', terms: false }
+const ORDER: Key[] = ['fullName', 'email', 'password', 'confirmation', 'state', 'terms']
 const strengthLabels = ['Muito fraca', 'Fraca', 'Razoável', 'Boa', 'Forte'] as const
 
 /** Guarda o plano escolhido na landing para retomar a contratação após o cadastro. */
@@ -48,7 +45,6 @@ export function Cadastro() {
   const captcha = useCaptcha()
   const [doneEmail, setDoneEmail] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
-  const municipios = useMunicipios(form.state)
 
   useEffect(() => {
     const plano = new URLSearchParams(window.location.search).get('plano')
@@ -58,8 +54,6 @@ export function Cadastro() {
       /* armazenamento indisponível: ignorar */
     }
   }, [])
-
-  const cityOptions = useMemo(() => municipios.cities.map((c) => ({ value: c, label: c })), [municipios.cities])
 
   function validate(key: Key, f: Form = form): string | null {
     switch (key) {
@@ -73,8 +67,6 @@ export function Cadastro() {
         return validatePasswordConfirmation(f.password, f.confirmation)
       case 'state':
         return validateUF(f.state)
-      case 'city':
-        return validateCity(f.city, municipios.status === 'ready' ? municipios.cities : undefined)
       case 'terms':
         return f.terms ? null : 'É necessário aceitar os Termos de Uso e a Política de Privacidade.'
     }
@@ -83,7 +75,6 @@ export function Cadastro() {
   function set<K extends Key>(key: K, value: Form[K]) {
     setForm((prev) => {
       const next = { ...prev, [key]: value }
-      if (key === 'state') next.city = ''
       // Revalida em tempo real apenas campos que já exibem erro
       setErrors((e) => {
         const ne = { ...e }
@@ -126,14 +117,13 @@ export function Cadastro() {
       email: form.email.trim().toLowerCase(),
       password: form.password,
       state: form.state,
-      city: normalizeSpaces(form.city),
     }
     const result = await signUp(payload, captcha.token)
     captcha.reset()
     // O lead é registrado mesmo que a confirmação de e-mail não seja concluída,
     // exceto quando o e-mail foi recusado ou já pertence a uma conta.
     if (result.ok || !['email_address_invalid', 'user_already_exists', 'email_exists', 'validation_failed'].includes(result.code ?? '')) {
-      await captureLead({ name: payload.fullName, email: payload.email, state: payload.state, city: payload.city })
+      await captureLead({ name: payload.fullName, email: payload.email, state: payload.state })
     }
     setSubmitting(false)
 
@@ -246,45 +236,18 @@ export function Cadastro() {
           />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-[0.9fr_1.1fr]">
-          <SelectField
-            label="Estado"
-            name="state"
-            autoComplete="address-level1"
-            placeholder="Selecione"
-            value={form.state}
-            options={UFS.map((u) => ({ value: u.sigla, label: `${u.nome} (${u.sigla})` }))}
-            onChange={(e) => set('state', e.target.value)}
-            onBlur={() => blur('state')}
-            error={errors.state}
-          />
-          {municipios.status === 'error' ? (
-            <TextField
-              label="Cidade"
-              name="city"
-              autoComplete="address-level2"
-              value={form.city}
-              onChange={(e) => set('city', e.target.value)}
-              onBlur={() => blur('city')}
-              error={errors.city}
-              maxLength={120}
-            />
-          ) : (
-            <SelectField
-              label="Cidade"
-              name="city"
-              autoComplete="address-level2"
-              placeholder={!form.state ? 'Escolha o estado primeiro' : municipios.status === 'loading' ? 'Carregando…' : 'Selecione'}
-              value={form.city}
-              options={cityOptions}
-              disabled={!form.state || municipios.status !== 'ready'}
-              onChange={(e) => set('city', e.target.value)}
-              onBlur={() => blur('city')}
-              error={errors.city}
-            />
-          )}
-        </div>
-        <p className="-mt-2 text-xs text-slate-500">Usados para personalizar as atualidades regionais.</p>
+        <SelectField
+          label="Estado"
+          name="state"
+          autoComplete="address-level1"
+          placeholder="Selecione"
+          value={form.state}
+          options={UFS.map((u) => ({ value: u.sigla, label: `${u.nome} (${u.sigla})` }))}
+          onChange={(e) => set('state', e.target.value)}
+          onBlur={() => blur('state')}
+          error={errors.state}
+        />
+        <p className="-mt-2 text-xs text-slate-500">Usado para incluir as atualidades do seu estado, além das nacionais e internacionais.</p>
 
         <Checkbox
           name="terms"

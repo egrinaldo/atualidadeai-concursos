@@ -11,7 +11,7 @@
  */
 
 export const LEGAL_VERSION = '1.0'
-export const LEGAL_EFFECTIVE_DATE = '05/11/2026'
+export const LEGAL_EFFECTIVE_DATE = '07/11/2026'
 
 export type LegalBlock = { p: string } | { ul: string[] } | { note: string }
 export type LegalSection = { id: string; title: string; blocks: LegalBlock[] }
@@ -57,7 +57,7 @@ export const termsOfUse: LegalDocument = {
       title: '3. Objeto do serviço',
       blocks: [
         {
-          p: 'A Plataforma oferece, mediante assinatura, materiais de estudo com atualidades regionais, nacionais e internacionais selecionadas e organizadas com o apoio de ferramentas de inteligência artificial, voltados à preparação para concursos públicos, considerando o estado e o município informados pelo usuário.',
+          p: 'A Plataforma oferece, mediante assinatura, materiais de estudo com atualidades estaduais, nacionais e internacionais selecionadas e organizadas com o apoio de ferramentas de inteligência artificial, voltados à preparação para concursos públicos, considerando o estado (UF) informado pelo usuário.',
         },
         {
           p: 'Os materiais são disponibilizados em formato digital, na Área do assinante e/ou por e-mail, conforme a periodicidade descrita na página de apresentação da Plataforma. O Fornecedor poderá aprimorar o formato, o layout e a organização dos materiais, preservando a natureza do serviço contratado.',
@@ -259,8 +259,8 @@ export const privacyPolicy: LegalDocument = {
         { p: 'Tratamos somente os dados necessários às finalidades descritas nesta Política (princípio da necessidade, art. 6º, III, da LGPD):' },
         {
           ul: [
-            'Dados de cadastro: nome completo, e-mail, estado (UF) e município, data e hora do aceite dos Termos de Uso e desta Política. A senha é armazenada exclusivamente em formato criptografado irreversível (hash) e nunca é acessível ao Controlador.',
-            'Dados de interessados: nome, e-mail, UF e município informados ao iniciar o cadastro na Plataforma, ainda que o cadastro não seja concluído.',
+            'Dados de cadastro: nome completo, e-mail, estado (UF), data e hora do aceite dos Termos de Uso e desta Política. A senha é armazenada exclusivamente em formato criptografado irreversível (hash) e nunca é acessível ao Controlador.',
+            'Dados de interessados: nome, e-mail e UF informados ao iniciar o cadastro na Plataforma, ainda que o cadastro não seja concluído.',
             'Dados de assinatura e pagamento: e-mail da conta do Mercado Pago informada para o pagamento, identificadores da assinatura e das transações, valor, status e datas. Dados de cartão são coletados e tratados exclusivamente pelo Mercado Pago e não são recebidos nem armazenados pelo Controlador.',
             'Dados de comunicação: registro dos e-mails transacionais enviados (tipo, assunto, data e situação do envio).',
             'Dados técnicos e de segurança: endereço IP, data e hora de acesso, dados da sessão de login armazenados no navegador e registros de autenticação, inclusive o fator de verificação em duas etapas de contas administrativas.',
@@ -277,7 +277,7 @@ export const privacyPolicy: LegalDocument = {
       blocks: [
         {
           ul: [
-            'Criar e gerenciar a conta, autenticar o acesso e prestar o serviço contratado, inclusive a regionalização dos Materiais conforme UF e município — execução de contrato e de procedimentos preliminares (art. 7º, V, da LGPD).',
+            'Criar e gerenciar a conta, autenticar o acesso e prestar o serviço contratado, inclusive a seleção das atualidades estaduais conforme a UF informada — execução de contrato e de procedimentos preliminares (art. 7º, V, da LGPD).',
             'Processar a assinatura, os pagamentos, cancelamentos e reembolsos — execução de contrato (art. 7º, V).',
             'Enviar comunicações transacionais (confirmação de cadastro, recuperação de senha, confirmação de contratação e situação de pagamentos) — execução de contrato (art. 7º, V).',
             'Cumprir obrigações legais e regulatórias, inclusive fiscais, de defesa do consumidor e a guarda de registros de acesso — cumprimento de obrigação legal (art. 7º, II) e art. 15 do Marco Civil da Internet.',
