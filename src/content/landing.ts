@@ -234,7 +234,7 @@ export const faq = {
     {
       question: 'Quanto custa?',
       answer:
-        `A assinatura custa ${formatBRL(plan.priceCents)} por mês e inclui todos os materiais: diário, semanal e mensal, com atualidades regionais, nacionais e internacionais.`,
+        `A assinatura custa ${formatBRL(plan.priceCents)} por mês e inclui todos os materiais: diário, semanal e mensal, com atualidades estaduais, nacionais e internacionais.`,
     },
     {
       question: 'Quais formas de pagamento são aceitas?',
