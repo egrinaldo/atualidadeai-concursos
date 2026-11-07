@@ -12,6 +12,7 @@ Personalização, publicação às 06h, área do assinante, e-mail e limpeza.
 ## Quem recebe
 
 - Assinatura com status **ativo**.
+- **Administradores** (`delivery.include_admins`, padrão ligado; migração 23) recebem igual a um cliente, sem precisar de assinatura, para conferir o que os clientes recebem.
 - Recebe as edições da UF do seu cadastro (`profiles.state`). Assinante sem estado não recebe e é contado em `without_state` no resultado da tarefa.
 - Na segunda-feira e no dia 1, a diária e a revisão (semanal/mensal) chegam juntas: são dois PDFs no mesmo e-mail.
 
