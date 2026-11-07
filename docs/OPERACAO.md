@@ -43,7 +43,7 @@ Ligue **as duas pontas juntas**: só o site sem o Supabase não protege; só o S
    - **Hostname:** o domínio do site (e `localhost` para testes).
    - **Modo:** *Managed*.
    - Anote a **Site key** (pública) e a **Secret key**.
-2. Na Vercel, em **Settings → Environment Variables**, crie `VITE_TURNSTILE_SITE_KEY` = Site key e faça um novo deploy.
+2. Na Vercel, em **Settings → Environment Variables**, crie `TURNSTILE_SITE_KEY` (ou `VITE_TURNSTILE_SITE_KEY`) = Site key e faça um novo deploy. É a chave **do site**, pública; a secreta vai só para o Supabase.
 3. Confira que a caixa de verificação aparece em `/entrar`, `/cadastro` e `/recuperar-senha`.
 4. No Supabase, em **Authentication → Attack Protection → Enable CAPTCHA protection**, escolha *Turnstile* e cole a Secret key.
 5. Teste: login, cadastro e recuperação de senha.
