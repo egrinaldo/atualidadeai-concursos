@@ -1,7 +1,7 @@
 /**
  * PLANO DE ASSINATURA
  * ---------------------------------------------------------------------
- * Oferta definida pelo responsável: plano único, mensal, R$ 10,00.
+ * Oferta definida pelo responsável: plano único, mensal, R$ 9,99 (era R$ 10,00 até 07/11/2026).
  *
  * Na Subetapa 5 o plano passa a ser lido da tabela `plans` do Supabase
  * (preço configurável pelo banco) e este arquivo vira apenas o valor
@@ -31,7 +31,7 @@ export const plan: Plan = {
   id: 'monthly',
   name: 'Assinatura mensal',
   description: 'Acesso completo a todos os materiais, com renovação automática todo mês.',
-  priceCents: 1000,
+  priceCents: 999,
   months: 1,
   priceSuffix: '/mês',
 }
@@ -50,7 +50,7 @@ export function formatBRL(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-/** Ex.: "R$ 10,00/mês" */
+/** Ex.: "R$ 9,99/mês" */
 export function planPriceLabel(p: Plan = plan): string {
   return `${formatBRL(p.priceCents)}${p.priceSuffix}`
 }

@@ -43,7 +43,7 @@ payments            leads (independente; gravado via capture_lead)
 | is_active | boolean | só planos ativos aparecem no site |
 | created_at / updated_at | timestamptz | |
 
-Registro inicial: **`mensal` — Assinatura mensal — R$ 10,00 — monthly — ativo**.
+Registro inicial: **`mensal` — Assinatura mensal — R$ 10,00 — monthly — ativo**. Desde 07/11/2026 (migração 26): **R$ 9,99**.
 
 ### subscriptions
 | Coluna | Tipo | Regras |
@@ -140,7 +140,7 @@ Registro dos e-mails transacionais: `kind`, `dedupe_key` (**única** — impede 
 | `supabase/migrations/20261104120000_schema_inicial.sql` | Tabelas, restrições, índices, triggers de `updated_at` |
 | `supabase/migrations/20261104120100_rls_e_permissoes.sql` | GRANTs e políticas RLS |
 | `supabase/migrations/20261104120200_funcoes_cadastro_e_leads.sql` | Funções e triggers de cadastro e leads |
-| `supabase/migrations/20261104120300_dados_iniciais_planos.sql` | Plano mensal de R$ 10,00 |
+| `supabase/migrations/20261104120300_dados_iniciais_planos.sql` | Plano mensal (R$ 10,00 inicial; R$ 9,99 desde a migração 26) |
 | `supabase/migrations/20261104130000_pagamentos_mercado_pago.sql` | Colunas de controle da assinatura e `payment_events` |
 | `supabase/migrations/20261104150000_registro_de_emails.sql` | Tabela `email_log` |
 | `supabase/migrations/20261104140000_conciliacao_agendada.sql` | `pg_cron` + `pg_net`: conciliação a cada 6 h (segredos no Vault) |

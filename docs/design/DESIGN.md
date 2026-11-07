@@ -46,7 +46,7 @@ Todas as cores, fontes e animações estão no bloco `@theme` de `src/index.css`
 | Quero mudar… | Arquivo | O que fazer |
 | --- | --- | --- |
 | Qualquer texto (títulos, descrições, FAQ, passos) | `src/content/landing.ts` | Edite o texto entre aspas. Mantenha vírgulas e chaves. |
-| Nome, descrição e preço da assinatura | `src/content/plans.ts` → `plan` | Preço em **centavos** (`1000` = R$ 10,00). O novo valor aparece automaticamente no hero, na seção de assinatura e no FAQ. |
+| Nome, descrição e preço da assinatura | `src/content/plans.ts` → `plan` | Preço em **centavos** (`999` = R$ 9,99). Mude também o preço do plano no banco (tabela `plans`), que é o valor cobrado pelo Mercado Pago. O novo valor aparece automaticamente no hero, na seção de assinatura e no FAQ. |
 | Itens "O que está incluso" | `src/content/plans.ts` → `planFeatures` | Um item por linha. |
 | Itens do menu | `src/content/landing.ts` → `navLinks` | `href` deve apontar para o `id` de uma seção. |
 | E-mail, razão social, CNPJ | `src/config/site.ts` | Aparecem no rodapé quando preenchidos. |

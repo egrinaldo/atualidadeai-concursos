@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Novo preço
+
+### Alterado
+- Assinatura mensal: **R$ 10,00 → R$ 9,99**, nos três lugares: plano no banco (migração 26), site e Termos de Uso, que usam o mesmo valor. Vale para novas assinaturas; não havia assinaturas ativas.
+
 ## [Não publicado] — Ilustrações com trechos reais
 
 ### Alterado
