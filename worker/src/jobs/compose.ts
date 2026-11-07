@@ -4,6 +4,7 @@ import type { BlockKey, EditionType } from '../pdf/model.ts'
 import { periodStories, planStory, synthesisKindFor } from '../period/plan.ts'
 import { selectStories, type Story } from '../period/stories.ts'
 import { SYNTHESIS_VERSION } from '../period/synthesis.ts'
+import { repeatDecisions, type Published } from '../pdf/repeats.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
 import type { JobContext } from './types.ts'
 
@@ -25,7 +26,7 @@ type Row = {
   source_count: number
   last_seen_at: string
   news: { news_sources: { reliability_level: number } }[]
-  news_analyses: { id: string; status: string; generated_at: string }[]
+  news_analyses: { id: string; status: string; generated_at: string; editorial_title: string; summary: string }[]
 }
 
 /**
@@ -63,7 +64,7 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
   const rows = (!types.includes('diaria') ? [] : await selectAll((from, to) =>
     ctx.db
       .from('news_clusters')
-      .select('id, scope, state, relevance, relevance_score, verification_status, needs_review, source_count, last_seen_at, news!inner(news_sources!inner(reliability_level)), news_analyses!inner(id, status, generated_at)')
+      .select('id, scope, state, relevance, relevance_score, verification_status, needs_review, source_count, last_seen_at, news!inner(news_sources!inner(reliability_level)), news_analyses!inner(id, status, generated_at, editorial_title, summary)')
       .eq('status', 'analyzed')
       .in('relevance', allowed)
       .in('news_analyses.status', ['valid', 'edited'])
@@ -74,9 +75,9 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
       .range(from, to),
   ).catch((e) => { throw new Error(`assuntos: ${e.message}`) })) as unknown as Row[]
 
-  const cands: EditionCandidate[] = rows.map((r) => {
+  const cands: (EditionCandidate & { title: string; summary: string })[] = rows.map((r) => {
     const latest = [...r.news_analyses].sort((a, b) => b.generated_at.localeCompare(a.generated_at))[0]
-    return { ...r, analysis_id: latest.id, best_reliability: Math.max(...r.news.map((n) => n.news_sources.reliability_level)) }
+    return { ...r, analysis_id: latest.id, title: latest.editorial_title, summary: latest.summary, best_reliability: Math.max(...r.news.map((n) => n.news_sources.reliability_level)) }
   })
 
   const results: Record<string, unknown>[] = []
@@ -84,8 +85,24 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
     for (const type of types) {
       let sel: Record<BlockKey, { analysis_id: string }[]>
       let periodInfo: Record<string, unknown> | null = null
-      if (type === 'diaria') sel = selectEditionItems(cands, { ...policyBase, state, window: windows[type], perBlock: perBlockAll[type], graceHours: 12 })
-      else {
+      let repeats: { updates: Record<string, string>; skipped: { analysis_id: string; reason: string }[] } | null = null
+      if (type === 'diaria') {
+        // Nada que já saiu numa diária anterior volta sem fato novo (e, se voltar, vem como "Atualização")
+        const decisions = repeatDecisions(cands, await publishedDaily(ctx, state, referenceDate), referenceDate, { similarity: Number(get('edition.repeat_similarity', 0.6)) })
+        const fresh = cands.filter((c) => decisions.get(c.analysis_id)?.keep !== false)
+        sel = selectEditionItems(fresh, { ...policyBase, state, window: windows[type], perBlock: perBlockAll[type], graceHours: 12 })
+        const chosen = new Set((['estado', 'nacional', 'internacional'] as BlockKey[]).flatMap((b) => sel[b].map((x) => x.analysis_id)))
+        const updates: Record<string, string> = {}
+        for (const id of chosen) {
+          const d = decisions.get(id)
+          if (d?.keep && d.updateOf) updates[id] = d.updateOf
+        }
+        const skipped = cands.flatMap((c) => {
+          const d = decisions.get(c.analysis_id)
+          return d && !d.keep ? [{ analysis_id: c.analysis_id, reason: d.reason }] : []
+        })
+        repeats = { updates, skipped }
+      } else {
         const p = await periodItems(ctx, type, state, referenceDate, perBlockAll[type], Number(get('synthesis.similarity_threshold', 0.4)))
         sel = p.sel
         periodInfo = p.info
@@ -96,7 +113,13 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
         results.push({ state, type, skipped: `edição já ${existing.status}` })
         continue
       }
-      const summary = { blocks: { estado: sel.estado.length, nacional: sel.nacional.length, internacional: sel.internacional.length }, candidates: type === 'diaria' ? cands.length : undefined, ...(periodInfo ? { period: periodInfo } : {}), composed_at: new Date().toISOString() }
+      const summary = {
+        blocks: { estado: sel.estado.length, nacional: sel.nacional.length, internacional: sel.internacional.length },
+        candidates: type === 'diaria' ? cands.length : undefined,
+        ...(periodInfo ? { period: periodInfo } : {}),
+        ...(repeats ? { updates: repeats.updates, repeats_skipped: repeats.skipped.length } : {}),
+        composed_at: new Date().toISOString(),
+      }
       const row = { edition_type: type, state, reference_date: referenceDate, period_start: windows[type].start, period_end: windows[type].end, status: total ? 'in_review' : 'draft', summary }
       const { data: ed, error: e1 } = existing
         ? await ctx.db.from('editions').update(row).eq('id', existing.id).select('id').single()
@@ -145,4 +168,21 @@ async function periodItems(ctx: JobContext, type: 'semanal' | 'mensal', state: s
   const seen = new Set<string>()
   for (const b of ['estado', 'nacional', 'internacional'] as BlockKey[]) sel[b] = sel[b].filter((x) => !seen.has(x.analysis_id) && seen.add(x.analysis_id))
   return { sel, info: { from: period.from, to: period.to, entries: period.entries, dropped_by_audit: period.dropped, stories: period.stories.length, syntheses, fallbacks, weeklies: period.weeklies } }
+}
+
+/** Itens das diárias já montadas/publicadas da UF nos últimos 10 dias (para não repetir). */
+async function publishedDaily(ctx: JobContext, state: string, referenceDate: string): Promise<Published[]> {
+  const from = new Date(Date.parse(`${referenceDate}T12:00:00Z`) - 10 * 86_400_000).toISOString().slice(0, 10)
+  const { data, error } = await ctx.db
+    .from('edition_items')
+    .select('analysis_id, editions!inner(reference_date, period_end, state, edition_type, status), news_analyses!inner(cluster_id, editorial_title, summary)')
+    .eq('editions.edition_type', 'diaria')
+    .eq('editions.state', state)
+    .in('editions.status', ['in_review', 'approved', 'generating', 'generated', 'published'])
+    .gte('editions.reference_date', from)
+    .lt('editions.reference_date', referenceDate)
+    .limit(1000)
+  if (error) throw new Error(`edições anteriores: ${error.message}`)
+  type R = { analysis_id: string; editions: { reference_date: string; period_end: string }; news_analyses: { cluster_id: string; editorial_title: string; summary: string } }
+  return ((data ?? []) as unknown as R[]).map((r) => ({ clusterId: r.news_analyses.cluster_id, analysisId: r.analysis_id, referenceDate: r.editions.reference_date, periodEnd: r.editions.period_end, title: r.news_analyses.editorial_title ?? '', summary: r.news_analyses.summary ?? '' }))
 }
