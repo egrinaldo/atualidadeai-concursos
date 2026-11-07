@@ -63,7 +63,7 @@ Após alterar `.env.local`, **reinicie** o `npm run dev` para que os novos valor
    4. `20261104120300_dados_iniciais_planos.sql`
    - Se o editor perguntar sobre *"destructive operations"* ou RLS, confirme: os scripts usam `drop ... if exists` apenas para poder ser reexecutados.
 5. Por fim, cole e execute `supabase/verificacao.sql`. **Todas as linhas devem mostrar `OK`.**
-6. Opcional: menu **Table Editor** → as 6 tabelas aparecem com o selo de RLS ativo; a tabela `plans` tem 1 linha (R$ 10,00).
+6. Opcional: menu **Table Editor** → as 6 tabelas aparecem com o selo de RLS ativo; a tabela `plans` tem 1 linha (R$ 9,99).
 
 Se algum script falhar, copie a mensagem de erro (sem credenciais) e me envie. Como os scripts são reexecutáveis, basta corrigir e rodar novamente.
 
@@ -84,7 +84,7 @@ Se algum script falhar, copie a mensagem de erro (sem credenciais) e me envie. C
    npm run check:supabase
    ```
    Resultado esperado: todas as linhas com ✓ e a mensagem **"Tudo certo! Banco configurado corretamente."** O comando também confirma que visitantes **não** conseguem ler perfis, assinaturas, pagamentos e leads.
-2. Visualmente: rode `npm run dev` e abra <http://localhost:5173/status>. O cartão **"Banco de dados Supabase (conexão real)"** deve mostrar **OK** e o plano "Assinatura mensal (R$ 10,00)".
+2. Visualmente: rode `npm run dev` e abra <http://localhost:5173/status>. O cartão **"Banco de dados Supabase (conexão real)"** deve mostrar **OK** e o plano "Assinatura mensal (R$ 9,99)".
 
 | Mensagem | Solução |
 | --- | --- |
@@ -169,7 +169,7 @@ npx supabase functions deploy --remote=pjtlsiulnipynkierkez --use-api --yes
 3. Substituir nos Secrets: `MERCADO_PAGO_ACCESS_TOKEN` (produção) e, no `.env`/Vercel, `VITE_MERCADO_PAGO_PUBLIC_KEY` (produção).
 4. **Remover** `MERCADO_PAGO_TEST_PAYER_EMAIL` dos Secrets (`npx supabase secrets unset MERCADO_PAGO_TEST_PAYER_EMAIL ...`).
 5. Configurar o webhook no **Modo produção** e atualizar `MERCADO_PAGO_WEBHOOK_SECRET` com a assinatura secreta de produção.
-6. Fazer **uma** assinatura real de R$ 10,00 com um cartão próprio, conferir ativação/registro e cancelá-la; o estorno, se desejado, é feito no painel do Mercado Pago.
+6. Fazer **uma** assinatura real de R$ 9,99 com um cartão próprio, conferir ativação/registro e cancelá-la; o estorno, se desejado, é feito no painel do Mercado Pago.
 7. Conferir que o preço em `public.plans` é o desejado.
 
 ## 5. E-mails — Resend (Subetapa 6)
