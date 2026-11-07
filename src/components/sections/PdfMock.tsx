@@ -1,133 +1,142 @@
 import { Icon } from '@/components/ui'
+import { dailyHeadlines, dailySample, monthlyContents, weeklySample, type SampleItem } from '@/content/samples'
 import { cn } from '@/utils/cn'
 
-type PdfMockProps = {
-  edition: string
-  title: string
-  className?: string
-  /** Mostra os blocos de conteúdo detalhados (usado na demonstração). */
-  detailed?: boolean
-  /** Versão reduzida para miniaturas (sem etiquetas e blocos extras). */
-  compact?: boolean
+/**
+ * Ilustrações dos PDFs na página inicial, com TRECHOS REAIS das edições publicadas (content/samples.ts).
+ * variant: "daily" (cartão do topo), "weekly" (demonstração com linha do tempo), "daily-mini" e "monthly-mini".
+ */
+type Variant = 'daily' | 'weekly' | 'daily-mini' | 'monthly-mini'
+
+const levelClass: Record<SampleItem['level'], string> = {
+  Estadual: 'bg-signal-400/15 text-signal-300',
+  Nacional: 'bg-brand-500/20 text-brand-200',
+  Internacional: 'bg-white/10 text-slate-200',
 }
 
-const levelTags = [
-  { label: 'Estadual', className: 'bg-signal-400/15 text-signal-300' },
-  { label: 'Nacional', className: 'bg-brand-500/20 text-brand-200' },
-  { label: 'Internacional', className: 'bg-white/10 text-slate-200' },
-]
+function Level({ level }: { level: SampleItem['level'] }) {
+  return <span className={cn('rounded-full px-2 py-0.5 text-[0.62rem] font-semibold', levelClass[level])}>{level}</span>
+}
 
-function Lines({ widths }: { widths: string[] }) {
+function Header({ title, edition, compact, badge }: { title: string; edition: string; compact?: boolean; badge?: string }) {
   return (
-    <div className="space-y-1.5" aria-hidden>
-      {widths.map((w, i) => (
-        <div key={i} className="h-1.5 rounded-full bg-slate-300/15" style={{ width: w }} />
-      ))}
+    <div className={cn('flex items-center justify-between gap-3 border-b border-white/10', compact ? 'pb-3' : 'pb-4')}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <span className={cn('flex shrink-0 items-center justify-center rounded-lg bg-brand-500/20 text-brand-300', compact ? 'size-7' : 'size-8')}>
+          <Icon name="fileText" className={compact ? 'size-4' : 'size-4.5'} />
+        </span>
+        <div className="min-w-0">
+          <p className={cn('font-display font-bold text-white', compact ? 'truncate text-xs' : 'text-sm')}>{title}</p>
+          <p className="truncate text-[0.7rem] text-slate-400">{edition}</p>
+        </div>
+      </div>
+      {badge && (
+        <span className="shrink-0 rounded-md border border-success-400/40 bg-success-400/10 px-2 py-0.5 text-[0.6rem] font-bold tracking-wider text-success-400 uppercase">
+          {badge}
+        </span>
+      )}
     </div>
   )
 }
 
-/**
- * Ilustração de uma página de PDF do AtualidadeAI.
- * Conteúdo propositalmente genérico e marcado como EXEMPLO.
- */
-export function PdfMock({ edition, title, className, detailed = false, compact = false }: PdfMockProps) {
-  return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-navy-800 to-navy-900 shadow-card',
-        compact ? 'p-4' : 'p-5 sm:p-6',
-        className,
-      )}
-      role="img"
-      aria-label={`Ilustração de exemplo: ${title}`}
-    >
-      {/* Marca d'água de exemplo */}
-      <span
-        className={cn(
-          'pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 font-display font-extrabold tracking-widest text-white/[0.04] select-none',
-          compact ? 'text-3xl' : 'text-5xl sm:text-6xl',
-        )}
-      >
-        EXEMPLO
-      </span>
+export function PdfMock({ variant, className }: { variant: Variant; className?: string }) {
+  const frame = cn('relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-navy-800 to-navy-900 shadow-card', variant.endsWith('mini') ? 'p-4' : 'p-5 sm:p-6', className)
 
-      <div className={cn('flex items-center justify-between gap-3 border-b border-white/10', compact ? 'pb-3' : 'pb-4')}>
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span
-            className={cn(
-              'flex shrink-0 items-center justify-center rounded-lg bg-brand-500/20 text-brand-300',
-              compact ? 'size-7' : 'size-8',
-            )}
-          >
-            <Icon name="fileText" className={compact ? 'size-4' : 'size-4.5'} />
-          </span>
-          <div className="min-w-0">
-            <p className={cn('font-display font-bold text-white', compact ? 'truncate text-xs' : 'text-sm')}>{title}</p>
-            <p className="text-[0.7rem] text-slate-400">{edition}</p>
-          </div>
-        </div>
-        {!compact && (
-          <span className="rounded-md border border-warning-400/40 bg-warning-400/10 px-2 py-0.5 text-[0.62rem] font-bold tracking-wider text-warning-400 uppercase">
-            Exemplo
-          </span>
-        )}
+  if (variant === 'daily-mini')
+    return (
+      <div className={frame} role="figure" aria-label="Informativo diário: exemplos de títulos reais">
+        <Header title="Diário" edition="Todo dia às 6h" compact />
+        <ul className="mt-3 space-y-2">
+          {dailyHeadlines.map((h) => (
+            <li key={h} className="flex gap-1.5 text-[0.7rem] leading-snug text-slate-300">
+              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-brand-300" aria-hidden />
+              {h}
+            </li>
+          ))}
+        </ul>
       </div>
+    )
 
-      {compact ? (
-        <div className="mt-4 space-y-4">
-          <Lines widths={['100%', '86%', '60%']} />
-          <Lines widths={['94%', '72%']} />
+  if (variant === 'monthly-mini')
+    return (
+      <div className={frame} role="figure" aria-label="Revisão mensal: o que contém">
+        <Header title="Mensal" edition="Todo dia 1º" compact />
+        <ul className="mt-3 space-y-2">
+          {monthlyContents.map((h) => (
+            <li key={h} className="flex gap-1.5 text-[0.7rem] leading-snug text-slate-300">
+              <Icon name="check" className="mt-0.5 size-3 shrink-0 text-signal-400" />
+              {h}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+
+  if (variant === 'weekly') {
+    const w = weeklySample
+    return (
+      <div className={frame} role="figure" aria-label={`${w.title}: ${w.story.title}`}>
+        <Header title={w.title} edition={w.edition} badge="Fatos reais" />
+        <div className="mt-4 flex items-center gap-2">
+          <Level level={w.story.level} />
+          <span className="text-[0.65rem] text-slate-500">Acompanhado em 2 edições diárias</span>
         </div>
-      ) : (
-        <>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {levelTags.map((t) => (
-              <span key={t.label} className={cn('rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold', t.className)}>
-                {t.label}
-              </span>
-            ))}
+        <p className="mt-2 text-sm font-semibold text-white">{w.story.title}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{w.story.text}</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3 sm:col-span-2">
+            <p className="text-[0.66rem] font-bold tracking-wider text-brand-300 uppercase">Linha do tempo</p>
+            <ol className="mt-2 space-y-1.5 border-l-2 border-brand-500/40 pl-3">
+              {w.timeline.map((t) => (
+                <li key={t.date} className="text-[0.72rem] leading-snug text-slate-300">
+                  <b className="mr-1.5 font-display text-brand-200">{t.date}</b>
+                  {t.fact}
+                </li>
+              ))}
+            </ol>
           </div>
-
-          <div className="mt-5 space-y-5">
-            <div>
-              <p className="text-xs font-semibold text-slate-200">Tema fictício de exemplo</p>
-              <div className="mt-2">
-                <Lines widths={['100%', '92%', '64%']} />
-              </div>
-            </div>
-
-            {detailed ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {['Contexto', 'Por que importa', 'Pontos de atenção', 'Fonte'].map((label) => (
-                  <div key={label} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-                    <p className="text-[0.68rem] font-bold tracking-wider text-brand-300 uppercase">{label}</p>
-                    <div className="mt-2">
-                      <Lines widths={['100%', '78%']} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-signal-400/20 bg-signal-400/[0.06] p-3">
-                <p className="flex items-center gap-1.5 text-[0.68rem] font-bold tracking-wider text-signal-300 uppercase">
-                  <Icon name="lightbulb" className="size-3.5" /> Por que importa para a prova
-                </p>
-                <div className="mt-2">
-                  <Lines widths={['96%', '70%']} />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <p className="text-xs font-semibold text-slate-200">Outro tema de exemplo</p>
-              <div className="mt-2">
-                <Lines widths={['100%', '84%']} />
-              </div>
-            </div>
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+            <p className="text-[0.66rem] font-bold tracking-wider text-brand-300 uppercase">Para memorizar</p>
+            <ul className="mt-1.5 space-y-1 text-[0.7rem] leading-snug text-slate-300">
+              {w.memorize.map((m) => (
+                <li key={m}>• {m}</li>
+              ))}
+            </ul>
           </div>
-        </>
-      )}
+          <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+            <p className="text-[0.66rem] font-bold tracking-wider text-brand-300 uppercase">Fontes</p>
+            <p className="mt-1.5 text-[0.7rem] leading-snug text-slate-300">{w.sources}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const d = dailySample
+  return (
+    <div className={frame} role="figure" aria-label={`${d.title}, ${d.edition}`}>
+      <Header title={d.title} edition={d.edition} badge="Trecho real" />
+      <div className="mt-4 space-y-4">
+        <div>
+          <Level level={d.lead.level} />
+          <p className="mt-2 text-sm font-semibold text-white">{d.lead.title}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{d.lead.text}</p>
+        </div>
+        <div className="rounded-xl border border-signal-400/20 bg-signal-400/[0.06] p-3">
+          <p className="flex items-center gap-1.5 text-[0.66rem] font-bold tracking-wider text-signal-300 uppercase">
+            <Icon name="lightbulb" className="size-3.5" /> Por que importa para a prova
+          </p>
+          <p className="mt-1.5 text-[0.72rem] leading-relaxed text-slate-300">{d.whyItMatters}</p>
+        </div>
+        <ul className="space-y-2.5">
+          {d.more.map((m) => (
+            <li key={m.title} className="flex items-start gap-2">
+              <Level level={m.level} />
+              <span className="text-xs leading-snug font-medium text-slate-200">{m.title}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

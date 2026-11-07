@@ -19,8 +19,8 @@ export function PdfDemo() {
             description={pdfDemo.description}
           />
           <Reveal>
-            <Badge tone="warning" className="mt-6">
-              Demonstração ilustrativa
+            <Badge tone="success" className="mt-6">
+              Trechos reais das edições publicadas
             </Badge>
           </Reveal>
           <ol className="mt-8 space-y-4">
@@ -41,10 +41,10 @@ export function PdfDemo() {
         <Reveal className="relative mx-auto w-full max-w-lg min-w-0">
           <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-brand-500/20 via-transparent to-signal-400/10 blur-xl" aria-hidden />
           <div className="relative space-y-4">
-            <PdfMock title="Compilado semanal" edition="Semana ilustrativa" detailed />
+            <PdfMock variant="weekly" />
             <div className="grid grid-cols-2 gap-4 [&>*]:min-w-0">
-              <PdfMock title="Diário" edition="Exemplo" compact />
-              <PdfMock title="Mensal" edition="Exemplo" compact />
+              <PdfMock variant="daily-mini" />
+              <PdfMock variant="monthly-mini" />
             </div>
           </div>
         </Reveal>
