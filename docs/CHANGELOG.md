@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Site só com estadual, nacional e internacional
+
+### Alterado
+- **Página inicial, planos, perguntas frequentes e ilustração do PDF:** o texto deixa de falar em "regional", "cidade", "municipal" e "local". A cobertura passa a ser **Estadual**, nacional e internacional, igual ao que o informativo entrega.
+- **Cadastro:** não pede mais a cidade, só o estado (minimização de dados, LGPD). A coluna `city` continua no banco para os cadastros antigos, sem uso. "Minha conta" deixa de mostrar a cidade.
+- **Termos e Política de Privacidade:** "atualidades estaduais" e "estado (UF)"; deixa de citar município. Vigência 07/11/2026.
+
 ## [Não publicado] — Diária sem repetição
 
 ### Corrigido

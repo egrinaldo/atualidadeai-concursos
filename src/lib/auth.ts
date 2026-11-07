@@ -18,7 +18,6 @@ export type SignUpInput = {
   email: string
   password: string
   state: string
-  city: string
 }
 
 export type SignUpResult =
@@ -37,7 +36,6 @@ export async function signUp(input: SignUpInput, captchaToken?: string | null): 
       data: {
         full_name: input.fullName,
         state: input.state,
-        city: input.city,
         terms_accepted: true,
       },
     },

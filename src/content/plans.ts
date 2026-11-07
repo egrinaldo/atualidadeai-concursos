@@ -41,7 +41,7 @@ export const planFeatures = [
   'PDF diário de atualidades',
   'Compilado semanal em PDF',
   'Compilado mensal em PDF',
-  'Atualidades do seu estado e da sua cidade',
+  'Atualidades do seu estado',
   'Destaques nacionais e internacionais',
   'Conteúdo com foco em concursos públicos',
 ]
