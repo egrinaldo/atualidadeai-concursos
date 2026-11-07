@@ -14,7 +14,7 @@
 8. **Registro:** cada tentativa vai para `source_fetch_logs` (status, HTTP, itens, novos, duplicados, erro, duração) e a saúde da fonte é atualizada (`last_checked_at`, `last_success_at`, `last_error`, `consecutive_failures`).
 9. **Encaminhamento:** notícias novas ficam com `status = 'collected'` — a triagem (Subetapa 2.3) parte delas. Alcance, UF e categoria iniciais vêm da fonte e são refinados na triagem.
 
-Identificação do robô (User-Agent): `AtualidadeAI-Concursos-Bot/1.0 (+https://atualidadeai-concursos.vercel.app; atualidadeaiconcursos@gmail.com)`.
+Identificação do robô (User-Agent): `AtualidadeAI-Concursos-Bot/1.0 (+https://www.atualidadeaiconcursos.com.br; atualidadeaiconcursos@gmail.com)`.
 
 ## Triagem e agrupamento (Subetapa 2.3)
 

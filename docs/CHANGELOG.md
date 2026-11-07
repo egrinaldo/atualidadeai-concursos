@@ -2,6 +2,14 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Domínio próprio
+
+### Alterado
+- Site em `https://www.atualidadeaiconcursos.com.br`; o endereço `atualidadeai-concursos.vercel.app` não responde mais.
+- Supabase Auth: Site URL = domínio próprio; Redirect URLs com os dois domínios + `.vercel.app` + localhost.
+- `SITE_URL` das Edge Functions (retorno do checkout) e padrão do worker (links dos e-mails) = domínio próprio.
+- Página legal, rodapé do PDF e identificação do robô (User-Agent) com o domínio próprio.
+
 ## [Não publicado] — Etapa 2 · Subetapa 2.9: endurecimento antes das vendas
 
 ### Adicionado

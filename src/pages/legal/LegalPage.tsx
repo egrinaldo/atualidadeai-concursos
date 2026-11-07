@@ -6,7 +6,7 @@ import { site } from '@/config/site'
 import { LEGAL_EFFECTIVE_DATE, LEGAL_VERSION, type LegalDocument } from '@/content/legal'
 import { formatBRL, plan } from '@/content/plans'
 
-const SITE_URL = 'https://atualidadeai-concursos.vercel.app'
+const SITE_URL = 'https://www.atualidadeaiconcursos.com.br'
 
 /** Valores dos marcadores {{...}}; vazio = ainda não informado em site.ts. */
 const values: Record<string, string> = {

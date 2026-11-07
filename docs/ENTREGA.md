@@ -68,7 +68,7 @@ Personalização, publicação às 06h, área do assinante, e-mail e limpeza.
 
 - **Obrigatórios para o e-mail:** `RESEND_API_KEY` e `EMAIL_FROM` (remetente de um domínio verificado no Resend).
 - **Opcionais:** `EMAIL_REPLY_TO` e `EMAIL_TEST_TO`. Este último **mantém tudo em modo de teste enquanto existir**.
-- **Variável:** `SITE_URL` (link da área no e-mail; padrão `https://atualidadeai-concursos.vercel.app`).
+- **Variável:** `SITE_URL` (link da área no e-mail; padrão `https://www.atualidadeaiconcursos.com.br`).
 
 ## Teste real (06/11, assinante temporário)
 

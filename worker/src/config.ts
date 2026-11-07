@@ -16,7 +16,7 @@ const schema = z.object({
   EMAIL_FROM: z.string().min(3).max(200).optional(),
   EMAIL_REPLY_TO: z.string().email().optional(),
   EMAIL_TEST_TO: z.string().email().optional(),
-  SITE_URL: z.string().url().default('https://atualidadeai-concursos.vercel.app'),
+  SITE_URL: z.string().url().default('https://www.atualidadeaiconcursos.com.br'),
   WORKER_ID: z.string().min(1).max(100).optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 })
