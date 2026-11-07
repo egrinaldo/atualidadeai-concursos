@@ -14,7 +14,7 @@ Manual do dia a dia do robô e do informativo: o que roda e quando, como ativar 
 | 05h57 → 06h00 | **Publicação**: área do assinante + e-mail → limpeza (7/90 dias) → verificação diária (e-mail de alerta só se algo falhou) | `worker-edition` (deliver) |
 | A cada 6h | Conciliação de pagamentos do Mercado Pago | pg_cron `mp-reconcile` |
 
-**Quem dispara:** os horários são acionados pelo **Supabase** (`pg_cron`, que chama a API do GitHub). O agendador do próprio GitHub fica como reserva; ele já atrasou 2h e pulou execuções.
+**Quem dispara:** os horários são acionados pelo **Supabase** (`pg_cron`, que chama a API do GitHub). As edições usam **só** esse disparo: o agendador do GitHub atrasou até 13h em 06–07/11, e uma montagem atrasada para depois do meio-dia montaria a edição seguinte cedo demais. A coleta mantém o agendador do GitHub como reserva. A resposta do GitHub a cada disparo fica em `dispatch_log` (copiada a cada 10 min pelo pg_cron `dispatch-capture`).
 
 **Disparo duplicado ou atrasado não repete trabalho:** as rodadas das edições são únicas por dia de edição (`TICK_SLOT=edition`).
 
