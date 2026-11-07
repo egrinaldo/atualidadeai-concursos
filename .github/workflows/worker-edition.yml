@@ -5,13 +5,12 @@
 #           e prepara as cópias personalizadas (nome + e-mail) de cada assinante
 #   05h57 — publica às 06h (área do assinante + e-mail, se ligado), faz a limpeza (cópias 7 dias, base 90 dias)
 #           e o alerta operacional (e-mail aos administradores só se algo falhou)
-# Disparo: Supabase pg_cron → API do GitHub (no horário) e, como reserva, o agendador do próprio GitHub.
+# Disparo: SOMENTE pelo Supabase (pg_cron → API do GitHub, jobs worker-compose/render/deliver), no horário.
+# O agendador do GitHub foi retirado deste fluxo: em 06–07/11 atrasou até 13h — uma montagem atrasada para
+# depois do meio-dia montaria a edição de AMANHÃ cedo demais (sem as notícias da tarde). A coleta mantém o
+# agendador do GitHub como reserva (atrasar a coleta não faz mal).
 name: worker-edition
 on:
-  schedule:
-    - cron: '12 1 * * *'   # 22h12 em Brasília
-    - cron: '35 7 * * *'   # 04h35 em Brasília
-    - cron: '57 8 * * *'   # 05h57 em Brasília (o job espera dar 06h)
   workflow_dispatch:
     inputs:
       step:
