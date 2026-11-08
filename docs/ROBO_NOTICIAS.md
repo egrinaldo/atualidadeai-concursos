@@ -72,6 +72,21 @@ Além das fontes públicas, o robô lê **feeds e mapas de notícias** de veícu
 
 **Risco jurídico residual** (anotado em `terms_notes` de cada fonte): BBC, DW e Euronews restringem o conteúdo a uso pessoal/não comercial; UOL, Folha, Jovem Pan, InfoMoney, O Povo, CN7 e NPR têm termos não verificados (página inacessível a robôs ou não localizada). Fatos não têm direito autoral (Lei 9.610/98, art. 8º) e não reproduzimos texto, mas **antes de atender clientes pagantes** recomenda-se revisão jurídica e, se necessário, licenciamento — ou desativar a fonte (`update news_sources set is_active = false where name = '...'`).
 
+## Bahia (migração 27 — verificadas em 08/11/2026)
+
+| Fonte | Tipo | Modo | Situação |
+|---|---|---|---|
+| TJBA — Notícias | Órgão público (feed) | integral | Ativa; sem robots.txt (permitido) |
+| MPBA — Notícias | Órgão público | integral | Ativa; robots.txt permite |
+| TCM-BA — Notícias | Órgão público | integral | Ativa; robots.txt permite |
+| G1 — Bahia | Imprensa | resumo | Ativa (feed `/rss/g1/ba/bahia/`; o antigo `/rss/g1/bahia/` parou em 2018) |
+| A Tarde | Imprensa | resumo | Ativa; termos não localizados |
+| Bahia Notícias | Imprensa | resumo | Ativa; termos não localizados |
+| Metro1 | Imprensa | resumo | Ativa; termos não localizados |
+| Prefeitura de Salvador | Órgão público | integral | **Inativa**: feed parado desde 23/10/2026 |
+
+Sem feed público: Governo da Bahia (ba.gov.br), Assembleia Legislativa (al.ba.gov.br) e TCE-BA. Primeira coleta: 163 notícias, nenhuma falha.
+
 ## Regras para novas fontes
 
 1. Preferir API oficial → RSS/Atom → mapa de notícias (sitemap) → dados públicos estruturados. Raspagem de página só com permissão expressa.
