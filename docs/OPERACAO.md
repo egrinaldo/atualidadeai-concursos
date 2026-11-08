@@ -20,7 +20,7 @@ Manual do dia a dia do robô e do informativo: o que roda e quando, como ativar 
 
 **Incidente de 08/11/2026:** um disparo antigo do agendador do GitHub chegou atrasado ao meio-dia de 07/11 e, pela regra antiga (vaga = data da *próxima* edição), ocupou a vaga da publicação de 08/11 sem ter nada a publicar. Às 06h de 08/11 a publicação e a verificação diária foram descartadas como "duplicadas": nenhum PDF saiu e nenhum alerta foi enviado. Correções: vaga pela data de hoje, rodada sem efeito não conta e o reforço a cada coleta (até 06h07 o envio sai mesmo se o disparo das 05h57 se perder).
 
-**Estados:** cada assinante ativo (e administrador) recebe a edição do seu estado. Estados em `pipeline.pilot_states` com fontes estaduais ativas têm o bloco estadual; os demais recebem Brasil e Mundo, e a verificação diária avisa "falta cadastrar fontes estaduais". Cobertura estadual em 08/11/2026: **CE e BA**. Tudo automático: assinante novo de um estado novo entra na próxima edição (a das 22h ou, se assinou depois, a das 04h35), sem nenhuma ação manual; o alerta diário segue até as fontes do estado serem cadastradas.
+**Estados:** cada assinante ativo (e administrador) recebe a edição do seu estado. Estados em `pipeline.pilot_states` com fontes estaduais ativas têm o bloco estadual; os demais recebem Brasil e Mundo, e a verificação diária avisa "falta cadastrar fontes estaduais". Cobertura estadual desde 08/11/2026: **todas as 27 UFs** (migração 28; ROBO_NOTICIAS.md). A análise por IA do bloco estadual roda só nas UFs com assinante ativo. Tudo automático: assinante novo de um estado novo entra na próxima edição (a das 22h ou, se assinou depois, a das 04h35), sem nenhuma ação manual; o alerta diário segue até as fontes do estado serem cadastradas.
 
 ## 2. Ativações que dependem de você
 
@@ -78,7 +78,7 @@ Ligue **as duas pontas juntas**: só o site sem o Supabase não protege; só o S
 
 | Sintoma | O que fazer |
 |---|---|
-| Alerta "recebem o PDF sem o bloco estadual" | Assinante de um estado sem fontes. Cadastre fontes estaduais (ROBO_NOTICIAS.md → Regras para novas fontes) e inclua a UF em `pipeline.pilot_states` (ex.: migração 27, Bahia) |
+| Alerta "recebem o PDF sem o bloco estadual" | Todas as fontes estaduais daquela UF estão desativadas ou falhando. Painel → Fontes; troque o feed (ROBO_NOTICIAS.md → Regras para novas fontes) |
 | Alerta "Edição diária … não foi montada" | GitHub → Actions → **worker-edition → Run workflow → step: compose** (sem `origem`). Depois **render** e **deliver** |
 | Alerta "não publicada" / PDF não saiu | Painel → Editorial → abra a edição (QA e situação). Ajuste e use **Gerar de novo**, depois rode **render** e **deliver** |
 | Alerta "Nenhuma coleta nas últimas 7h" | Rode **worker-collect** à mão. Se o problema persistir: `select * from dispatch_recent(24)` e o token (2.1) |
