@@ -18,7 +18,13 @@ Workflow: `.github/workflows/worker-edition.yml` (pode ser disparado à mão esc
 
 - **Janela**: diária = 24h até o fechamento das 22h da véspera (+12h de tolerância); semanal = 7 dias; mensal = mês anterior.
 - **Assuntos**: analisados (análise válida), elegíveis pela política de verificação, **sem revisão pendente**, relevância ≥ média; os de maior nota em cada bloco.
-- **Sem repetição (diária)**: assunto já publicado numa diária dos últimos 10 dias só volta com fato novo (matérias depois do período daquela edição + texto novo), marcado "Atualização — assunto publicado em DD/MM". Título e resumo quase iguais aos de uma diária dos últimos 3 dias também ficam de fora (`edition.repeat_similarity`, padrão 0,6). Por isso a diária pode ter **menos itens** que o máximo do bloco: só entra o que é novo.
+- **Sem repetição (diária)** — revisto em 08/11/2026 (`pdf/repeats.ts`):
+  - **Histórico comparado:** bloco estadual = diárias anteriores da própria UF; blocos nacional e internacional = diárias de **todas** as UFs (fato nacional já publicado é velho para qualquer estado, inclusive um estado que acabou de entrar).
+  - **Mesmo assunto** = mesmo agrupamento **ou** outro agrupamento com texto quase igual (`edition.repeat_similarity`, 0,6) **ou** com os mesmos nomes próprios distintivos (ex.: "Santiago Peña" + "Paraguai"). Nomes de órgãos ("Prefeitura de Fortaleza", "Ministério Público…") e siglas (MPCE, TCE-CE) não ligam assuntos.
+  - Assunto já publicado (últimos 10 dias; outro agrupamento: 5 dias) só volta como **"Atualização — assunto publicado em DD/MM"** se houver matérias depois daquela edição, texto novo **e manchete nova** (`edition.update_headline_similarity`, 0,6). Título reescrito com o mesmo fato é repetição. Agrupamento que começou antes da publicação anterior é antecedente, não novidade.
+  - **Na mesma edição**, dois agrupamentos do mesmo assunto entram uma vez só (fica o mais relevante; a vaga é completada com o próximo).
+  - **Folga do período:** 6h antes do início (`edition.grace_hours`; era 12h e trazia fato da véspera).
+  - Por isso a diária pode ter **menos itens** que o máximo do bloco: só entra o que é novo. O motivo de cada assunto retirado fica em `editions.summary.repeats.skipped`.
 - **Ordem fixa**: Estado (UF da edição) → Brasil → Mundo. Quantidades em `app_settings` → `edition.items_per_block` (diária 5/6/4; semanal 8/10/6; mensal 10/14/8).
 - Grava `editions` (status `in_review`) e `edition_items`. Edição já gerada/publicada não é alterada (salvo `{"force": true}`).
 
