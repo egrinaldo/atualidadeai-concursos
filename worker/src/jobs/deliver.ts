@@ -28,13 +28,14 @@ async function waitUntilSix(now = new Date(), sleep = (ms: number) => new Promis
  * Publicação das 06h: edições do dia com PDF aprovado no QA viram "publicadas"; as cópias personalizadas
  * aparecem na área do assinante; com `delivery.email_enabled`, cada assinante recebe UM e-mail com os PDFs
  * do dia em anexo (falhas são tentadas de novo nas próximas execuções, até 3 vezes).
- * Payload opcional: { referenceDate, noWait, emailOnly }.
+ * Payload opcional: { referenceDate, noWait, emailOnly }. stage "reforco": rodada de segurança a cada coleta (3h):
+ * idempotente — só publica/envia o que ainda não saiu (cobre um disparo das 06h perdido ou descartado).
  */
 export async function deliverJob(job: { id: string; payload: Record<string, unknown> }, ctx: JobContext, deps?: { fetch?: typeof fetch }) {
   // Nunca publica antes das 06h. Também roda logo após a geração dos PDFs ("deliver@atrasado"): se o agendador
   // do GitHub atrasar e o PDF ficar pronto depois das 06h, a publicação sai na hora, sem esperar o dia seguinte.
   if (job.payload.noWait !== true) {
-    if (minutesToSix() > 10) return { skipped: 'antes das 06h — a publicação fica para o horário das 06h' }
+    if (minutesToSix() > 10) return { skipped: 'antes das 06h — a publicação fica para o horário das 06h', noop: true }
     await waitUntilSix()
   }
   const referenceDate = typeof job.payload.referenceDate === 'string' ? job.payload.referenceDate : brtDate(new Date())
@@ -68,8 +69,10 @@ export async function deliverJob(job: { id: string; payload: Record<string, unkn
     if (!ctx.config.RESEND_API_KEY) ctx.log.warn('e-mail ligado, mas RESEND_API_KEY ausente — nada enviado')
     else await sendEmails(ctx, referenceDate, docs, stats.email, deps?.fetch)
   }
-  ctx.log.info('publicação', stats)
-  return stats
+  // Sem nada publicado/entregue/enviado: a rodada não "ocupa a vaga" do dia (ver lib/slot.ts)
+  const noop = stats.published === 0 && stats.area === 0 && stats.email.sent === 0 && stats.email.failed === 0 && docs.length === 0
+  ctx.log.info('publicação', { ...stats, noop })
+  return { ...stats, noop }
 }
 
 type DocInfo = { id: string; type: EditionType; state: string }
