@@ -52,8 +52,8 @@ export async function collectProblems(ctx: JobContext, today: string): Promise<s
 
   // 1b. Assinantes de estados sem fontes estaduais: recebem só Brasil e Mundo
   const { data: srcs } = await ctx.db.from('news_sources').select('state').eq('is_active', true).eq('scope', 'estadual')
-  const uncovered = uncoveredStates(states, pilot, (srcs ?? []).map((r) => r.state as string))
-  if (uncovered.length) problems.push(`Assinantes de ${uncovered.join(', ')} recebem o PDF sem o bloco estadual: falta cadastrar fontes estaduais e incluir o estado em pipeline.pilot_states`)
+  const uncovered = uncoveredStates(states, states, (srcs ?? []).map((r) => r.state as string))
+  if (uncovered.length) problems.push(`Assinantes de ${uncovered.join(', ')} recebem o PDF sem o bloco estadual: nenhuma fonte estadual ativa (Painel → Fontes; todas as UFs foram cadastradas em 08/11/2026 — alguma foi desativada ou está falhando?)`)
 
   // 2. Tarefas do robô que falharam nas últimas 24h
   // Só rodadas agendadas (têm dedupe_key); execuções manuais/testes locais não geram alerta

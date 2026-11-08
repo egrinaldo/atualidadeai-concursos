@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Fontes estaduais das 27 UFs
+
+### Adicionado
+- Migração 28: fontes estaduais para as 25 UFs que faltavam (60 ativas: G1 regional + órgãos públicos e jornais regionais; 2 cadastradas inativas pelo robots.txt/termos). Todas as UFs têm bloco estadual.
+- Análise por IA do bloco estadual automática para a UF de todo assinante ativo (antes: só `pipeline.pilot_states`); a síntese semanal/mensal segue a mesma regra.
+
 ## [Não publicado] — Revisão de repetições mais rígida
 
 ### Corrigido

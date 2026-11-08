@@ -6,6 +6,7 @@ import { selectAll } from '../db/paginate.ts'
 import { buildInput, inputHash, PROMPT_VERSION, type AnalysisInput } from '../analysis/prompt.ts'
 import { selectForAnalysis, type Block, type Candidate, type SelectionPolicy } from '../analysis/select.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
+import { editionStates } from './compose.ts'
 import type { JobContext } from './types.ts'
 
 /** Modelos verificados na conta NVIDIA em 05/11/2026 (ordem = preferência; o seguinte é usado se o anterior falhar). */
@@ -20,7 +21,8 @@ async function settings(ctx: JobContext) {
   const models = get<{ analysis?: string[] }>('ai.models', {}).analysis
   return {
     policy: {
-      pilotStates: get<string[]>('pipeline.pilot_states', ['CE']),
+      // Bloco estadual: UFs do piloto + UF de todo assinante ativo (estado novo entra na coleta seguinte à assinatura)
+      pilotStates: await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE'])),
       perBlock: { ...ANALYZE_DEFAULTS.perBlock, ...get<Partial<Record<Block, number>>>('ai.analysis_per_block', {}) },
       minRelevance: get<Relevance>('triage.min_relevance_for_edition', 'media'),
       editionStatuses: get<string[]>('verification.edition_statuses', ['corroborada', 'parcialmente_corroborada', 'nao_confirmada']),

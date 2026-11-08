@@ -7,7 +7,7 @@ import { periodStories, planStory, synthesisKindFor } from '../period/plan.ts'
 import { selectStories, type Story } from '../period/stories.ts'
 import { generateSynthesis, mergeReferences, SYNTHESIS_VERSION, synthesisInput } from '../period/synthesis.ts'
 import { DEFAULT_ANALYSIS_MODELS } from './analyze.ts'
-import { loadSettings } from './compose.ts'
+import { editionStates, loadSettings } from './compose.ts'
 import type { JobContext } from './types.ts'
 
 /** Cluster "principal" da história: o do texto mais relevante (a síntese fica ligada a ele). */
@@ -29,7 +29,7 @@ export async function synthesizeJob(job: { id: string; payload: Record<string, u
     return { referenceDate, skipped: 'sem chave de IA' }
   }
   const get = await loadSettings(ctx)
-  const states = get<string[]>('pipeline.pilot_states', ['CE'])
+  const states = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
   const perBlockAll = { ...DEFAULT_ITEMS_PER_BLOCK, ...get<Partial<typeof DEFAULT_ITEMS_PER_BLOCK>>('edition.items_per_block', {}) }
   const threshold = Number(get('synthesis.similarity_threshold', 0.4))
   const maxCalls = Math.min(Number(get('synthesis.max_calls_per_run', 12)), Number(job.payload.maxCalls ?? Infinity) || Infinity)
