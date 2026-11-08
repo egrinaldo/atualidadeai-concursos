@@ -10,7 +10,7 @@ Manual do dia a dia do robô e do informativo: o que roda e quando, como ativar 
 | 22h12 | Auditoria pendente → revisão automática → **monta a diária** de amanhã → (segunda/dia 1) sínteses → auditoria → monta semanal/mensal | `worker-edition` (compose) |
 | 22h00–04h30 | **Prazo de revisão do editor** no painel (opcional: o robô já decidiu a fila) | Painel → Editorial |
 | 03h41 | Retenção LGPD do banco (`apply_retention`) | pg_cron `lgpd-retencao` |
-| 04h35 | Auditoria final → **PDF base** → cópias personalizadas → (se já passou das 06h) publicação | `worker-edition` (render) |
+| 04h35 | Diária dos estados que ganharam assinante depois das 22h → auditoria final → **PDF base** → cópias personalizadas → (se já passou das 06h) publicação | `worker-edition` (render) |
 | 05h57 → 06h00 | **Publicação**: área do assinante + e-mail → limpeza (7/90 dias) → verificação diária (e-mail de alerta só se algo falhou) | `worker-edition` (deliver) |
 | A cada 6h | Conciliação de pagamentos do Mercado Pago | pg_cron `mp-reconcile` |
 
@@ -20,7 +20,7 @@ Manual do dia a dia do robô e do informativo: o que roda e quando, como ativar 
 
 **Incidente de 08/11/2026:** um disparo antigo do agendador do GitHub chegou atrasado ao meio-dia de 07/11 e, pela regra antiga (vaga = data da *próxima* edição), ocupou a vaga da publicação de 08/11 sem ter nada a publicar. Às 06h de 08/11 a publicação e a verificação diária foram descartadas como "duplicadas": nenhum PDF saiu e nenhum alerta foi enviado. Correções: vaga pela data de hoje, rodada sem efeito não conta e o reforço a cada coleta (até 06h07 o envio sai mesmo se o disparo das 05h57 se perder).
 
-**Estados:** cada assinante ativo (e administrador) recebe a edição do seu estado. Estados em `pipeline.pilot_states` com fontes estaduais ativas têm o bloco estadual; os demais recebem Brasil e Mundo, e a verificação diária avisa "falta cadastrar fontes estaduais". Cobertura estadual em 08/11/2026: **CE e BA**.
+**Estados:** cada assinante ativo (e administrador) recebe a edição do seu estado. Estados em `pipeline.pilot_states` com fontes estaduais ativas têm o bloco estadual; os demais recebem Brasil e Mundo, e a verificação diária avisa "falta cadastrar fontes estaduais". Cobertura estadual em 08/11/2026: **CE e BA**. Tudo automático: assinante novo de um estado novo entra na próxima edição (a das 22h ou, se assinou depois, a das 04h35), sem nenhuma ação manual; o alerta diário segue até as fontes do estado serem cadastradas.
 
 ## 2. Ativações que dependem de você
 
