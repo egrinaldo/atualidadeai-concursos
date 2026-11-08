@@ -2,6 +2,15 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Envio diário à prova de falhas e Bahia
+
+### Corrigido
+- **08/11/2026: nenhum PDF enviado às 06h.** Um disparo atrasado de 07/11 ocupou a vaga da publicação de 08/11. A vaga de publicação/limpeza/verificação passa a ser a data de hoje; rodada sem efeito não ocupa a vaga; `deliver@reforco` a cada coleta como rede de segurança (OPERACAO.md §1).
+- Assinante de estado sem edição ficava sem PDF: agora todo assinante ativo recebe a edição do seu estado (sem fontes estaduais: Brasil e Mundo), e a verificação diária avisa.
+
+### Adicionado
+- Bahia: 7 fontes estaduais ativas e BA em `pipeline.pilot_states` (migração 27).
+
 ## [Não publicado] — Novo preço
 
 ### Alterado
