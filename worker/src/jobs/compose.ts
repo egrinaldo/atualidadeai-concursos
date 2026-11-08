@@ -5,7 +5,7 @@ import type { BlockKey, EditionType } from '../pdf/model.ts'
 import { periodStories, planStory, synthesisKindFor } from '../period/plan.ts'
 import { selectStories, type Story } from '../period/stories.ts'
 import { SYNTHESIS_VERSION } from '../period/synthesis.ts'
-import { repeatDecisions, type Published } from '../pdf/repeats.ts'
+import { dedupeSameStory, repeatDecisions, type Published } from '../pdf/repeats.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
 import type { JobContext } from './types.ts'
 
@@ -67,7 +67,7 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
   const rows = (!types.includes('diaria') ? [] : await selectAll((from, to) =>
     ctx.db
       .from('news_clusters')
-      .select('id, scope, state, relevance, relevance_score, verification_status, needs_review, source_count, last_seen_at, news!inner(news_sources!inner(reliability_level)), news_analyses!inner(id, status, generated_at, editorial_title, summary)')
+      .select('id, scope, state, relevance, relevance_score, verification_status, needs_review, source_count, first_seen_at, last_seen_at, news!inner(news_sources!inner(reliability_level)), news_analyses!inner(id, status, generated_at, editorial_title, summary)')
       .eq('status', 'analyzed')
       .in('relevance', allowed)
       .in('news_analyses.status', ['valid', 'edited'])
@@ -91,9 +91,22 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
       let repeats: { updates: Record<string, string>; skipped: { analysis_id: string; reason: string }[] } | null = null
       if (type === 'diaria') {
         // Nada que já saiu numa diária anterior volta sem fato novo (e, se voltar, vem como "Atualização")
-        const decisions = repeatDecisions(cands, await publishedDaily(ctx, state, referenceDate), referenceDate, { similarity: Number(get('edition.repeat_similarity', 0.6)) })
-        const fresh = cands.filter((c) => decisions.get(c.analysis_id)?.keep !== false)
-        sel = selectEditionItems(fresh, { ...policyBase, state, window: windows[type], perBlock: perBlockAll[type], graceHours: 12 })
+        const similarity = Number(get('edition.repeat_similarity', 0.6))
+        const decisions = repeatDecisions(cands, await publishedDaily(ctx, state, referenceDate), referenceDate, { similarity, headlineSimilarity: Number(get('edition.update_headline_similarity', 0.6)) })
+        const kept = cands.filter((c) => decisions.get(c.analysis_id)?.keep !== false)
+        // Folga de 6h antes do início do período (era 12h: trazia fato da véspera já superado)
+        const policy = { ...policyBase, state, window: windows[type], perBlock: perBlockAll[type], graceHours: Number(get('edition.grace_hours', 6)) }
+        // O mesmo assunto em dois agrupamentos entra uma vez só: tira o repetido dos escolhidos e completa a vaga
+        let fresh = kept
+        sel = selectEditionItems(fresh, policy)
+        for (let round = 0; round < 4; round++) {
+          const chosenRows = (['estado', 'nacional', 'internacional'] as BlockKey[]).flatMap((b) => sel[b] as typeof cands)
+          const twins = dedupeSameStory(chosenRows, { similarity })
+          if (!twins.size) break
+          for (const [id, reason] of twins) decisions.set(id, { keep: false, reason })
+          fresh = fresh.filter((c) => !twins.has(c.analysis_id))
+          sel = selectEditionItems(fresh, policy)
+        }
         const chosen = new Set((['estado', 'nacional', 'internacional'] as BlockKey[]).flatMap((b) => sel[b].map((x) => x.analysis_id)))
         const updates: Record<string, string> = {}
         for (const id of chosen) {
@@ -180,19 +193,21 @@ async function periodItems(ctx: JobContext, type: 'semanal' | 'mensal', state: s
   return { sel, info: { from: period.from, to: period.to, entries: period.entries, dropped_by_audit: period.dropped, stories: period.stories.length, syntheses, fallbacks, weeklies: period.weeklies } }
 }
 
-/** Itens das diárias já montadas/publicadas da UF nos últimos 10 dias (para não repetir). */
+/**
+ * Itens das diárias já montadas/publicadas nos últimos 10 dias (para não repetir): o bloco estadual da própria UF
+ * e os blocos nacional e internacional de TODAS as UFs (fato nacional já publicado é velho para qualquer estado).
+ */
 async function publishedDaily(ctx: JobContext, state: string, referenceDate: string): Promise<Published[]> {
   const from = new Date(Date.parse(`${referenceDate}T12:00:00Z`) - 10 * 86_400_000).toISOString().slice(0, 10)
   const { data, error } = await ctx.db
     .from('edition_items')
-    .select('analysis_id, editions!inner(reference_date, period_end, state, edition_type, status), news_analyses!inner(cluster_id, editorial_title, summary)')
+    .select('analysis_id, block, editions!inner(reference_date, period_end, state, edition_type, status), news_analyses!inner(cluster_id, editorial_title, summary)')
     .eq('editions.edition_type', 'diaria')
-    .eq('editions.state', state)
     .in('editions.status', ['in_review', 'approved', 'generating', 'generated', 'published'])
     .gte('editions.reference_date', from)
     .lt('editions.reference_date', referenceDate)
-    .limit(1000)
+    .limit(5000)
   if (error) throw new Error(`edições anteriores: ${error.message}`)
-  type R = { analysis_id: string; editions: { reference_date: string; period_end: string }; news_analyses: { cluster_id: string; editorial_title: string; summary: string } }
-  return ((data ?? []) as unknown as R[]).map((r) => ({ clusterId: r.news_analyses.cluster_id, analysisId: r.analysis_id, referenceDate: r.editions.reference_date, periodEnd: r.editions.period_end, title: r.news_analyses.editorial_title ?? '', summary: r.news_analyses.summary ?? '' }))
+  type R = { analysis_id: string; block: string; editions: { reference_date: string; period_end: string; state: string }; news_analyses: { cluster_id: string; editorial_title: string; summary: string } }
+  return ((data ?? []) as unknown as R[]).filter((r) => r.block !== 'estado' || r.editions.state === state).map((r) => ({ clusterId: r.news_analyses.cluster_id, analysisId: r.analysis_id, referenceDate: r.editions.reference_date, periodEnd: r.editions.period_end, title: r.news_analyses.editorial_title ?? '', summary: r.news_analyses.summary ?? '' }))
 }
