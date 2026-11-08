@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não publicado] — Revisão de repetições mais rígida
+
+### Corrigido
+- Diárias de 07 e 08/11 repetiam assuntos: a prisão de Santiago Peña voltou como "Atualização" com o mesmo fato reescrito, e a renúncia dele (outro agrupamento) passou como assunto novo. Agora "Atualização" exige manchete nova; o mesmo assunto em outro agrupamento é reconhecido pelos nomes próprios; dentro da edição o assunto aparece uma vez só; nacional/internacional comparam com as diárias de todos os estados; folga do período 12h → 6h. Calibrado com as edições reais de 06–08/11 (GERACAO_PDF.md).
+
 ## [Não publicado] — Envio diário à prova de falhas e Bahia
 
 ### Corrigido
