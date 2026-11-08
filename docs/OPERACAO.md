@@ -6,7 +6,7 @@ Manual do dia a dia do robô e do informativo: o que roda e quando, como ativar 
 
 | Hora | O que acontece | Onde |
 |---|---|---|
-| A cada 3h (00h07, 03h07, …) | Coleta → triagem → agrupamento → verificação → análise (IA) → auditoria de veracidade → revisão automática | `worker-collect` |
+| A cada 3h (00h07, 03h07, …) | Coleta → triagem → agrupamento → verificação → análise (IA) → auditoria de veracidade → revisão automática → **reforço da publicação** (depois das 06h, publica/envia o que ainda não saiu; antes das 06h não faz nada) | `worker-collect` |
 | 22h12 | Auditoria pendente → revisão automática → **monta a diária** de amanhã → (segunda/dia 1) sínteses → auditoria → monta semanal/mensal | `worker-edition` (compose) |
 | 22h00–04h30 | **Prazo de revisão do editor** no painel (opcional: o robô já decidiu a fila) | Painel → Editorial |
 | 03h41 | Retenção LGPD do banco (`apply_retention`) | pg_cron `lgpd-retencao` |
@@ -16,7 +16,11 @@ Manual do dia a dia do robô e do informativo: o que roda e quando, como ativar 
 
 **Quem dispara:** os horários são acionados pelo **Supabase** (`pg_cron`, que chama a API do GitHub). As edições usam **só** esse disparo: o agendador do GitHub atrasou até 13h em 06–07/11, e uma montagem atrasada para depois do meio-dia montaria a edição seguinte cedo demais. A coleta mantém o agendador do GitHub como reserva. A resposta do GitHub a cada disparo fica em `dispatch_log` (copiada a cada 10 min pelo pg_cron `dispatch-capture`).
 
-**Disparo duplicado ou atrasado não repete trabalho:** as rodadas das edições são únicas por dia de edição (`TICK_SLOT=edition`).
+**Disparo duplicado ou atrasado não repete trabalho:** as rodadas das edições são únicas por dia (`TICK_SLOT=edition`). Montagem e PDF usam a data da edição preparada; **publicação, limpeza e verificação usam a data de hoje**. Uma rodada que terminou sem fazer nada (ex.: "antes das 06h") não ocupa a vaga.
+
+**Incidente de 08/11/2026:** um disparo antigo do agendador do GitHub chegou atrasado ao meio-dia de 07/11 e, pela regra antiga (vaga = data da *próxima* edição), ocupou a vaga da publicação de 08/11 sem ter nada a publicar. Às 06h de 08/11 a publicação e a verificação diária foram descartadas como "duplicadas": nenhum PDF saiu e nenhum alerta foi enviado. Correções: vaga pela data de hoje, rodada sem efeito não conta e o reforço a cada coleta (até 06h07 o envio sai mesmo se o disparo das 05h57 se perder).
+
+**Estados:** cada assinante ativo (e administrador) recebe a edição do seu estado. Estados em `pipeline.pilot_states` com fontes estaduais ativas têm o bloco estadual; os demais recebem Brasil e Mundo, e a verificação diária avisa "falta cadastrar fontes estaduais". Cobertura estadual em 08/11/2026: **CE e BA**.
 
 ## 2. Ativações que dependem de você
 
@@ -74,6 +78,7 @@ Ligue **as duas pontas juntas**: só o site sem o Supabase não protege; só o S
 
 | Sintoma | O que fazer |
 |---|---|
+| Alerta "recebem o PDF sem o bloco estadual" | Assinante de um estado sem fontes. Cadastre fontes estaduais (ROBO_NOTICIAS.md → Regras para novas fontes) e inclua a UF em `pipeline.pilot_states` (ex.: migração 27, Bahia) |
 | Alerta "Edição diária … não foi montada" | GitHub → Actions → **worker-edition → Run workflow → step: compose** (sem `origem`). Depois **render** e **deliver** |
 | Alerta "não publicada" / PDF não saiu | Painel → Editorial → abra a edição (QA e situação). Ajuste e use **Gerar de novo**, depois rode **render** e **deliver** |
 | Alerta "Nenhuma coleta nas últimas 7h" | Rode **worker-collect** à mão. Se o problema persistir: `select * from dispatch_recent(24)` e o token (2.1) |
