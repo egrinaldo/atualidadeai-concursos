@@ -44,7 +44,7 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
   if (!/^\d{4}-\d{2}-\d{2}$/.test(referenceDate)) throw new Error(`data inválida: ${referenceDate}`)
   const due = (Array.isArray(job.payload.types) ? job.payload.types : editionTypesFor(referenceDate)) as EditionType[]
   // Etapas do fluxo das 22h: "diaria" monta a diária; "periodo" monta semanal/mensal depois das sínteses
-  const types = job.payload.stage === 'diaria' ? due.filter((t) => t === 'diaria') : job.payload.stage === 'periodo' ? due.filter((t) => t !== 'diaria') : due
+  const types = job.payload.stage === 'diaria' || job.payload.stage === 'novos' ? due.filter((t) => t === 'diaria') : job.payload.stage === 'periodo' ? due.filter((t) => t !== 'diaria') : due
   if (!types.length) return { referenceDate, types, editions: [] }
   const force = job.payload.force === true
   // Estados com edição: os de `pipeline.pilot_states` + o de todo assinante ativo (e administrador). Um estado sem

@@ -39,8 +39,9 @@ jobs:
       STEP: ${{ github.event_name == 'workflow_dispatch' && inputs.step || (github.event.schedule == '12 1 * * *' && 'compose' || (github.event.schedule == '57 8 * * *' && 'deliver' || 'render')) }}
       # Etapas de cada passo (tipo@etiqueta = rodada própria na mesma janela)
       COMPOSE_STEPS: audit@edicao,review@edicao,compose@diaria,synthesize,audit@periodo,compose@periodo
+      # compose@novos: monta a diária de estados que ganharam assinante depois das 22h (as já montadas não mudam)
       # deliver@atrasado: só publica se já passou das 06h (agendamento do GitHub atrasado)
-      RENDER_STEPS: audit@pdf,render,personalize,deliver@atrasado
+      RENDER_STEPS: compose@novos,audit@pdf,render,personalize,deliver@atrasado
       DELIVER_STEPS: deliver,cleanup,healthcheck@diario
       # Disparo agendado (GitHub ou Supabase): rodadas idempotentes POR DIA DE EDIÇÃO — o disparo duplo
       # (os dois agendadores) ou atrasado não repete trabalho. Manual: sempre roda.
