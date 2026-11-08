@@ -87,6 +87,40 @@ Além das fontes públicas, o robô lê **feeds e mapas de notícias** de veícu
 
 Sem feed público: Governo da Bahia (ba.gov.br), Assembleia Legislativa (al.ba.gov.br) e TCE-BA. Primeira coleta: 163 notícias, nenhuma falha.
 
+## Todas as UFs (migração 28 — verificadas em 08/11/2026)
+
+Todas as 27 UFs têm fontes estaduais. Em cada uma: **G1 regional** (`/rss/g1/<uf>/<estado>/`, modo resumo) + órgão público (MP, TJ, TCE, Governo, Assembleia; texto integral) e/ou jornal regional (modo resumo). Critério: feed com itens dos últimos 7 dias e robots.txt permitindo o caminho ao nosso robô. Primeira coleta: 60 fontes, 60 ok, 1.469 notícias.
+
+| UF | Fontes ativas |
+|---|---|
+| AC | G1, Agência de Notícias do Acre, TCE-AC |
+| AL | G1, MPAL, Assembleia Legislativa |
+| AM | G1, Agência Amazonas, Aleam, TCE-AM |
+| AP | G1, Portal Selesnafes |
+| DF | G1, MPDFT |
+| ES | G1, TJES (TCE-ES **inativo**: robots.txt não permite) |
+| GO | G1, Alego |
+| MA | G1, MPMA, Alema |
+| MG | G1, Agência Minas |
+| MS | G1, Agência de Notícias MS, ALEMS |
+| MT | G1, TCE-MT |
+| PA | G1, O Liberal |
+| PB | G1, Jornal da Paraíba (ClickPB **inativo**: termos vedam vender artigos sem consentimento) |
+| PE | G1, Jornal do Commercio, Folha de Pernambuco |
+| PI | G1, Governo do Piauí, Alepi |
+| PR | G1, AEN (Governo do Paraná), MPPR |
+| RJ | G1, O Dia |
+| RN | G1, MPRN |
+| RO | G1, Governo de Rondônia |
+| RR | G1, ALE-RR |
+| RS | G1, Sul21 (termos permitem texto com crédito) |
+| SC | G1, NSC Total, ND+ |
+| SE | G1, Alese |
+| SP | G1, Agência SP |
+| TO | G1, TCE-TO |
+
+**Custo de IA:** a coleta, a triagem e o agrupamento (sem IA) rodam para todas as UFs. A **análise por IA do bloco estadual** roda só para as UFs com assinante ativo (mais `pipeline.pilot_states`): um estado novo entra na primeira coleta depois da assinatura. A cota diária (`ai.daily_call_budget`) vale para tudo; com muitos estados com assinantes, aumente-a.
+
 ## Regras para novas fontes
 
 1. Preferir API oficial → RSS/Atom → mapa de notícias (sitemap) → dados públicos estruturados. Raspagem de página só com permissão expressa.
