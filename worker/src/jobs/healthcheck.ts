@@ -28,6 +28,12 @@ export async function healthcheck(job: { id?: string; payload?: Record<string, u
   return checks
 }
 
+/** Estados com edição, mas sem bloco estadual (sem fontes estaduais ativas ou fora do piloto). Exportada para teste. */
+export function uncoveredStates(states: string[], pilot: string[], sourceStates: string[]): string[] {
+  const withSources = new Set(sourceStates)
+  return states.filter((st) => !withSources.has(st) || !pilot.includes(st))
+}
+
 /** Lista de problemas do dia (texto pronto para o e-mail). Exportada para teste. */
 export async function collectProblems(ctx: JobContext, today: string): Promise<string[]> {
   const problems: string[] = []
@@ -46,8 +52,7 @@ export async function collectProblems(ctx: JobContext, today: string): Promise<s
 
   // 1b. Assinantes de estados sem fontes estaduais: recebem só Brasil e Mundo
   const { data: srcs } = await ctx.db.from('news_sources').select('state').eq('is_active', true).eq('scope', 'estadual')
-  const withSources = new Set((srcs ?? []).map((r) => r.state as string))
-  const uncovered = states.filter((st) => !withSources.has(st) || !pilot.includes(st))
+  const uncovered = uncoveredStates(states, pilot, (srcs ?? []).map((r) => r.state as string))
   if (uncovered.length) problems.push(`Assinantes de ${uncovered.join(', ')} recebem o PDF sem o bloco estadual: falta cadastrar fontes estaduais e incluir o estado em pipeline.pilot_states`)
 
   // 2. Tarefas do robô que falharam nas últimas 24h
