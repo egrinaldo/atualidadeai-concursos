@@ -1,4 +1,5 @@
 import { selectAll } from '../db/paginate.ts'
+import { activeSubscribers } from '../delivery/recipients.ts'
 import { DEFAULT_ITEMS_PER_BLOCK, editionTypesFor, editionWindow, referenceDateFor, selectEditionItems, type EditionCandidate } from '../pdf/edition.ts'
 import type { BlockKey, EditionType } from '../pdf/model.ts'
 import { periodStories, planStory, synthesisKindFor } from '../period/plan.ts'
@@ -46,7 +47,9 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
   const types = job.payload.stage === 'diaria' ? due.filter((t) => t === 'diaria') : job.payload.stage === 'periodo' ? due.filter((t) => t !== 'diaria') : due
   if (!types.length) return { referenceDate, types, editions: [] }
   const force = job.payload.force === true
-  const states = get<string[]>('pipeline.pilot_states', ['CE'])
+  // Estados com edição: os de `pipeline.pilot_states` + o de todo assinante ativo (e administrador). Um estado sem
+  // fontes estaduais ainda recebe a edição com Brasil e Mundo — assinante nunca fica sem PDF (falha de 08/11/2026).
+  const states = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
   const cutoff = get<string>('pipeline.edition_cutoff', '22:00')
   const perBlockAll = { ...DEFAULT_ITEMS_PER_BLOCK, ...get<Partial<typeof DEFAULT_ITEMS_PER_BLOCK>>('edition.items_per_block', {}) }
   const minRelevance = get<Relevance>('triage.min_relevance_for_edition', 'media')
@@ -142,6 +145,13 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
  * Itens da semanal/mensal: as histórias de maior peso de cada bloco. História de um texto só → esse texto;
  * com vários → a síntese (se gerada, válida e não reprovada na auditoria) ou, na falta dela, o texto mais recente.
  */
+/** Estados que recebem edição: piloto + estados dos destinatários (assinantes ativos e administradores). */
+export async function editionStates(ctx: JobContext, pilot: string[]): Promise<string[]> {
+  const out = new Set(pilot)
+  for (const s of await activeSubscribers(ctx)) if (s.state && /^[A-Z]{2}$/.test(s.state)) out.add(s.state)
+  return [...out].sort()
+}
+
 async function periodItems(ctx: JobContext, type: 'semanal' | 'mensal', state: string, referenceDate: string, perBlock: Record<BlockKey, number>, threshold: number) {
   const kind = synthesisKindFor(type)
   const period = await periodStories(ctx, type, state, referenceDate, threshold)
