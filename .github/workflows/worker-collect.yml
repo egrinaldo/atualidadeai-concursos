@@ -26,9 +26,15 @@ jobs:
           cache: npm
           cache-dependency-path: worker/package-lock.json
       - run: npm ci
-      - run: npm run job -- tick collect,triage,cluster,verify,analyze,audit,review
+      - run: npm run job -- tick collect,triage,cluster,verify,analyze,audit,review,deliver@reforco
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           # Sem a chave, análise e auditoria são ignoradas (as demais seguem normalmente)
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          # deliver@reforco: rede de segurança do envio das 06h (idempotente; antes das 06h não faz nada)
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_REPLY_TO: ${{ secrets.EMAIL_REPLY_TO }}
+          EMAIL_TEST_TO: ${{ secrets.EMAIL_TEST_TO }}
+          SITE_URL: ${{ vars.SITE_URL }}

@@ -12,8 +12,8 @@ import { dbClient } from './db/client.ts'
 import { JOB_TYPES, postgresQueue, type JobType } from './db/queue.ts'
 import { handlers } from './jobs/index.ts'
 import { createLogger } from './lib/logger.ts'
-import { referenceDateFor } from './pdf/edition.ts'
 import { runQueue } from './runner.ts'
+import { isNoop, tickSlot } from './lib/slot.ts'
 
 async function main() {
   const [command = 'run', arg1, arg2] = process.argv.slice(2)
@@ -44,15 +44,17 @@ async function main() {
     })
     if (!steps.length || steps.some((s) => !JOB_TYPES.includes(s.type) || s.tag === null)) throw new Error(`tipo inválido: ${arg1}`)
     const now = new Date()
-    // Janela de idempotência: 3h (padrão); "edition" = dia da edição (disparos agendados das edições, que podem
-    // chegar duplicados ou atrasados); "manual" = sempre uma rodada nova
     const mode = process.env.TICK_SLOT
-    const slot =
-      mode === 'edition' ? `ed-${referenceDateFor(now)}`
-      : mode === 'manual' ? `m-${now.toISOString()}`
-      : `${now.toISOString().slice(0, 10)}T${String(Math.floor(now.getUTCHours() / 3) * 3).padStart(2, '0')}`
     for (const { type, tag } of steps) {
-      const r = await queue.enqueue(type, tag ? { stage: tag } : {}, { dedupeKey: `${type}${tag ? `@${tag}` : ''}:${slot}` })
+      const slot = tickSlot(mode, type, now)
+      const base = `${type}${tag ? `@${tag}` : ''}:${slot}`
+      let r = await queue.enqueue(type, tag ? { stage: tag } : {}, { dedupeKey: base })
+      // Vaga já usada por uma rodada que não fez nada (ex.: disparo atrasado/adiantado): roda de novo
+      for (let n = 2; r === 'duplicate' && n <= 6; n++) {
+        const { data: prev } = await db.from('processing_jobs').select('status, result').eq('dedupe_key', n === 2 ? base : `${base}#${n - 1}`).maybeSingle()
+        if (!isNoop(prev)) break
+        r = await queue.enqueue(type, tag ? { stage: tag } : {}, { dedupeKey: `${base}#${n}` })
+      }
       log.info('rodada', { type, tag, slot, result: r })
       const summary = await runQueue(ctx, queue, handlers, { types: [type], maxJobs: 5 })
       log.info('fila processada', { type, ...summary })

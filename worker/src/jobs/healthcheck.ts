@@ -1,7 +1,7 @@
 import { renderOpsAlertEmail } from '../../../supabase/functions/_shared/email/templates.ts'
 import { sendEmail } from '../delivery/email.ts'
 import { brtDate } from '../pdf/edition.ts'
-import { loadSettings } from './compose.ts'
+import { editionStates, loadSettings } from './compose.ts'
 import type { JobContext } from './types.ts'
 
 const hoursAgo = (n: number) => new Date(Date.now() - n * 3_600_000).toISOString()
@@ -34,7 +34,8 @@ export async function collectProblems(ctx: JobContext, today: string): Promise<s
   const get = await loadSettings(ctx)
 
   // 1. Edições de hoje publicadas?
-  const states = get<string[]>('pipeline.pilot_states', ['CE'])
+  const pilot = get<string[]>('pipeline.pilot_states', ['CE'])
+  const states = await editionStates(ctx, pilot)
   const { data: eds } = await ctx.db.from('editions').select('edition_type, state, status').eq('reference_date', today)
   for (const st of states) {
     const daily = (eds ?? []).find((e) => e.state === st && e.edition_type === 'diaria')
@@ -42,6 +43,12 @@ export async function collectProblems(ctx: JobContext, today: string): Promise<s
     else if (daily.status !== 'published') problems.push(`Edição diária de ${st} de hoje está "${daily.status}", não publicada`)
   }
   for (const e of (eds ?? []).filter((x) => x.edition_type !== 'diaria' && x.status !== 'published')) problems.push(`Revisão ${e.edition_type} de ${e.state} está "${e.status}", não publicada`)
+
+  // 1b. Assinantes de estados sem fontes estaduais: recebem só Brasil e Mundo
+  const { data: srcs } = await ctx.db.from('news_sources').select('state').eq('is_active', true).eq('scope', 'estadual')
+  const withSources = new Set((srcs ?? []).map((r) => r.state as string))
+  const uncovered = states.filter((st) => !withSources.has(st) || !pilot.includes(st))
+  if (uncovered.length) problems.push(`Assinantes de ${uncovered.join(', ')} recebem o PDF sem o bloco estadual: falta cadastrar fontes estaduais e incluir o estado em pipeline.pilot_states`)
 
   // 2. Tarefas do robô que falharam nas últimas 24h
   // Só rodadas agendadas (têm dedupe_key); execuções manuais/testes locais não geram alerta
