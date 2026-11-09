@@ -6,6 +6,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Corrigido
 - 09/11: diária de SE com 2 assuntos reprovada no controle de qualidade (mínimo 3) e não enviada; BA/CE saíram com 3–4 assuntos e sem internacional. Causa: cota de IA fixa (120 chamadas/dia, 6 por rodada) dividida entre 3 UFs; a fila estadual vinha antes do nacional/internacional.
+- Revisões semanal/mensal em **formato compacto** (cartão de revisão): resumo, linha do tempo, até 4 pontos para memorizar, "Na prova", 1 questão e fontes; sem quebra de página por bloco. Revisão de 16 assuntos: 34 → 17 páginas. A diária segue completa.
 - Revisões semanal/mensal: blocos nacional e internacional passam a vir das diárias de TODAS as UFs (SE, sem diárias anteriores, teve semanal de 3 assuntos em 09/11; agora 16). Bloco estadual segue da própria UF. `compose`/`synthesize` aceitam `payload.states`.
 - **Cota de IA não trava mais o conteúdo** (pedido do responsável): sem teto de chamadas por rodada (prazo de tempo no lugar), uso acima do previsto só gera alerta; única trava é o freio de emergência de 3000 chamadas/dia contra loop (OPERACAO.md → Cota de IA).
 - Diária refeita depois das 06h usa o período até a hora da montagem. E-mail: chave de envio único passa a incluir os documentos (um PDF que sai mais tarde no mesmo dia era recusado pelo Resend com 409).
