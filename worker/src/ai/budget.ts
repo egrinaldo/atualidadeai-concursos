@@ -20,3 +20,17 @@ export function scaledBudget(get: <T>(k: string, d: T) => T, states: number): { 
   )
   return { daily, perRun }
 }
+
+/**
+ * Desde 09/11/2026 a cota NÃO trava o conteúdo: `scaledBudget().daily` é só o uso PREVISTO (passou dele, a verificação
+ * diária manda alerta e o robô continua). Única trava: este freio de emergência contra defeito em loop, muito acima
+ * do uso normal (~100–300 chamadas/dia).
+ */
+export function emergencyLimit(get: <T>(k: string, d: T) => T): number {
+  return Number(get('ai.daily_call_hard_limit', 3000))
+}
+
+/** Prazo da rodada (em vez de um número fixo de chamadas): analisa tudo o que foi escolhido enquanto couber no tempo. */
+export function runDeadline(get: <T>(k: string, d: T) => T, key: string, defaultMinutes: number, start = Date.now()): number {
+  return start + Number(get(key, defaultMinutes)) * 60_000
+}
