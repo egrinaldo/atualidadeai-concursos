@@ -62,6 +62,10 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
   }
 
   const windows = Object.fromEntries(types.map((t) => [t, editionWindow(t, referenceDate, cutoff)])) as Record<EditionType, { start: string; end: string }>
+  // Diária montada DEPOIS da publicação das 06h (refeita ou de estado que entrou no dia): o período vai até agora,
+  // para aproveitar o que foi analisado de manhã (09/11/2026: SE refeita às 09h só tinha 1 assunto até 22h).
+  // A regra de repetição usa o fim do período, então esses assuntos não voltam na diária seguinte.
+  if (windows.diaria && Date.now() > Date.parse(`${referenceDate}T09:00:00Z`)) windows.diaria = { ...windows.diaria, end: new Date().toISOString() }
   // Só a diária busca assuntos direto (semanal/mensal partem das edições anteriores)
   const earliest = windows.diaria ? new Date(Date.parse(windows.diaria.start) - 12 * 3_600_000).toISOString() : ''
   const allowed = (['baixa', 'media', 'alta', 'muito_alta'] as Relevance[]).filter((r) => RELEVANCE_RANK[r] >= RELEVANCE_RANK[minRelevance])
