@@ -158,10 +158,12 @@ export function buildDoc(meta: Omit<EditionDoc, 'blocks' | 'templateVersion' | '
   ]
   let n = 1
   let q = 1
+  // Revisões (semanal/mensal) são para revisar rápido: 1 questão por assunto (a diária traz todas)
+  const maxQuestions = meta.type === 'diaria' ? Infinity : 1
   const blocks = defs.map((d) => ({
     ...d,
     items: (byBlock[d.key] ?? []).map((r) => {
-      const item = toItem(r, n++, q)
+      const item = toItem({ ...r, questions: (r.questions ?? []).slice(0, maxQuestions) }, n++, q)
       q += item.questions.length
       return item
     }),
