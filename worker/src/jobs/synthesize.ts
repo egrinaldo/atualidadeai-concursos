@@ -7,6 +7,7 @@ import { periodStories, planStory, synthesisKindFor } from '../period/plan.ts'
 import { selectStories, type Story } from '../period/stories.ts'
 import { generateSynthesis, mergeReferences, SYNTHESIS_VERSION, synthesisInput } from '../period/synthesis.ts'
 import { DEFAULT_ANALYSIS_MODELS } from './analyze.ts'
+import { scaledBudget } from '../ai/budget.ts'
 import { editionStates, loadSettings } from './compose.ts'
 import type { JobContext } from './types.ts'
 
@@ -35,7 +36,7 @@ export async function synthesizeJob(job: { id: string; payload: Record<string, u
   const maxCalls = Math.min(Number(get('synthesis.max_calls_per_run', 12)), Number(job.payload.maxCalls ?? Infinity) || Infinity)
   const models = get<{ synthesis?: string[]; analysis?: string[] }>('ai.models', {})
   const synthModels = models.synthesis?.length ? models.synthesis : models.analysis?.length ? models.analysis : DEFAULT_ANALYSIS_MODELS
-  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: Number(get('ai.daily_call_budget', 120)) })
+  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: scaledBudget(get, states.length).daily })
   const jobId = job.id === 'direto' ? null : job.id
 
   const stats = { referenceDate, types, generated: 0, reused: 0, single: 0, invalid: 0, calls: 0, stopped: null as string | null, editions: [] as Record<string, unknown>[] }

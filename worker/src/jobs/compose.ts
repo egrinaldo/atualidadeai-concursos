@@ -7,6 +7,7 @@ import { selectStories, type Story } from '../period/stories.ts'
 import { SYNTHESIS_VERSION } from '../period/synthesis.ts'
 import { dedupeSameStory, repeatDecisions, type Published } from '../pdf/repeats.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
+import { QA_LIMITS } from '../pdf/qa.ts'
 import type { JobContext } from './types.ts'
 
 export async function loadSettings(ctx: JobContext) {
@@ -88,6 +89,7 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
     for (const type of types) {
       let sel: Record<BlockKey, { analysis_id: string }[]>
       let periodInfo: Record<string, unknown> | null = null
+      let backfill: number | null = null
       let repeats: { updates: Record<string, string>; skipped: { analysis_id: string; reason: string }[] } | null = null
       if (type === 'diaria') {
         // Nada que já saiu numa diária anterior volta sem fato novo (e, se voltar, vem como "Atualização")
@@ -107,6 +109,13 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
           fresh = fresh.filter((c) => !twins.has(c.analysis_id))
           sel = selectEditionItems(fresh, policy)
         }
+        // Diária magra (abaixo do mínimo do controle de qualidade): amplia a folga para assuntos inéditos das
+        // últimas 24h/36h em vez de deixar o assinante sem PDF (09/11/2026: SE com 2 assuntos não foi enviada)
+        for (const grace of [24, 36]) {
+          if (blockCount(sel) >= QA_LIMITS.minItems) break
+          sel = selectEditionItems(fresh, { ...policy, graceHours: grace })
+          backfill = grace
+        }
         const chosen = new Set((['estado', 'nacional', 'internacional'] as BlockKey[]).flatMap((b) => sel[b].map((x) => x.analysis_id)))
         const updates: Record<string, string> = {}
         for (const id of chosen) {
@@ -123,7 +132,7 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
         sel = p.sel
         periodInfo = p.info
       }
-      const total = sel.estado.length + sel.nacional.length + sel.internacional.length
+      const total = blockCount(sel)
       const { data: existing } = await ctx.db.from('editions').select('id, status').eq('edition_type', type).eq('reference_date', referenceDate).eq('state', state).maybeSingle()
       if (existing && ['generating', 'generated', 'published'].includes(existing.status) && !force) {
         results.push({ state, type, skipped: `edição já ${existing.status}` })
@@ -134,6 +143,7 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
         candidates: type === 'diaria' ? cands.length : undefined,
         ...(periodInfo ? { period: periodInfo } : {}),
         ...(repeats ? { updates: repeats.updates, repeats_skipped: repeats.skipped.length } : {}),
+        ...(backfill ? { backfill_hours: backfill } : {}),
         composed_at: new Date().toISOString(),
       }
       const row = { edition_type: type, state, reference_date: referenceDate, period_start: windows[type].start, period_end: windows[type].end, status: total ? 'in_review' : 'draft', summary }
@@ -158,6 +168,9 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
  * Itens da semanal/mensal: as histórias de maior peso de cada bloco. História de um texto só → esse texto;
  * com vários → a síntese (se gerada, válida e não reprovada na auditoria) ou, na falta dela, o texto mais recente.
  */
+/** Total de assuntos escolhidos nos três blocos. */
+const blockCount = (s: Record<BlockKey, unknown[]>) => s.estado.length + s.nacional.length + s.internacional.length
+
 /** Estados que recebem edição: piloto + estados dos destinatários (assinantes ativos e administradores). */
 export async function editionStates(ctx: JobContext, pilot: string[]): Promise<string[]> {
   const out = new Set(pilot)
