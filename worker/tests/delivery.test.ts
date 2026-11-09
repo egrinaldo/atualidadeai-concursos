@@ -62,7 +62,7 @@ test('e-mail: modo de teste redireciona tudo e marca o assunto; envio leva anexo
 
 test('e-mail do informativo: assunto com data e estado, lista dos materiais e link da área', () => {
   const m = renderEditionEmail({ name: 'Maria Souza', siteUrl: 'https://site.com/', dateLabel: '09/11', stateName: 'Ceará', items: ['Informativo Diário — Ceará', 'Revisão Semanal — Ceará'], attached: true })
-  assert.equal(m.subject, 'Seu informativo de 09/11 — Ceará')
+  assert.equal(m.subject, 'Informativo Diário + Revisão Semanal de 09/11 — Ceará')
   assert.match(m.html, /Olá, Maria!/)
   assert.match(m.html, /https:\/\/site\.com\/conta/)
   assert.match(m.text, /- Revisão Semanal — Ceará/)
@@ -70,6 +70,8 @@ test('e-mail do informativo: assunto com data e estado, lista dos materiais e li
   const x = renderEditionEmail({ name: '<script>', siteUrl: 'https://site.com', dateLabel: '07/11', stateName: 'Ceará', items: ['Informativo Diário — Ceará'], attached: false })
   assert.doesNotMatch(x.html, /<script>/)
   assert.doesNotMatch(x.text, /anexo/)
+  assert.equal(x.subject, 'Informativo Diário de 07/11 — Ceará')
+  assert.equal(renderEditionEmail({ siteUrl: 'https://s', dateLabel: '09/11', stateName: 'Sergipe', items: ['Revisão Semanal — Sergipe'], attached: true }).subject, 'Revisão Semanal de 09/11 — Sergipe')
 })
 
 test('publicação: espera dar 06h se disparar até 10 min antes; fora disso não espera', async () => {
