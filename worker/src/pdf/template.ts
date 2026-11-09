@@ -109,23 +109,37 @@ h1 em{font-style:normal;color:${COLORS.signal400}}
 const para = (s: string | null) => (s ? `<p>${esc(s)}</p>` : '')
 const list = (xs: string[]) => (xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '')
 
-function itemHtml(i: Item): string {
+/**
+ * compact (revisões semanal e mensal, desde 09/11/2026): cartão de revisão — resumo, linha do tempo (quando o assunto
+ * durou vários dias), até 4 pontos para memorizar, "na prova" sem as formas de cobrança, 1 questão e fontes.
+ * O que aconteceu em detalhe, contexto, antecedentes, análises e desdobramentos ficam na diária
+ * (a revisão de 16 assuntos tinha 34 páginas; compacta, ~12).
+ */
+function itemHtml(i: Item, compact = false): string {
   const sections: string[] = []
-  sections.push(`<div class="sec"><h4>O que aconteceu</h4>${para(i.whatHappened)}</div>`)
-  if (i.timeline.length)
-    sections.push(`<div class="sec tl"><h4>Linha do tempo</h4><ol>${i.timeline.map((t) => `<li><b>${esc(t.date)}</b><span>${esc(t.fact)}</span></li>`).join('')}</ol></div>`)
-  if (i.context) sections.push(`<div class="sec"><h4>Contexto</h4>${para(i.context)}</div>`)
-  if (i.background) sections.push(`<div class="sec"><h4>Antecedentes</h4>${para(i.background)}</div>`)
-  for (const a of i.analyses) sections.push(`<div class="sec"><h4>${esc(a.label)}</h4>${para(a.text)}</div>`)
-  sections.push(`<div class="sec"><h4>Por que importa</h4>${para(i.whyItMatters)}</div>`)
-  if (i.consequences.confirmed.length || i.consequences.projections.length)
-    sections.push(`<div class="sec two"><div><h4>Efeitos confirmados</h4>${list(i.consequences.confirmed) || '<p class="muted">Sem efeitos confirmados até o fechamento.</p>'}</div>
-      <div><h4>Possíveis desdobramentos <span class="tag">projeção</span></h4>${list(i.consequences.projections) || '<p class="muted">—</p>'}</div></div>`)
+  const timeline = i.timeline.length
+    ? `<div class="sec tl"><h4>Linha do tempo</h4><ol>${i.timeline.map((t) => `<li><b>${esc(t.date)}</b><span>${esc(t.fact)}</span></li>`).join('')}</ol></div>`
+    : ''
+  if (compact) {
+    // O resumo (lead) já diz o que aconteceu e o quadro "Na prova" diz por que importa: só a linha do tempo, se houver
+    if (timeline) sections.push(timeline)
+  } else {
+    sections.push(`<div class="sec"><h4>O que aconteceu</h4>${para(i.whatHappened)}</div>`)
+    if (timeline) sections.push(timeline)
+    if (i.context) sections.push(`<div class="sec"><h4>Contexto</h4>${para(i.context)}</div>`)
+    if (i.background) sections.push(`<div class="sec"><h4>Antecedentes</h4>${para(i.background)}</div>`)
+    for (const a of i.analyses) sections.push(`<div class="sec"><h4>${esc(a.label)}</h4>${para(a.text)}</div>`)
+    sections.push(`<div class="sec"><h4>Por que importa</h4>${para(i.whyItMatters)}</div>`)
+    if (i.consequences.confirmed.length || i.consequences.projections.length)
+      sections.push(`<div class="sec two"><div><h4>Efeitos confirmados</h4>${list(i.consequences.confirmed) || '<p class="muted">Sem efeitos confirmados até o fechamento.</p>'}</div>
+        <div><h4>Possíveis desdobramentos <span class="tag">projeção</span></h4>${list(i.consequences.projections) || '<p class="muted">—</p>'}</div></div>`)
+  }
   const exam = `<div class="exam"><div class="exam-h"><span class="ico">✦</span>Na prova</div>
     <p>${esc(i.examRelevance)}</p>
     ${i.topics.length ? `<div class="chips">${i.topics.map((t) => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
-    ${i.approaches.length ? `<h5>Como as bancas podem cobrar</h5>${list(i.approaches)}` : ''}</div>`
-  const mem = i.memorize.length ? `<div class="memo"><div class="memo-h">Para memorizar</div>${list(i.memorize)}</div>` : ''
+    ${!compact && i.approaches.length ? `<h5>Como as bancas podem cobrar</h5>${list(i.approaches)}` : ''}</div>`
+  const memo = compact ? i.memorize.slice(0, 4) : i.memorize
+  const mem = memo.length ? `<div class="memo"><div class="memo-h">Para memorizar</div>${list(memo)}</div>` : ''
   const qs = i.questions
     .map(
       (q) => `<div class="q"><div class="q-h">Questão ${q.n}</div><p class="q-s">${esc(q.statement)}</p>
@@ -137,7 +151,7 @@ function itemHtml(i: Item): string {
         .map((r) => `<a href="${safeUrl(r.url)}">${esc(r.source)}${r.official ? ' <i>oficial</i>' : ''}</a>`)
         .join('<span class="dot">·</span>')}</div>`
     : ''
-  return `<article class="item" id="item-${i.n}">
+  return `<article class="item${compact ? ' compact' : ''}" id="item-${i.n}">
   <header class="item-h"><div class="item-n">${String(i.n).padStart(2, '0')}</div><div class="item-t">
     <div class="badges"><span class="cat">${esc(i.category)}</span><span class="ver ${i.verification.tone}">${esc(i.verification.label)}</span>${i.followUp ? `<span class="fu">${esc(i.followUp)}</span>` : ''}</div>
     <h3>${esc(i.title)}</h3></div></header>
@@ -150,13 +164,14 @@ function itemHtml(i: Item): string {
 }
 
 export function bodyHtml(doc: EditionDoc, faces: string): string {
+  const compact = doc.type !== 'diaria'
   const blocks = doc.blocks
     .filter((b) => b.items.length)
     .map(
-      (b) => `<section class="block">
+      (b) => `<section class="block${compact ? ' compact' : ''}">
   <div class="block-h"><div class="block-k">${b.key === 'estado' ? 'Bloco 1 · Seu estado' : b.key === 'nacional' ? 'Bloco 2 · Nacional' : 'Bloco 3 · Internacional'}</div>
   <h2>${esc(b.title)}</h2><p>${esc(b.subtitle)}</p></div>
-  ${b.items.map(itemHtml).join('')}
+  ${b.items.map((i) => itemHtml(i, compact)).join('')}
 </section>`,
     )
     .join('')
@@ -172,6 +187,11 @@ ${faces}${BASE_CSS}
 .block-h:after{content:'';position:absolute;right:-12mm;top:-14mm;width:48mm;height:48mm;border-radius:50%;background:radial-gradient(circle,rgba(56,225,255,.35),transparent 70%)}
 .block{break-before:page}
 .block:first-child{break-before:auto}
+.block.compact{break-before:auto;margin-top:4mm}
+.item.compact{padding:0 0 4mm;margin:0 0 5mm}
+.item.compact .lead{margin:2.5mm 0 2mm;font-size:10.2pt}
+.item.compact .sec{margin-top:2mm}
+.item.compact .memo,.item.compact .exam{margin-top:2.5mm;padding:2.6mm 4mm}
 .block-k{font-size:7.5pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:${COLORS.signal400}}
 .block-h h2{font-size:22pt;font-weight:800;margin-top:1.5mm}
 .block-h p{font-size:9pt;color:#c9d4f5;margin-top:1mm}
@@ -212,6 +232,8 @@ ul{padding-left:4.2mm}li{margin:.6mm 0}
 .refs i{font-style:normal;font-size:6.5pt;font-weight:700;color:${COLORS.ok};background:${COLORS.okBg};padding:.2mm 1.2mm;border-radius:1.5mm}
 .dot{margin:0 1.6mm;color:#b0b6c8}
 .answers{break-before:page}
+.answers.compact{break-before:auto;margin-top:8mm;padding-top:5mm;border-top:2px solid ${COLORS.line}}
+.item.compact .refs{break-before:avoid}
 .answers h2,.about h2{font-size:18pt;font-weight:800;color:${COLORS.navy900};margin-bottom:1mm}
 .answers>p,.about>p{color:${COLORS.muted};margin-bottom:4mm}
 .ans{padding:2.6mm 0;border-bottom:1px solid ${COLORS.line};break-inside:avoid}
@@ -225,7 +247,7 @@ ul{padding-left:4.2mm}li{margin:.6mm 0}
 .about p{font-size:8.6pt;margin-top:1.5mm}
 </style></head><body>
 ${blocks}
-<section class="answers"><h2>Gabarito comentado</h2><p>Resolva as questões antes de conferir. O comentário explica por que a alternativa está correta.</p>${answers}
+<section class="answers${compact ? ' compact' : ''}"><h2>Gabarito comentado</h2><p>Resolva as questões antes de conferir. O comentário explica por que a alternativa está correta.</p>${answers}
 <div class="about"><h2>Como este material é feito</h2>
 <p>Os assuntos são coletados de fontes oficiais (órgãos públicos, tribunais, IBGE, Banco Central, ONU e outros) e de veículos de imprensa citados em cada matéria. Cada fato passa por verificação cruzada entre fontes independentes; o selo de cada assunto indica o resultado.</p>
 <p>Os textos são redigidos por inteligência artificial a partir somente dessas fontes, conferidos automaticamente (números, nomes e ausência de cópia) e sujeitos a revisão editorial. Não reproduzimos o texto dos veículos: consulte as fontes indicadas para a íntegra.</p>

@@ -61,3 +61,8 @@ npm run job -- tick render                # gera os PDFs das edições de hoje
 ## Primeira edição real (06/11/2026)
 
 Informativo Diário · Ceará: 14 assuntos (5 Ceará, 5 Brasil, 4 Mundo), 26 questões, 30 páginas, 881 KB, QA aprovado, gerado em ~6 s. Download privado conferido pelo SHA-256; acesso público negado.
+
+## Formato das revisões (desde 09/11/2026)
+
+A **diária** traz o assunto completo (o que aconteceu, contexto, antecedentes, análises, desdobramentos, formas de cobrança e todas as questões). A **semanal** e a **mensal** usam o **cartão de revisão** (`template.ts`, `compact`): resumo, linha do tempo (assunto de vários dias), até 4 pontos "Para memorizar", "Na prova" (sem as formas de cobrança), **1 questão** por assunto e fontes; blocos sem quebra de página e gabarito em seguida. Referência: revisão semanal de 16 assuntos = 17 páginas (antes, 34).
+
