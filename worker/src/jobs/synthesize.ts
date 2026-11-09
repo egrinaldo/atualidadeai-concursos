@@ -30,7 +30,8 @@ export async function synthesizeJob(job: { id: string; payload: Record<string, u
     return { referenceDate, skipped: 'sem chave de IA' }
   }
   const get = await loadSettings(ctx)
-  const states = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
+  const only = Array.isArray(job.payload.states) ? (job.payload.states as string[]) : null
+  const states = (await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))).filter((s) => !only || only.includes(s))
   const perBlockAll = { ...DEFAULT_ITEMS_PER_BLOCK, ...get<Partial<typeof DEFAULT_ITEMS_PER_BLOCK>>('edition.items_per_block', {}) }
   const threshold = Number(get('synthesis.similarity_threshold', 0.4))
   // Sem teto fixo: sintetiza tudo dentro do prazo da rodada (payload { maxCalls } ainda vale em execução manual)
