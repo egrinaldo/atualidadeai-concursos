@@ -6,6 +6,7 @@ import { selectAll } from '../db/paginate.ts'
 import { buildInput, inputHash, PROMPT_VERSION, type AnalysisInput } from '../analysis/prompt.ts'
 import { selectForAnalysis, type Block, type Candidate, type SelectionPolicy } from '../analysis/select.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
+import { scaledBudget } from '../ai/budget.ts'
 import { editionStates } from './compose.ts'
 import type { JobContext } from './types.ts'
 
@@ -19,18 +20,20 @@ async function settings(ctx: JobContext) {
   const m = new Map((data ?? []).map((r) => [r.key as string, r.value as unknown]))
   const get = <T>(k: string, d: T): T => (m.has(k) && m.get(k) !== null ? (m.get(k) as T) : d)
   const models = get<{ analysis?: string[] }>('ai.models', {}).analysis
+  // Bloco estadual: UFs do piloto + UF de todo assinante ativo (estado novo entra na coleta seguinte à assinatura)
+  const pilotStates = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
+  const budget = scaledBudget(get, pilotStates.length)
   return {
     policy: {
-      // Bloco estadual: UFs do piloto + UF de todo assinante ativo (estado novo entra na coleta seguinte à assinatura)
-      pilotStates: await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE'])),
+      pilotStates,
       perBlock: { ...ANALYZE_DEFAULTS.perBlock, ...get<Partial<Record<Block, number>>>('ai.analysis_per_block', {}) },
       minRelevance: get<Relevance>('triage.min_relevance_for_edition', 'media'),
       editionStatuses: get<string[]>('verification.edition_statuses', ['corroborada', 'parcialmente_corroborada', 'nao_confirmada']),
       singleSourceMinReliability: Number(get('verification.single_source_min_reliability', 4)),
     } satisfies SelectionPolicy,
     models: models?.length ? models : DEFAULT_ANALYSIS_MODELS,
-    dailyBudget: Number(get('ai.daily_call_budget', ANALYZE_DEFAULTS.dailyBudget)),
-    maxCallsPerRun: Number(get('ai.max_calls_per_run', ANALYZE_DEFAULTS.maxCallsPerRun)),
+    dailyBudget: budget.daily,
+    maxCallsPerRun: budget.perRun,
     lookbackHours: Number(get('ai.lookback_hours', ANALYZE_DEFAULTS.lookbackHours)),
   }
 }
