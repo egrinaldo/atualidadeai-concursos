@@ -50,6 +50,10 @@ export function coverHtml(doc: EditionDoc, faces: string): string {
   const total = doc.blocks.reduce((a, b) => a + b.items.length, 0)
   const questions = doc.blocks.reduce((a, b) => a + b.items.reduce((x, i) => x + i.questions.length, 0), 0)
   const label = EDITION_LABELS[doc.type]
+  // Capa mostra os blocos que REALMENTE têm assuntos (antes: sempre "3 · estado, Brasil e mundo")
+  const filled = doc.blocks.filter((b) => b.items.length)
+  const blockNames = filled.map((b) => ({ estado: 'estado', nacional: 'Brasil', internacional: 'mundo' })[b.key] ?? b.title)
+  const blockList = blockNames.length > 1 ? `${blockNames.slice(0, -1).join(', ')} e ${blockNames.at(-1)}` : (blockNames[0] ?? '')
   const toc = doc.blocks
     .filter((b) => b.items.length)
     .map(
@@ -95,7 +99,7 @@ h1 em{font-style:normal;color:${COLORS.signal400}}
 <div class="meta"><div><b>Edição</b>${esc(dateLong(doc.referenceDate))}</div><div><b>Período coberto</b>${esc(hourShort(doc.periodStart))} a ${esc(hourShort(doc.periodEnd))}</div></div>
 <div class="stats"><div class="stat"><div class="v">${total}</div><div class="l">assuntos selecionados</div></div>
 <div class="stat"><div class="v">${questions}</div><div class="l">questões de fixação</div></div>
-<div class="stat"><div class="v">3</div><div class="l">blocos: estado, Brasil e mundo</div></div></div>
+<div class="stat"><div class="v">${filled.length}</div><div class="l">${filled.length === 1 ? 'bloco' : 'blocos'}: ${esc(blockList)}</div></div></div>
 <div class="toc">${toc}</div>
 <div class="personal"><div class="l">Exemplar de uso pessoal e intransferível</div></div>
 <div class="foot"><span>Fontes oficiais e veículos citados · texto próprio verificado</span><span>atualidadeaiconcursos.com.br</span></div>
