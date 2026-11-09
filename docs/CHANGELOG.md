@@ -6,6 +6,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ### Corrigido
 - 09/11: diária de SE com 2 assuntos reprovada no controle de qualidade (mínimo 3) e não enviada; BA/CE saíram com 3–4 assuntos e sem internacional. Causa: cota de IA fixa (120 chamadas/dia, 6 por rodada) dividida entre 3 UFs; a fila estadual vinha antes do nacional/internacional.
+- Diária refeita depois das 06h usa o período até a hora da montagem. E-mail: chave de envio único passa a incluir os documentos (um PDF que sai mais tarde no mesmo dia era recusado pelo Resend com 409).
 - Cota de IA proporcional às UFs com edição (`ai/budget.ts`: +50/dia e +3/rodada por UF, teto 600 e 16); análise começa por nacional e internacional; diária abaixo do mínimo amplia a folga para assuntos inéditos de 24h/36h (`summary.backfill_hours`).
 
 ## [Não publicado] — Fontes estaduais das 27 UFs

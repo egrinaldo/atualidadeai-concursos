@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { renderEditionEmail } from '../../../supabase/functions/_shared/email/templates.ts'
 import { sendEmail, type Attachment } from '../delivery/email.ts'
 import { currentDocument } from '../delivery/recipients.ts'
@@ -124,7 +125,9 @@ async function sendEmails(ctx: JobContext, referenceDate: string, docs: DocInfo[
         return `${EDITION_LABELS[d.type]} — ${STATE_NAMES[d.state] ?? d.state}`
       })
       const mail = renderEditionEmail({ name: p.full_name, siteUrl: ctx.config.SITE_URL, dateLabel, stateName: STATE_NAMES[p.state ?? ''] ?? p.state ?? '', items, attached: attach })
-      const dedupe = `informativo:${referenceDate}:${p.id}`
+      // Chave de envio único = data + assinante + QUAIS documentos: reenvio do mesmo e-mail não duplica, mas um PDF
+      // que sai depois no mesmo dia (diária refeita, 09/11/2026) ganha e-mail próprio (antes: Resend 409)
+      const dedupe = `informativo:${referenceDate}:${p.id}:${createHash('sha256').update(list.map((m) => m.document_id).sort().join(',')).digest('hex').slice(0, 16)}`
       const r = await sendEmail(
         { apiKey: ctx.config.RESEND_API_KEY!, from: ctx.config.EMAIL_FROM, replyTo: ctx.config.EMAIL_REPLY_TO, testTo: ctx.config.EMAIL_TEST_TO },
         { to: p.email, subject: mail.subject, html: mail.html, text: mail.text, idempotencyKey: dedupe, attachments: attach ? files : undefined, tags: { kind: 'informativo' } },
