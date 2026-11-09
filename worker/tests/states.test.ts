@@ -57,3 +57,10 @@ test('análise: nacional e internacional vêm antes das filas estaduais', async 
   const out = selectForAnalysis([c('e1', 'estadual', 'BA'), c('e2', 'estadual', 'SE'), c('n1', 'nacional', null), c('i1', 'internacional', null)], { pilotStates: ['BA', 'CE', 'SE'], perBlock: { estado: 5, nacional: 6, internacional: 4 }, minRelevance: 'media', editionStatuses: ['corroborada'], singleSourceMinReliability: 4 })
   assert.deepEqual(out.map((o) => o.id), ['n1', 'i1', 'e1', 'e2'])
 })
+
+test('cota não trava: só freio de emergência alto e prazo por rodada', async () => {
+  const { emergencyLimit, runDeadline } = await import('../src/ai/budget.ts')
+  const none = <T>(_k: string, d: T) => d
+  assert.equal(emergencyLimit(none), 3000)
+  assert.equal(runDeadline(none, 'ai.analysis_run_minutes', 20, 0), 20 * 60_000)
+})

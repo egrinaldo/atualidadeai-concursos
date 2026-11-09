@@ -109,3 +109,12 @@ Ligue **as duas pontas juntas**: só o site sem o Supabase não protege; só o S
 - **Storage:** o bucket `documents` é privado e não tem políticas públicas. Download só por link temporário gerado no servidor: 5 min para o editor, 2 min para o assinante e só a própria cópia.
 - **GitHub Actions:** ações fixadas por commit (SHA), permissões `contents: read`, segredos no ambiente `production`. O Dependabot propõe atualizações semanais.
 - **Mercado Pago 429:** vira 503 "tente em alguns segundos" com `Retry-After`.
+
+## Cota de IA (desde 09/11/2026)
+
+A cota **não trava** o conteúdo. Cada rodada analisa/audita **tudo** o que foi escolhido (até 5 assuntos por UF, 6 nacionais e 4 internacionais), dentro de um **prazo**: análise 20 min (`ai.analysis_run_minutes`), auditoria 15 min (`audit.run_minutes`; 25 na rodada das 04h35), síntese 20 min (`synthesis.run_minutes`). O que não couber continua na coleta seguinte (a cada 3h).
+
+- **Uso previsto** = `ai.daily_call_budget` (120) + 50 por UF a mais com assinante (`ai/budget.ts`). Passou dele → a verificação diária manda alerta; o robô **continua**.
+- **Freio de emergência** (`ai.daily_call_hard_limit`, 3000/dia): única trava, contra defeito em loop. Uso normal: ~100–300/dia.
+- Limite real do provedor (NVIDIA): taxa por minuto; as chamadas são sequenciais (~20 s cada), bem abaixo dele.
+

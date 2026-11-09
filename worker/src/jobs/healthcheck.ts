@@ -1,3 +1,5 @@
+import { emergencyLimit, scaledBudget } from '../ai/budget.ts'
+import { startOfDayBrasilia } from '../ai/client.ts'
 import { renderOpsAlertEmail } from '../../../supabase/functions/_shared/email/templates.ts'
 import { sendEmail } from '../delivery/email.ts'
 import { brtDate } from '../pdf/edition.ts'
@@ -54,6 +56,14 @@ export async function collectProblems(ctx: JobContext, today: string): Promise<s
   const { data: srcs } = await ctx.db.from('news_sources').select('state').eq('is_active', true).eq('scope', 'estadual')
   const uncovered = uncoveredStates(states, states, (srcs ?? []).map((r) => r.state as string))
   if (uncovered.length) problems.push(`Assinantes de ${uncovered.join(', ')} recebem o PDF sem o bloco estadual: nenhuma fonte estadual ativa (Painel → Fontes; todas as UFs foram cadastradas em 08/11/2026 — alguma foi desativada ou está falhando?)`)
+
+  // 1c. Uso de IA acima do previsto: o robô NÃO para (desde 09/11/2026), só avisa
+  const { data: aiCfg } = await ctx.db.from('app_settings').select('key, value').like('key', 'ai.%')
+  const aiMap = new Map((aiCfg ?? []).map((r) => [r.key as string, r.value as unknown]))
+  const aiGet = <T>(k: string, d: T): T => (aiMap.has(k) && aiMap.get(k) !== null ? (aiMap.get(k) as T) : d)
+  const expected = scaledBudget(aiGet, states.length).daily
+  const { count: used } = await ctx.db.from('ai_usage_logs').select('id', { count: 'exact', head: true }).gte('created_at', startOfDayBrasilia()).neq('status', 'invalid_output')
+  if ((used ?? 0) > expected) problems.push(`IA: ${used} chamadas hoje, acima do previsto (${expected}) — o robô continuou normalmente; confira o custo/limite do provedor (freio de emergência em ${emergencyLimit(aiGet)})`)
 
   // 2. Tarefas do robô que falharam nas últimas 24h
   // Só rodadas agendadas (têm dedupe_key); execuções manuais/testes locais não geram alerta
