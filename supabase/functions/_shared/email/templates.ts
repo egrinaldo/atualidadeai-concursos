@@ -190,8 +190,11 @@ export function renderEditionEmail(d: { name?: string | null; siteUrl: string; d
   const ola = firstName(d.name) ? `Olá, ${firstName(d.name)}!` : 'Olá!'
   const conta = `${d.siteUrl.replace(/\/+$/, '')}/conta`
   const many = d.items.length > 1
+  // O assunto diz QUAIS materiais vêm no e-mail ("Revisão Semanal de 09/11 — Sergipe"): com assunto igual, o Gmail
+  // juntava o e-mail da semanal e o da diária na mesma conversa e a semanal passava despercebida (09/11/2026)
+  const kinds = [...new Set(d.items.map((i) => i.split(' — ')[0].trim()).filter(Boolean))]
   return build(
-    `Seu informativo de ${d.dateLabel} — ${d.stateName}`,
+    `${kinds.length ? kinds.join(' + ') : 'Seu informativo'} de ${d.dateLabel} — ${d.stateName}`,
     many ? `${d.items.length} materiais de atualidades prontos para você.` : 'Seu material de atualidades está pronto.',
     many ? 'Seus informativos chegaram' : 'Seu informativo chegou',
     {
