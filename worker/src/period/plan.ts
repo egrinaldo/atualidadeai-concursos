@@ -9,7 +9,7 @@ const AUDIT_OK = ['aprovada', 'dispensada', 'pendente'] // pendente: auditada an
 
 type Row = {
   block: BlockKey
-  editions: { reference_date: string }
+  editions: { reference_date: string; state: string }
   news_analyses: {
     id: string
     kind: EntryKind
@@ -28,7 +28,7 @@ type Row = {
   }
 }
 
-const COLS = 'block, editions!inner(reference_date), news_analyses!inner(id, kind, status, cluster_id, editorial_title, summary, what_happened, memorize, consequences, references, audit_status, generated_at, period_meta, news_clusters!inner(relevance_score, source_count))'
+const COLS = 'block, editions!inner(reference_date, state), news_analyses!inner(id, kind, status, cluster_id, editorial_title, summary, what_happened, memorize, consequences, references, audit_status, generated_at, period_meta, news_clusters!inner(relevance_score, source_count))'
 
 function toEntry(r: Row, dates: string[]): Entry {
   const a = r.news_analyses
@@ -51,19 +51,30 @@ function toEntry(r: Row, dates: string[]): Entry {
   }
 }
 
-/** Itens das edições de um tipo/UF num intervalo de datas de referência. Versões substituídas → versão atual. */
+/**
+ * Itens das edições de um tipo num intervalo de datas de referência, para a revisão de uma UF: bloco estadual das
+ * edições DESSA UF; blocos nacional e internacional das edições de TODAS as UFs (são os mesmos fatos para todos —
+ * 09/11/2026: SE, sem diárias anteriores, teve revisão semanal com 3 assuntos e CE com 24). O mesmo texto publicado
+ * em várias UFs no mesmo dia conta uma vez. Versões substituídas → versão atual.
+ */
 async function editionRows(ctx: JobContext, type: 'diaria' | 'semanal', state: string, from: string, to: string): Promise<Row[]> {
   const { data, error } = await ctx.db
     .from('edition_items')
     .select(COLS)
     .eq('editions.edition_type', type)
-    .eq('editions.state', state)
     .in('editions.status', USABLE)
     .gte('editions.reference_date', from)
     .lte('editions.reference_date', to)
-    .limit(1000)
+    .limit(10000)
   if (error) throw new Error(`itens das edições ${type}: ${error.message}`)
-  const rows = (data ?? []) as unknown as Row[]
+  const seen = new Set<string>()
+  const rows = ((data ?? []) as unknown as Row[]).filter((r) => {
+    if (r.block === 'estado' && r.editions.state !== state) return false
+    const k = `${r.block}:${r.editions.reference_date}:${r.news_analyses.id}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
   // Texto editado/corrigido depois que a edição saiu: usa a versão atual do mesmo assunto
   const stale = rows.filter((r) => !['valid', 'edited'].includes(r.news_analyses.status) && r.news_analyses.kind === 'analise')
   if (stale.length) {
@@ -98,15 +109,25 @@ export async function periodEntries(ctx: JobContext, type: 'semanal' | 'mensal',
   const [weekly, daily] = await Promise.all([editionRows(ctx, 'semanal', state, from, to), editionRows(ctx, 'diaria', state, from, to)])
   const inRange = (d: string) => d >= from && d <= to
   const dailyDates = new Map<string, string[]>()
-  for (const r of daily) dailyDates.set(r.news_analyses.id, [...(dailyDates.get(r.news_analyses.id) ?? []), r.editions.reference_date])
+  for (const r of daily) dailyDates.set(r.news_analyses.id, [...new Set([...(dailyDates.get(r.news_analyses.id) ?? []), r.editions.reference_date])])
   const weeklies = [...new Set(weekly.map((r) => r.editions.reference_date))].sort()
   const covered = new Set(weeklies.flatMap(weekDates))
   const entries: Entry[] = []
+  const weeklySeen = new Set<string>()
   for (const r of weekly) {
+    if (weeklySeen.has(`${r.block}:${r.news_analyses.id}`)) continue // mesma síntese na semanal de várias UFs
+    weeklySeen.add(`${r.block}:${r.news_analyses.id}`)
     const dates = (r.news_analyses.period_meta?.dates ?? dailyDates.get(r.news_analyses.id) ?? weekDates(r.editions.reference_date).slice(-1)).filter(inRange)
     if (dates.length) entries.push(toEntry(r, dates))
   }
-  for (const r of daily) if (!covered.has(r.editions.reference_date)) entries.push(toEntry(r, [r.editions.reference_date]))
+  const dailySeen = new Set<string>()
+  for (const r of daily) {
+    if (covered.has(r.editions.reference_date)) continue
+    const k = `${r.block}:${r.news_analyses.id}`
+    if (dailySeen.has(k)) continue // a mesma notícia em vários dias/UFs vira uma entrada com todas as datas
+    dailySeen.add(k)
+    entries.push(toEntry(r, dailyDates.get(r.news_analyses.id) ?? [r.editions.reference_date]))
+  }
   return { entries, from, to, weeklies }
 }
 

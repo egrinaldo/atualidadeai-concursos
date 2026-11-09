@@ -50,7 +50,9 @@ export async function composeJob(job: { payload: Record<string, unknown> }, ctx:
   const force = job.payload.force === true
   // Estados com edição: os de `pipeline.pilot_states` + o de todo assinante ativo (e administrador). Um estado sem
   // fontes estaduais ainda recebe a edição com Brasil e Mundo — assinante nunca fica sem PDF (falha de 08/11/2026).
-  const states = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
+  // payload { states: ['SE'] } restringe a montagem (refazer a edição de uma UF sem mexer nas outras)
+  const only = Array.isArray(job.payload.states) ? (job.payload.states as string[]) : null
+  const states = (await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))).filter((s) => !only || only.includes(s))
   const cutoff = get<string>('pipeline.edition_cutoff', '22:00')
   const perBlockAll = { ...DEFAULT_ITEMS_PER_BLOCK, ...get<Partial<typeof DEFAULT_ITEMS_PER_BLOCK>>('edition.items_per_block', {}) }
   const minRelevance = get<Relevance>('triage.min_relevance_for_edition', 'media')
