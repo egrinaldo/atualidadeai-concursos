@@ -6,7 +6,7 @@ import { selectAll } from '../db/paginate.ts'
 import { buildInput, inputHash, PROMPT_VERSION, type AnalysisInput } from '../analysis/prompt.ts'
 import { selectForAnalysis, type Block, type Candidate, type SelectionPolicy } from '../analysis/select.ts'
 import { RELEVANCE_RANK, type Relevance } from '../triage/classify.ts'
-import { scaledBudget } from '../ai/budget.ts'
+import { emergencyLimit, runDeadline } from '../ai/budget.ts'
 import { editionStates } from './compose.ts'
 import type { JobContext } from './types.ts'
 
@@ -22,7 +22,6 @@ async function settings(ctx: JobContext) {
   const models = get<{ analysis?: string[] }>('ai.models', {}).analysis
   // Bloco estadual: UFs do piloto + UF de todo assinante ativo (estado novo entra na coleta seguinte à assinatura)
   const pilotStates = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
-  const budget = scaledBudget(get, pilotStates.length)
   return {
     policy: {
       pilotStates,
@@ -32,8 +31,8 @@ async function settings(ctx: JobContext) {
       singleSourceMinReliability: Number(get('verification.single_source_min_reliability', 4)),
     } satisfies SelectionPolicy,
     models: models?.length ? models : DEFAULT_ANALYSIS_MODELS,
-    dailyBudget: budget.daily,
-    maxCallsPerRun: budget.perRun,
+    dailyBudget: emergencyLimit(get),
+    deadline: runDeadline(get, 'ai.analysis_run_minutes', 20),
     lookbackHours: Number(get('ai.lookback_hours', ANALYZE_DEFAULTS.lookbackHours)),
   }
 }
@@ -76,12 +75,13 @@ export async function analyzeJob(job: { id: string; payload: Record<string, unkn
   const cands: Candidate[] = [...clusters.values()].map((r) => ({ ...r, best_reliability: Math.max(...r.news.map((n) => n.news_sources.reliability_level)) }))
   const selected = selectForAnalysis(cands, cfg.policy)
 
-  // Execução manual pode pedir menos chamadas (payload { maxCalls }); nunca mais que o limite configurado
-  const maxCalls = Math.min(cfg.maxCallsPerRun, Number(job.payload.maxCalls ?? cfg.maxCallsPerRun) || cfg.maxCallsPerRun)
+  // Sem teto de chamadas por rodada: analisa tudo o que foi escolhido (já limitado por bloco) dentro do prazo da
+  // rodada. Execução manual pode pedir um teto (payload { maxCalls }).
+  const maxCalls = Number(job.payload.maxCalls ?? Infinity) || Infinity
   const stats = { selected: selected.length, already_analyzed: 0, analyzed: 0, reused: 0, invalid: 0, skipped_invalid_before: 0, calls: 0, stopped: null as string | null }
   for (const sel of selected) {
-    if (stats.calls >= maxCalls && clusters.get(sel.id)!.status !== 'analyzed') {
-      stats.stopped = `limite por rodada (${maxCalls} chamadas)`
+    if (clusters.get(sel.id)!.status !== 'analyzed' && (stats.calls >= maxCalls || Date.now() > cfg.deadline)) {
+      stats.stopped = stats.calls >= maxCalls ? `limite pedido (${maxCalls} chamadas)` : 'prazo da rodada — continua na próxima coleta'
       break
     }
     const c = clusters.get(sel.id)!

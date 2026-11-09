@@ -7,7 +7,7 @@ import { periodStories, planStory, synthesisKindFor } from '../period/plan.ts'
 import { selectStories, type Story } from '../period/stories.ts'
 import { generateSynthesis, mergeReferences, SYNTHESIS_VERSION, synthesisInput } from '../period/synthesis.ts'
 import { DEFAULT_ANALYSIS_MODELS } from './analyze.ts'
-import { scaledBudget } from '../ai/budget.ts'
+import { emergencyLimit, runDeadline } from '../ai/budget.ts'
 import { editionStates, loadSettings } from './compose.ts'
 import type { JobContext } from './types.ts'
 
@@ -33,10 +33,12 @@ export async function synthesizeJob(job: { id: string; payload: Record<string, u
   const states = await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))
   const perBlockAll = { ...DEFAULT_ITEMS_PER_BLOCK, ...get<Partial<typeof DEFAULT_ITEMS_PER_BLOCK>>('edition.items_per_block', {}) }
   const threshold = Number(get('synthesis.similarity_threshold', 0.4))
-  const maxCalls = Math.min(Number(get('synthesis.max_calls_per_run', 12)), Number(job.payload.maxCalls ?? Infinity) || Infinity)
+  // Sem teto fixo: sintetiza tudo dentro do prazo da rodada (payload { maxCalls } ainda vale em execução manual)
+  const maxCalls = Number(job.payload.maxCalls ?? Infinity) || Infinity
+  const deadline = runDeadline(get, 'synthesis.run_minutes', 20)
   const models = get<{ synthesis?: string[]; analysis?: string[] }>('ai.models', {})
   const synthModels = models.synthesis?.length ? models.synthesis : models.analysis?.length ? models.analysis : DEFAULT_ANALYSIS_MODELS
-  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: scaledBudget(get, states.length).daily })
+  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: emergencyLimit(get) })
   const jobId = job.id === 'direto' ? null : job.id
 
   const stats = { referenceDate, types, generated: 0, reused: 0, single: 0, invalid: 0, calls: 0, stopped: null as string | null, editions: [] as Record<string, unknown>[] }
@@ -59,8 +61,8 @@ export async function synthesizeJob(job: { id: string; payload: Record<string, u
           else stats.invalid++
           continue
         }
-        if (stats.calls >= maxCalls) {
-          stats.stopped = `limite por rodada (${maxCalls} chamadas)`
+        if (stats.calls >= maxCalls || Date.now() > deadline) {
+          stats.stopped = stats.calls >= maxCalls ? `limite pedido (${maxCalls} chamadas)` : 'prazo da rodada'
           break outer
         }
         const input = synthesisInput(story, story.block === 'estado' ? state : null)

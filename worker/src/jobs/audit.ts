@@ -6,8 +6,8 @@ import { buildMessages, type AnalysisInput, type AnalysisSource } from '../analy
 import { toAnalysisRow } from '../analysis/generate.ts'
 import { validateAnalysis } from '../analysis/validate.ts'
 import { AUDIT_PROMPT_VERSION, auditHash, buildAuditMessages, judge, type AuditReport, type AuditTarget } from '../audit/audit.ts'
-import { scaledBudget } from '../ai/budget.ts'
-import { editionStates, loadSettings } from './compose.ts'
+import { emergencyLimit, runDeadline } from '../ai/budget.ts'
+import { loadSettings } from './compose.ts'
 import { DEFAULT_ANALYSIS_MODELS } from './analyze.ts'
 import type { JobContext } from './types.ts'
 
@@ -79,10 +79,10 @@ export async function auditJob(job: { id: string; payload: Record<string, unknow
   const writerModels = models.analysis?.length ? models.analysis : DEFAULT_ANALYSIS_MODELS
   const autoCorrect = get<boolean>('audit.auto_correct', true) !== false
   const editionStage = job.payload.stage === 'edicao' || job.payload.stage === 'pdf'
-  const configured = Number(get('audit.max_per_run', AUDIT_DEFAULTS.maxPerRun))
-  const maxCalls = Math.max(1, Math.min(editionStage ? AUDIT_DEFAULTS.maxPerEditionRun : configured, Number(job.payload.maxCalls ?? Infinity) || Infinity))
-  const budget = scaledBudget(get, (await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))).length)
-  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: budget.daily })
+  // Sem teto fixo de chamadas: audita a fila inteira dentro do prazo da rodada (o que sobrar vai na próxima)
+  const maxCalls = Math.max(1, Number(job.payload.maxCalls ?? Infinity) || Infinity)
+  const deadline = runDeadline(get, editionStage ? 'audit.edition_run_minutes' : 'audit.run_minutes', editionStage ? 25 : 15)
+  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: emergencyLimit(get) })
   const jobId = job.id === 'direto' ? null : job.id
 
   const queue = await pendingQueue(ctx, job.payload)
@@ -92,8 +92,8 @@ export async function auditJob(job: { id: string; payload: Record<string, unknow
     const id = queue.shift()!
     if (done.has(id)) continue
     done.add(id)
-    if (stats.calls >= maxCalls) {
-      stats.stopped = `limite por rodada (${maxCalls} chamadas)`
+    if (stats.calls >= maxCalls || Date.now() > deadline) {
+      stats.stopped = stats.calls >= maxCalls ? `limite pedido (${maxCalls} chamadas)` : 'prazo da rodada — continua na próxima'
       break
     }
     const { data: a, error } = await ctx.db.from('news_analyses').select(COLS).eq('id', id).maybeSingle()
@@ -172,7 +172,7 @@ export async function auditJob(job: { id: string; payload: Record<string, unknow
 
     // Correção automática: só texto da IA (o editado por pessoa vai para revisão), até 2 rodadas por assunto
     if (!autoCorrect || row.kind !== 'analise' || row.status !== 'valid' || correctionRound(row) >= MAX_CORRECTION_ROUNDS || !input) continue
-    if (stats.calls >= maxCalls) continue
+    if (stats.calls >= maxCalls || Date.now() > deadline) continue
     try {
       const fixedId = await correct(ctx, ai, writerModels, row, input, report, jobId)
       stats.calls += fixedId.calls
