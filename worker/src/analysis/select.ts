@@ -37,10 +37,12 @@ export function eligible(c: Candidate, p: SelectionPolicy): boolean {
  */
 export function selectForAnalysis(cands: Candidate[], p: SelectionPolicy): { id: string; block: Block; state: string | null }[] {
   const ok = cands.filter((c) => eligible(c, p)).sort((a, b) => (b.relevance_score ?? 0) - (a.relevance_score ?? 0))
+  // Nacional e internacional primeiro em cada volta: servem a TODAS as UFs (com várias UFs, as filas estaduais
+  // ocupavam as vagas da rodada e o internacional ficava sem análise — diárias de 09/11/2026 sem internacional)
   const queues: { block: Block; state: string | null; items: string[] }[] = [
-    ...p.pilotStates.map((uf) => ({ block: 'estado' as const, state: uf, items: ok.filter((c) => c.scope === 'estadual' && c.state === uf).slice(0, p.perBlock.estado).map((c) => c.id) })),
     { block: 'nacional', state: null, items: ok.filter((c) => c.scope === 'nacional').slice(0, p.perBlock.nacional).map((c) => c.id) },
     { block: 'internacional', state: null, items: ok.filter((c) => c.scope === 'internacional').slice(0, p.perBlock.internacional).map((c) => c.id) },
+    ...p.pilotStates.map((uf) => ({ block: 'estado' as const, state: uf, items: ok.filter((c) => c.scope === 'estadual' && c.state === uf).slice(0, p.perBlock.estado).map((c) => c.id) })),
   ]
   const out: { id: string; block: Block; state: string | null }[] = []
   const seen = new Set<string>()

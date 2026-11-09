@@ -6,7 +6,8 @@ import { buildMessages, type AnalysisInput, type AnalysisSource } from '../analy
 import { toAnalysisRow } from '../analysis/generate.ts'
 import { validateAnalysis } from '../analysis/validate.ts'
 import { AUDIT_PROMPT_VERSION, auditHash, buildAuditMessages, judge, type AuditReport, type AuditTarget } from '../audit/audit.ts'
-import { loadSettings } from './compose.ts'
+import { scaledBudget } from '../ai/budget.ts'
+import { editionStates, loadSettings } from './compose.ts'
 import { DEFAULT_ANALYSIS_MODELS } from './analyze.ts'
 import type { JobContext } from './types.ts'
 
@@ -80,7 +81,8 @@ export async function auditJob(job: { id: string; payload: Record<string, unknow
   const editionStage = job.payload.stage === 'edicao' || job.payload.stage === 'pdf'
   const configured = Number(get('audit.max_per_run', AUDIT_DEFAULTS.maxPerRun))
   const maxCalls = Math.max(1, Math.min(editionStage ? AUDIT_DEFAULTS.maxPerEditionRun : configured, Number(job.payload.maxCalls ?? Infinity) || Infinity))
-  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: Number(get('ai.daily_call_budget', 120)) })
+  const budget = scaledBudget(get, (await editionStates(ctx, get<string[]>('pipeline.pilot_states', ['CE']))).length)
+  const ai = deps?.ai ?? aiClient(nvidiaProvider({ apiKey: ctx.config.NVIDIA_API_KEY!, baseUrl: ctx.config.NVIDIA_BASE_URL }), dbUsageStore(ctx.db), { dailyBudget: budget.daily })
   const jobId = job.id === 'direto' ? null : job.id
 
   const queue = await pendingQueue(ctx, job.payload)

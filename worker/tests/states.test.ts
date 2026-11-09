@@ -42,3 +42,18 @@ test('alerta: estado com edição mas sem fontes estaduais', () => {
   assert.deepEqual(uncoveredStates(['RJ'], ['CE'], ['RJ']), ['RJ'])
   assert.deepEqual(uncoveredStates(['CE'], ['CE'], ['CE']), [])
 })
+
+test('cota de IA cresce com o número de estados (com teto)', async () => {
+  const { scaledBudget } = await import('../src/ai/budget.ts')
+  const none = <T>(_k: string, d: T) => d
+  assert.deepEqual(scaledBudget(none, 1), { daily: 120, perRun: 6 })
+  assert.deepEqual(scaledBudget(none, 3), { daily: 220, perRun: 12 })
+  assert.deepEqual(scaledBudget(none, 27), { daily: 600, perRun: 16 })
+})
+
+test('análise: nacional e internacional vêm antes das filas estaduais', async () => {
+  const { selectForAnalysis } = await import('../src/analysis/select.ts')
+  const c = (id: string, scope: 'estadual' | 'nacional' | 'internacional', state: string | null) => ({ id, scope, state, relevance: 'alta' as const, relevance_score: 80, verification_status: 'corroborada', needs_review: false, best_reliability: 5 })
+  const out = selectForAnalysis([c('e1', 'estadual', 'BA'), c('e2', 'estadual', 'SE'), c('n1', 'nacional', null), c('i1', 'internacional', null)], { pilotStates: ['BA', 'CE', 'SE'], perBlock: { estado: 5, nacional: 6, internacional: 4 }, minRelevance: 'media', editionStatuses: ['corroborada'], singleSourceMinReliability: 4 })
+  assert.deepEqual(out.map((o) => o.id), ['n1', 'i1', 'e1', 'e2'])
+})

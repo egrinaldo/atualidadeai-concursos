@@ -188,7 +188,7 @@ test('geração: persiste inválida após a correção falhar (vai para revisão
 const policy: SelectionPolicy = { pilotStates: ['CE'], perBlock: { estado: 2, nacional: 2, internacional: 1 }, minRelevance: 'media', editionStatuses: ['corroborada', 'parcialmente_corroborada', 'nao_confirmada'], singleSourceMinReliability: 4 }
 const cand = (id: string, p: Partial<Candidate>): Candidate => ({ id, scope: 'nacional', state: null, relevance: 'alta', relevance_score: 60, verification_status: 'corroborada', needs_review: false, best_reliability: 5, ...p })
 
-test('seleção: só elegíveis, limite por bloco e blocos intercalados (estado primeiro)', () => {
+test('seleção: só elegíveis, limite por bloco e blocos intercalados (nacional e internacional primeiro, desde 09/11/2026)', () => {
   const s = selectForAnalysis([
     cand('n1', { relevance_score: 90 }), cand('n2', { relevance_score: 80 }), cand('n3', { relevance_score: 70 }),
     cand('e1', { scope: 'estadual', state: 'CE', relevance_score: 40, relevance: 'media' }), cand('sp', { scope: 'estadual', state: 'SP' }),
@@ -198,8 +198,8 @@ test('seleção: só elegíveis, limite por bloco e blocos intercalados (estado 
     cand('fraca', { verification_status: 'nao_confirmada', best_reliability: 3, relevance_score: 99 }),
     cand('forte', { verification_status: 'nao_confirmada', best_reliability: 4, relevance_score: 95 }),
   ], policy)
-  assert.deepEqual(s.map((x) => x.id), ['e1', 'forte', 'i1', 'n1'])
-  assert.deepEqual(s[0], { id: 'e1', block: 'estado', state: 'CE' })
+  assert.deepEqual(s.map((x) => x.id), ['forte', 'i1', 'e1', 'n1'])
+  assert.deepEqual(s[2], { id: 'e1', block: 'estado', state: 'CE' })
 })
 
 test('dia de Brasília começa às 03:00 UTC', () => {
