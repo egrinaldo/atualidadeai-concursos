@@ -1,12 +1,12 @@
 /**
- * Encerramento da sessão por inatividade (11/11/2026; 3 minutos, a pedido do responsável).
+ * Encerramento da sessão por inatividade (11/11/2026; 10 minutos, a pedido do responsável).
  *
  * O Supabase renova o token sozinho e, sem isto, o usuário ficava conectado por tempo indeterminado.
  * Regra: sem uso do site por IDLE_MINUTES (mouse, teclado, toque, rolagem), a sessão é encerrada neste navegador
  * e a pessoa volta para /entrar com o aviso de inatividade. O horário da última atividade fica no localStorage,
  * então vale entre abas e também ao reabrir o navegador depois de horas.
  */
-export const IDLE_MINUTES: number = 3
+export const IDLE_MINUTES: number = 10
 const IDLE_MS = IDLE_MINUTES * 60_000
 const KEY = 'aai:ultima-atividade'
 
