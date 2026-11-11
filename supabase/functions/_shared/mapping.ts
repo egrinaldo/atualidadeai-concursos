@@ -97,7 +97,7 @@ export function introActive(plan: PlanPricing, now = new Date()): boolean {
   return !Number.isNaN(fim.getTime()) && now < fim && Number(plan.intro_price) < Number(plan.price)
 }
 
-/** Valor da 1ª cobrança para quem assina agora: preço de entrada na promoção, senão o preço normal. */
+/** Valor das cobranças para quem assina agora: preço promocional no período da promoção (mantido nas renovações), senão o preço normal. */
 export function firstChargeAmount(plan: PlanPricing, now = new Date()): number {
   return Number(introActive(plan, now) ? plan.intro_price : plan.price)
 }
