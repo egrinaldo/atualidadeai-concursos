@@ -163,7 +163,7 @@ npx supabase functions deploy --remote=pjtlsiulnipynkierkez --use-api --yes
 4. Ao voltar, a página de retorno consulta o Mercado Pago e mostra **Assinatura ativa!**. Em **Minha conta**, a assinatura aparece como **Ativa** com a próxima cobrança.
 5. Cancelamento: **Minha conta → Cancelar assinatura** (cancela no Mercado Pago e no banco).
 
-### 4.8 Migrar para produção (somente com autorização)
+### 4.8 Migrar para produção (somente com autorização) — **feito em 11/11/2026**
 1. Publicar o site com domínio https (Subetapa 7) e atualizar `SITE_URL` para `https://seu-dominio`.
 2. Na aplicação Mercado Pago: **Credenciais → Produção** (pode exigir informar dados do negócio e ativar as credenciais).
 3. Substituir nos Secrets: `MERCADO_PAGO_ACCESS_TOKEN` (produção) e, no `.env`/Vercel, `VITE_MERCADO_PAGO_PUBLIC_KEY` (produção).

@@ -137,11 +137,6 @@ export function Admin() {
 
       <main className="py-8">
         <Container className="space-y-6">
-          {['geral', 'assinantes', 'pagamentos'].includes(tab) && (
-            <Alert tone="warning">
-              <strong>Ambiente de teste.</strong> Os pagamentos exibidos vêm do sandbox do Mercado Pago e não representam receita real.
-            </Alert>
-          )}
           {tab === 'geral' && <OverviewTab />}
           {tab === 'assinantes' && <SubscribersTab />}
           {tab === 'pagamentos' && <PaymentsTab />}

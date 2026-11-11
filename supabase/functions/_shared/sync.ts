@@ -66,11 +66,11 @@ export async function applyPreapproval(admin: SupabaseClient, pre: Preapproval):
   const { error } = await admin.from('subscriptions').update(update).eq('id', sub.id)
   if (error) throw new Error(`falha ao atualizar assinatura: ${error.message}`)
 
-  // Ativação (primeira vez desta assinatura): confirmação de contratação + orientações iniciais
+  // Ativação (primeira vez desta assinatura): UM e-mail de boas-vindas personalizado (nome, estado, valor, próxima
+  // cobrança, o que recebe). O antigo "orientacoes_iniciais" foi incorporado a ele (11/11/2026).
   if (status === 'active' && sub.status !== 'active') {
     const data = { amount: pre.auto_recurring?.transaction_amount ?? null, nextPaymentDate: pre.next_payment_date ?? null }
     await notifyUser(admin, { userId: sub.user_id, kind: 'assinatura_ativada', dedupeKey: `subscription:${sub.id}:activated`, data })
-    await notifyUser(admin, { userId: sub.user_id, kind: 'orientacoes_iniciais', dedupeKey: `user:${sub.user_id}:welcome` })
   }
   return { status: 'processed', detail, subscriptionId: sub.id }
 }

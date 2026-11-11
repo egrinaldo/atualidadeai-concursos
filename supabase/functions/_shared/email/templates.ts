@@ -19,7 +19,16 @@ export type EmailData = {
   name?: string | null
   amount?: number | null
   nextPaymentDate?: string | null
+  /** UF do assinante (perfil), para personalizar a boas-vindas. */
+  state?: string | null
   siteUrl: string
+}
+
+export const UF_NOME: Record<string, string> = {
+  AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal', ES: 'Espírito Santo',
+  GO: 'Goiás', MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul', MG: 'Minas Gerais', PA: 'Pará', PB: 'Paraíba',
+  PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí', RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul',
+  RO: 'Rondônia', RR: 'Roraima', SC: 'Santa Catarina', SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins',
 }
 
 export type RenderedEmail = { subject: string; html: string; text: string }
@@ -127,17 +136,39 @@ export function renderTransactional(kind: TransactionalKind, d: EmailData): Rend
   const proxima = formatDateBR(d.nextPaymentDate)
 
   switch (kind) {
-    case 'assinatura_ativada':
-      return build('Sua assinatura está ativa', 'Contratação confirmada: bem-vindo ao AtualidadeAI Concursos.', 'Contratação confirmada', {
-        paragraphs: [
-          ola,
-          'Sua assinatura do AtualidadeAI Concursos foi confirmada pelo Mercado Pago e já está ativa.',
-          [valor && `Valor: ${valor} por mês.`, proxima && `Próxima cobrança: ${proxima}.`].filter(Boolean).join(' ') ||
-            'A cobrança é mensal e renovada automaticamente.',
-        ],
-        cta: { label: 'Ver minha assinatura', url: conta },
-        note: 'Você pode cancelar a qualquer momento em Minha conta. O cancelamento interrompe as próximas cobranças.',
-      })
+    case 'assinatura_ativada': {
+      // Boas-vindas personalizada (nome, estado, valor, próxima cobrança). Substitui o par "contratação confirmada" +
+      // "primeiros passos": o assinante recebe UM e-mail de boas-vindas na ativação (11/11/2026).
+      const nome = firstName(d.name)
+      const uf = (d.state ?? '').toUpperCase()
+      const estado = UF_NOME[uf]
+      return build(
+        nome ? `Bem-vindo(a) ao AtualidadeAI Concursos, ${nome}!` : 'Bem-vindo(a) ao AtualidadeAI Concursos!',
+        'Sua assinatura está ativa. Veja o que você vai receber.',
+        'Sua assinatura está ativa',
+        {
+          paragraphs: [
+            ola,
+            'Que bom ter você com a gente! O Mercado Pago confirmou o pagamento e a sua assinatura já está ativa.',
+            `A partir da próxima edição, você recebe todo dia às 6h, neste e-mail, o resumo de atualidades ${estado ? `de ${estado}, do Brasil e do mundo` : 'do seu estado, do Brasil e do mundo'}, pronto para revisar.`,
+            [valor && `Valor: ${valor} por mês.`, proxima && `Próxima cobrança: ${proxima}.`].filter(Boolean).join(' ') ||
+              'A cobrança é mensal e renovada automaticamente.',
+            'O que você recebe:',
+          ],
+          list: [
+            'Informativo diário em PDF: os fatos que podem cair na prova, com contexto e pontos para memorizar.',
+            'Questões comentadas sobre os assuntos do dia.',
+            'Revisões semanal e mensal para a reta final.',
+            estado
+              ? `Atualidades de ${estado}. Mudou de estado? Atualize em Minha conta.`
+              : 'Informe o seu estado em Minha conta para receber as atualidades regionais.',
+            'Dica: adicione este remetente aos seus contatos para que os e-mails não caiam no spam.',
+          ],
+          cta: { label: 'Acessar minha conta', url: conta },
+          note: 'Você pode cancelar a qualquer momento em Minha conta; o cancelamento interrompe as próximas cobranças.',
+        },
+      )
+    }
 
     case 'orientacoes_iniciais':
       return build('Primeiros passos no AtualidadeAI', 'Como aproveitar seus materiais de atualidades.', 'Primeiros passos', {
