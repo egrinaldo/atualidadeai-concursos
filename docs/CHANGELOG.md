@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## 11/11/2026 — Sessão encerrada por inatividade
 
-- O usuário (assinante ou admin) é desconectado após **3 minutos sem uso** do site (era 60 min na primeira versão; reduzido a pedido do responsável no mesmo dia) (mouse, teclado, toque ou rolagem) e volta para "Entrar" com o aviso de inatividade. Antes, o Supabase renovava o token sozinho e a sessão durava indefinidamente.
+- O usuário (assinante ou admin) é desconectado após **10 minutos sem uso** do site (60 min na primeira versão, depois 3 min; 10 min a pedido do responsável no mesmo dia) (mouse, teclado, toque ou rolagem) e volta para "Entrar" com o aviso de inatividade. Antes, o Supabase renovava o token sozinho e a sessão durava indefinidamente.
 - A última atividade fica no navegador (vale entre abas e ao reabrir o navegador depois de horas). Limite em `src/lib/idle.ts` (`IDLE_MINUTES`). A página de retorno do pagamento não encerra a sessão na chegada (o checkout pode levar mais que o limite); vigilância em `src/hooks/useSession.ts`; login e links de e-mail reiniciam a contagem (`src/lib/auth.ts`).
 
 ## 11/11/2026 — Mercado Pago em produção e boas-vindas personalizada
