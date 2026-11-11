@@ -251,7 +251,7 @@ export const faq = {
       question: 'Quanto custa?',
       answer:
         (promoActive()
-          ? `Na Black Friday, quem assina até ${promo.lastDayLabel} paga ${formatBRL(promo.introCents)} no 1º mês; depois, ${formatBRL(plan.priceCents)} por mês. `
+          ? `Na Black Friday, quem assina até ${promo.lastDayLabel} paga ${formatBRL(promo.introCents)} por mês, e esse preço é mantido nas renovações enquanto a assinatura estiver ativa. Depois dessa data, novas assinaturas custam ${formatBRL(plan.priceCents)} por mês. `
           : `A assinatura custa ${formatBRL(plan.priceCents)} por mês. `) +
         'Inclui todos os materiais: diário, semanal e mensal, com atualidades estaduais, nacionais e internacionais. Você pode cancelar quando quiser.',
     },

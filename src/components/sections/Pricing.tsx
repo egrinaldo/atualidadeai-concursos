@@ -3,7 +3,7 @@ import { formatBRL, plan, PLAN_PRICES_ARE_EXAMPLES, planFeatures, promo, promoAc
 
 /** Seção de preço — plano único de assinatura mensal. */
 export function Pricing() {
-  // Black Friday (até 29/11/2026): preço de entrada no 1º mês; depois volta sozinho ao preço normal
+  // Black Friday (até 29/11/2026): R$ 9,90/mês garantido para quem assinar no período; depois volta sozinho ao preço normal
   const emPromo = promoActive()
   const destaque = emPromo ? promo.introCents : plan.priceCents
   const [reais, centavos] = formatBRL(destaque).replace('R$', '').trim().split(',')
@@ -43,24 +43,17 @@ export function Pricing() {
               <h3 className="text-xl font-bold">{plan.name}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">{plan.description}</p>
 
-              {emPromo && (
-                <p className="mt-8 text-base text-slate-400">
-                  de <span className="line-through">{formatBRL(plan.priceCents)}</span> por
-                </p>
-              )}
-              <p
-                className={emPromo ? 'mt-1 flex items-start text-white' : 'mt-8 flex items-start text-white'}
-                aria-label={emPromo ? `${formatBRL(promo.introCents)} no primeiro mês` : `${formatBRL(plan.priceCents)} por mês`}
-              >
+              <p className="mt-8 flex items-start text-white" aria-label={`${formatBRL(destaque)} por mês`}>
                 <span className="mt-2 mr-1.5 text-lg font-semibold text-slate-300">R$</span>
                 <span className="font-display text-7xl leading-none font-extrabold tracking-tight">{reais}</span>
                 <span className="mt-2 font-display text-2xl font-bold">,{centavos}</span>
-                <span className="mt-auto mb-2 ml-2 text-base text-slate-400">{emPromo ? 'no 1º mês' : plan.priceSuffix}</span>
+                <span className="mt-auto mb-2 ml-2 text-base text-slate-400">{plan.priceSuffix}</span>
               </p>
               {emPromo && (
                 <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                  Depois, {formatBRL(plan.priceCents)}
-                  {plan.priceSuffix}. Válido para assinaturas feitas até {promo.lastDayLabel}. Cancele quando quiser, sem multa.
+                  Preço de Black Friday <strong className="text-white">garantido nas renovações</strong> para quem assinar até{' '}
+                  {promo.lastDayLabel}. Depois dessa data, novas assinaturas custam {formatBRL(plan.priceCents)}
+                  {plan.priceSuffix}. Cancele quando quiser, sem multa.
                 </p>
               )}
 

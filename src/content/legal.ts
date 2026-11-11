@@ -86,7 +86,7 @@ export const termsOfUse: LegalDocument = {
           p: 'A assinatura tem valor de {{preco}} por mês, com renovação automática a cada Ciclo até que seja cancelada pelo Assinante. O preço vigente é sempre informado de forma clara antes da contratação.',
         },
         {
-          p: 'Promoções de preço de entrada (por exemplo, valor reduzido no 1º mês) são informadas antes da contratação, com o valor promocional, o período de validade e o preço aplicado depois dele. Encerrado o período promocional, as cobranças seguintes passam ao preço vigente do plano informado na contratação, e o Assinante é avisado por e-mail antes da primeira cobrança nesse valor, podendo cancelar sem ônus.',
+          p: 'Promoções de preço são informadas antes da contratação, com o valor promocional, o período em que podem ser contratadas e por quanto tempo o valor vale. Na promoção de Black Friday de 2026, quem contratar até 29/11/2026 paga o valor promocional em todas as renovações enquanto mantiver a assinatura ativa; se cancelar e assinar de novo depois do prazo, vale o preço vigente.',
         },
         {
           p: 'Os pagamentos são processados pelo Mercado Pago (Mercado Pago Instituição de Pagamento Ltda.), em ambiente próprio e seguro. O Fornecedor não coleta nem armazena dados de cartão de crédito. A assinatura somente é ativada após a confirmação do pagamento pelo Mercado Pago.',

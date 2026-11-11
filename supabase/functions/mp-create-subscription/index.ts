@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
 
     if (subs?.some((s) => s.status === 'active')) return json({ error: 'Você já possui uma assinatura ativa.' }, 409)
 
-    // Valor da 1ª cobrança: preço de entrada durante a promoção (Black Friday), senão o preço normal
+    // Preço promocional (Black Friday): quem assina no período paga o valor da promoção em TODAS as cobranças
+    // (preço garantido enquanto mantiver a assinatura); fora do período, o preço normal do plano
     const promo = introActive(plan)
     const amount = firstChargeAmount(plan)
     const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
 
     const { data: sub, error: insErr } = await admin
       .from('subscriptions')
-      .insert({ user_id: user.id, plan_id: plan.id, provider: 'mercadopago', status: 'pending', agreed_amount: amount, intro_pending: promo })
+      .insert({ user_id: user.id, plan_id: plan.id, provider: 'mercadopago', status: 'pending', agreed_amount: amount, intro_pending: false })
       .select('id')
       .single()
     if (insErr || !sub) throw new Error(`não foi possível criar a assinatura local: ${insErr?.message}`)
@@ -99,7 +100,7 @@ Deno.serve(async (req) => {
     const preapproval = await MercadoPago.createPreapproval(
       {
         reason: promo
-          ? `${plan.name} — AtualidadeAI Concursos (${plan.intro_label ?? 'promoção'}: 1º mês ${brl(amount)}, depois ${brl(Number(plan.price))}/mês)`
+          ? `${plan.name} — AtualidadeAI Concursos (${plan.intro_label ?? 'promoção'}: ${brl(amount)}/mês garantido)`
           : `${plan.name} — AtualidadeAI Concursos`,
         external_reference: sub.id,
         payer_email: payerEmail,
