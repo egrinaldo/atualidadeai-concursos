@@ -1,6 +1,6 @@
 import { Button, Container, Icon } from '@/components/ui'
 import { hero, highlights } from '@/content/landing'
-import { planPriceLabel } from '@/content/plans'
+import { offerLabel, promoActive } from '@/content/plans'
 import { PdfMock } from './PdfMock'
 
 export function Hero() {
@@ -35,7 +35,8 @@ export function Hero() {
           </div>
 
           <p className="mt-5 text-sm text-slate-400">
-            Assinatura de <strong className="font-semibold text-white">{planPriceLabel()}</strong>
+            {promoActive() ? 'Black Friday: ' : 'Assinatura de '}
+            <strong className="font-semibold text-white">{offerLabel()}</strong>
             <span className="text-slate-500"> · pagamento via Mercado Pago</span>
           </p>
         </div>

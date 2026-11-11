@@ -9,7 +9,7 @@ function ok(cond: unknown, msg: string) {
   if (!cond) throw new Error(msg)
 }
 
-const KINDS: TransactionalKind[] = ['assinatura_ativada', 'orientacoes_iniciais', 'pagamento_aprovado', 'pagamento_pendente', 'pagamento_recusado']
+const KINDS: TransactionalKind[] = ['assinatura_ativada', 'orientacoes_iniciais', 'pagamento_aprovado', 'pagamento_pendente', 'pagamento_recusado', 'reajuste_preco']
 const DATA = { name: 'Maria  Silva', amount: 10, nextPaymentDate: '2026-12-04T21:13:05Z', siteUrl: 'https://exemplo.com.br/' }
 
 Deno.test('todos os modelos geram assunto, HTML e texto em português', () => {
@@ -44,6 +44,13 @@ Deno.test('boas-vindas personalizada: nome, estado, valor e próxima cobrança',
   ok(r.html.includes('R$ 9,99 por mês') && r.html.includes('4 de dezembro de 2026'), 'valor/data')
   const semUf = renderTransactional('assinatura_ativada', { siteUrl: 'https://x.com' })
   ok(semUf.subject === 'Bem-vindo(a) ao AtualidadeAI Concursos!' && semUf.text.includes('Informe o seu estado'), 'sem nome/estado')
+})
+
+Deno.test('promoção do 1º mês: boas-vindas mostra 1º mês e preço normal; aviso de reajuste', () => {
+  const r = renderTransactional('assinatura_ativada', { ...DATA, amount: 9.9, nextAmount: 29.9 })
+  ok(r.text.includes('1º mês: R$ 9,90.') && r.text.includes('A partir da 2ª cobrança: R$ 29,90 por mês.'), r.text)
+  const a = renderTransactional('reajuste_preco', { ...DATA, amount: 29.9 })
+  ok(a.text.includes('valor normal de R$ 29,90 por mês') && a.text.includes('4 de dezembro de 2026') && a.text.includes('cancelar'), a.text)
 })
 
 Deno.test('funciona sem nome, valor ou data', () => {
