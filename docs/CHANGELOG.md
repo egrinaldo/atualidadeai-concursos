@@ -2,6 +2,12 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## 11/11/2026 — Mercado Pago em produção e boas-vindas personalizada
+
+- **Mercado Pago em produção** (autorizado pelo responsável em 11/11/2026): Access Token e assinatura do webhook de produção nos Secrets; `MERCADO_PAGO_TEST_PAYER_EMAIL` e `EMAIL_TEST_TO` removidos; `EMAIL_FROM` com o domínio verificado (`mail.atualidadeaiconcursos.com.br`). Valor cobrado: plano "Assinatura mensal", **R$ 9,99/mês (BRL)**, lido da tabela `plans`; a ativação só ocorre se valor e moeda no Mercado Pago forem iguais aos do plano.
+- **E-mail de boas-vindas personalizado** na ativação da assinatura (`assinatura_ativada`): assunto com o primeiro nome, estado do assinante, valor, próxima cobrança e o que ele recebe. Substitui o par "Contratação confirmada" + "Primeiros passos" (o assinante recebe um único e-mail de boas-vindas; o recibo do pagamento continua em "Pagamento aprovado").
+- Painel admin: removido o aviso "Ambiente de teste".
+
 ## [Não publicado] — Diárias magras (09/11/2026)
 
 ### Corrigido

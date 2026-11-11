@@ -18,7 +18,7 @@ export async function notifyUser(
 ): Promise<'sent' | 'skipped' | 'failed'> {
   try {
     if (!input.userId) return 'skipped'
-    const { data: profile } = await admin.from('profiles').select('email, full_name').eq('id', input.userId).maybeSingle()
+    const { data: profile } = await admin.from('profiles').select('email, full_name, state').eq('id', input.userId).maybeSingle()
     if (!profile?.email) return 'skipped'
 
     // Reserva o envio (chave única). Se já existe, só reenvia em caso de falha anterior.
@@ -42,6 +42,7 @@ export async function notifyUser(
 
     const rendered = renderTransactional(input.kind, {
       name: profile.full_name,
+      state: profile.state,
       siteUrl: Deno.env.get('SITE_URL') ?? 'http://localhost:5173',
       ...input.data,
     })
