@@ -11,7 +11,7 @@
  * =====================================================================
  */
 import type { IconName } from '@/components/ui/Icon'
-import { formatBRL, plan } from './plans'
+import { formatBRL, plan, promo, promoActive } from './plans'
 
 export const navLinks = [
   { label: 'Como funciona', href: '#como-funciona' },
@@ -250,7 +250,10 @@ export const faq = {
     {
       question: 'Quanto custa?',
       answer:
-        `A assinatura custa ${formatBRL(plan.priceCents)} por mês e inclui todos os materiais: diário, semanal e mensal, com atualidades estaduais, nacionais e internacionais.`,
+        (promoActive()
+          ? `Na Black Friday, quem assina até ${promo.lastDayLabel} paga ${formatBRL(promo.introCents)} no 1º mês; depois, ${formatBRL(plan.priceCents)} por mês. `
+          : `A assinatura custa ${formatBRL(plan.priceCents)} por mês. `) +
+        'Inclui todos os materiais: diário, semanal e mensal, com atualidades estaduais, nacionais e internacionais. Você pode cancelar quando quiser.',
     },
     {
       question: 'Quais formas de pagamento são aceitas?',

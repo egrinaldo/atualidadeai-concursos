@@ -14,11 +14,14 @@ export type TransactionalKind =
   | 'pagamento_aprovado'
   | 'pagamento_pendente'
   | 'pagamento_recusado'
+  | 'reajuste_preco' // fim do 1º mês promocional: próximas cobranças no preço normal
 
 export type EmailData = {
   name?: string | null
   amount?: number | null
   nextPaymentDate?: string | null
+  /** Valor das próximas cobranças quando o 1º mês foi promocional. */
+  nextAmount?: number | null
   /** UF do assinante (perfil), para personalizar a boas-vindas. */
   state?: string | null
   siteUrl: string
@@ -151,8 +154,10 @@ export function renderTransactional(kind: TransactionalKind, d: EmailData): Rend
             ola,
             'Que bom ter você com a gente! O Mercado Pago confirmou o pagamento e a sua assinatura já está ativa.',
             `A partir da próxima edição, você recebe todo dia às 6h, neste e-mail, o resumo de atualidades ${estado ? `de ${estado}, do Brasil e do mundo` : 'do seu estado, do Brasil e do mundo'}, pronto para revisar.`,
-            [valor && `Valor: ${valor} por mês.`, proxima && `Próxima cobrança: ${proxima}.`].filter(Boolean).join(' ') ||
-              'A cobrança é mensal e renovada automaticamente.',
+            d.nextAmount
+              ? [valor && `1º mês: ${valor}.`, `A partir da 2ª cobrança: ${formatBRL(d.nextAmount)} por mês.`, proxima && `Próxima cobrança: ${proxima}.`].filter(Boolean).join(' ')
+              : [valor && `Valor: ${valor} por mês.`, proxima && `Próxima cobrança: ${proxima}.`].filter(Boolean).join(' ') ||
+                'A cobrança é mensal e renovada automaticamente.',
             'O que você recebe:',
           ],
           list: [
@@ -202,6 +207,17 @@ export function renderTransactional(kind: TransactionalKind, d: EmailData): Rend
           'Isso costuma levar poucos minutos. Assim que for confirmado, sua assinatura será ativada automaticamente e avisaremos por e-mail.',
         ],
         cta: { label: 'Acompanhar em Minha conta', url: conta },
+      })
+
+    case 'reajuste_preco':
+      return build('Seu 1º mês promocional foi confirmado', 'Aviso sobre o valor das próximas cobranças.', 'Aviso sobre as próximas cobranças', {
+        paragraphs: [
+          ola,
+          'Obrigado por assinar o AtualidadeAI Concursos! O pagamento do seu 1º mês com o preço promocional foi confirmado.',
+          `Como informado na contratação, a partir da próxima cobrança a assinatura passa ao valor normal${valor ? ` de ${valor} por mês` : ''}${proxima ? `, com a próxima cobrança em ${proxima}` : ''}.`,
+          'Se não quiser continuar, você pode cancelar a qualquer momento em Minha conta, antes da próxima cobrança, sem multa.',
+        ],
+        cta: { label: 'Ver minha assinatura', url: conta },
       })
 
     case 'pagamento_recusado':

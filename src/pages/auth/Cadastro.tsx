@@ -3,7 +3,7 @@ import { Alert } from '@/components/forms/Alert'
 import { Checkbox, PasswordField, SelectField, TextField } from '@/components/forms/Field'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button, Icon } from '@/components/ui'
-import { planFeatures, planPriceLabel, plan } from '@/content/plans'
+import { offerLabel, planFeatures, plan } from '@/content/plans'
 import { UFS } from '@/data/ufs'
 import { useCaptcha } from '@/components/forms/Captcha'
 import { resendConfirmation, signUp } from '@/lib/auth'
@@ -288,7 +288,7 @@ function PlanAside() {
     <div>
       <p className="text-xs font-bold tracking-[0.2em] text-brand-300 uppercase">Sua assinatura</p>
       <p className="mt-3 font-display text-3xl font-bold text-white">{plan.name}</p>
-      <p className="mt-1 text-lg text-signal-300">{planPriceLabel()}</p>
+      <p className="mt-1 text-lg text-signal-300">{offerLabel()}</p>
       <ul className="mt-6 space-y-3">
         {planFeatures.map((f) => (
           <li key={f} className="flex items-start gap-3 text-sm text-slate-300">

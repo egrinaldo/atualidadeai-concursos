@@ -2,7 +2,7 @@
  * Testes das regras de pagamento (sem rede).
  * Executar:  npx deno test supabase/functions/tests/
  */
-import { amountMatches, billingToMp, isUuid, mapPaymentStatus, mapPreapprovalStatus, notificationKind, revokesAccess } from '../_shared/mapping.ts'
+import { amountMatches, billingToMp, firstChargeAmount, introActive, isUuid, mapPaymentStatus, mapPreapprovalStatus, notificationKind, revokesAccess } from '../_shared/mapping.ts'
 import { buildManifest, hmacSha256Hex, parseSignatureHeader, verifyMercadoPagoSignature } from '../_shared/signature.ts'
 
 function assertEquals<T>(actual: T, expected: T, msg = '') {
@@ -105,4 +105,14 @@ Deno.test('estorno e contestação encerram o acesso; demais status não', () =>
   assertEquals(revokesAccess('refunded'), true)
   assertEquals(revokesAccess('charged_back'), true)
   for (const st of ['approved', 'pending', 'rejected', 'cancelled', 'in_mediation'] as const) assertEquals(revokesAccess(st), false, st)
+})
+
+Deno.test('promoção do 1º mês (Black Friday): vale até intro_until, exclusivo', () => {
+  const plan = { price: 29.9, intro_price: 9.9, intro_until: '2026-11-30T03:00:00Z' }
+  assertEquals(introActive(plan, new Date('2026-11-29T23:59:00-03:00')), true)
+  assertEquals(firstChargeAmount(plan, new Date('2026-11-29T23:59:00-03:00')), 9.9)
+  assertEquals(introActive(plan, new Date('2026-11-30T00:00:00-03:00')), false)
+  assertEquals(firstChargeAmount(plan, new Date('2026-11-30T00:00:00-03:00')), 29.9)
+  assertEquals(introActive({ price: 29.9, intro_price: null, intro_until: null }), false)
+  assertEquals(introActive({ price: 9.9, intro_price: 19.9, intro_until: '2099-01-01T00:00:00Z' }), false) // "promoção" mais cara: ignora
 })

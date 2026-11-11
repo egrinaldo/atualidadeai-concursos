@@ -87,6 +87,21 @@ export function amountMatches(
   return sameAmount && sameCurrency
 }
 
+/** Plano com preço de entrada (promoção do 1º mês). */
+export type PlanPricing = { price: number | string; intro_price?: number | string | null; intro_until?: string | null }
+
+/** A promoção do 1º mês vale agora? (intro_until é exclusivo) */
+export function introActive(plan: PlanPricing, now = new Date()): boolean {
+  if (plan.intro_price == null || !plan.intro_until) return false
+  const fim = new Date(plan.intro_until)
+  return !Number.isNaN(fim.getTime()) && now < fim && Number(plan.intro_price) < Number(plan.price)
+}
+
+/** Valor da 1ª cobrança para quem assina agora: preço de entrada na promoção, senão o preço normal. */
+export function firstChargeAmount(plan: PlanPricing, now = new Date()): number {
+  return Number(introActive(plan, now) ? plan.intro_price : plan.price)
+}
+
 /** Frequência de cobrança do plano local → parâmetros do Mercado Pago. */
 export function billingToMp(period: string): { frequency: number; frequency_type: 'months' } {
   if (period === 'quarterly') return { frequency: 3, frequency_type: 'months' }
