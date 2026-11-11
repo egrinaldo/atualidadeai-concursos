@@ -6,7 +6,7 @@
  * e a pessoa volta para /entrar com o aviso de inatividade. O horário da última atividade fica no localStorage,
  * então vale entre abas e também ao reabrir o navegador depois de horas.
  */
-export const IDLE_MINUTES = 3
+export const IDLE_MINUTES: number = 3
 const IDLE_MS = IDLE_MINUTES * 60_000
 const KEY = 'aai:ultima-atividade'
 
