@@ -1,12 +1,12 @@
 /**
- * Encerramento da sessão por inatividade (11/11/2026).
+ * Encerramento da sessão por inatividade (11/11/2026; 3 minutos, a pedido do responsável).
  *
  * O Supabase renova o token sozinho e, sem isto, o usuário ficava conectado por tempo indeterminado.
  * Regra: sem uso do site por IDLE_MINUTES (mouse, teclado, toque, rolagem), a sessão é encerrada neste navegador
  * e a pessoa volta para /entrar com o aviso de inatividade. O horário da última atividade fica no localStorage,
  * então vale entre abas e também ao reabrir o navegador depois de horas.
  */
-export const IDLE_MINUTES = 60
+export const IDLE_MINUTES = 3
 const IDLE_MS = IDLE_MINUTES * 60_000
 const KEY = 'aai:ultima-atividade'
 
@@ -43,20 +43,20 @@ export function isIdleExpired(now = Date.now(), last = read()): boolean {
 
 const EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart', 'mousemove', 'focus'] as const
 
-/** Escuta atividade (com no máximo 1 gravação a cada 30 s) e chama onExpire quando passar do limite. */
+/** Escuta atividade (com no máximo 1 gravação a cada 10 s) e chama onExpire quando passar do limite. */
 export function watchIdle(onExpire: () => void): () => void {
   let lastWrite = 0
   const onActivity = () => {
     const now = Date.now()
     if (isIdleExpired(now)) return onExpire() // voltou depois do limite (ex.: aba em segundo plano)
-    if (now - lastWrite > 30_000) {
+    if (now - lastWrite > 10_000) {
       lastWrite = now
       touchActivity(now)
     }
   }
   const timer = window.setInterval(() => {
     if (isIdleExpired()) onExpire()
-  }, 30_000)
+  }, 15_000)
   const onVisible = () => document.visibilityState === 'visible' && isIdleExpired() && onExpire()
   for (const e of EVENTS) window.addEventListener(e, onActivity, { passive: true })
   document.addEventListener('visibilitychange', onVisible)
@@ -65,4 +65,10 @@ export function watchIdle(onExpire: () => void): () => void {
     for (const e of EVENTS) window.removeEventListener(e, onActivity)
     document.removeEventListener('visibilitychange', onVisible)
   }
+}
+
+/** Texto do limite para avisos ("3 minutos", "1 hora"). */
+export function idleLabel(): string {
+  if (IDLE_MINUTES % 60 === 0) return IDLE_MINUTES === 60 ? '1 hora' : `${IDLE_MINUTES / 60} horas`
+  return IDLE_MINUTES === 1 ? '1 minuto' : `${IDLE_MINUTES} minutos`
 }

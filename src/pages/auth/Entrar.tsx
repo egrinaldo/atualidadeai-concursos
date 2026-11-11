@@ -7,6 +7,7 @@ import { isAdmin } from '@/lib/admin'
 import { useCaptcha } from '@/components/forms/Captcha'
 import { getSession, resendConfirmation, signIn } from '@/lib/auth'
 import { validateEmail } from '@/lib/validation'
+import { idleLabel } from '@/lib/idle'
 
 /**
  * Só aceita destinos internos (evita redirecionamento aberto).
@@ -46,7 +47,7 @@ export function Entrar() {
     params.get('senha') === 'redefinida'
       ? 'Senha alterada. Entre com a nova senha.'
       : params.get('motivo') === 'inatividade'
-        ? 'Por segurança, sua sessão foi encerrada após 1 hora sem uso. Entre novamente.'
+        ? `Por segurança, sua sessão foi encerrada após ${idleLabel()} sem uso. Entre novamente.`
         : null,
   )
   const [submitting, setSubmitting] = useState(false)
