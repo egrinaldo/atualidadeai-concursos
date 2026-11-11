@@ -3,7 +3,7 @@
 | Integração | Status | Subetapa | Ponto de entrada no código |
 | --- | --- | --- | --- |
 | Supabase (Auth + banco) | Banco aplicado e Auth integrado (cadastro, login, confirmação, recuperação) | 3 e 4 | `src/lib/supabase.ts`, `src/config/env.ts` |
-| Mercado Pago | Assinatura mensal integrada e testada em **ambiente de teste** | 5 | `supabase/functions/mp-*`, `src/lib/billing.ts` |
+| Mercado Pago | Assinatura mensal em **produção** desde 11/11/2026 (R$ 9,99/mês) | 5 | `supabase/functions/mp-*`, `src/lib/billing.ts` |
 | Serviço de e-mail (Resend) | Integrado: login do Supabase via SMTP + e-mails de pagamento via API; **modo de teste** (sem domínio) | 6 | `supabase/functions/_shared/email/` |
 | Vercel | Preparada — `vercel.json` | 7 | `vercel.json` |
 

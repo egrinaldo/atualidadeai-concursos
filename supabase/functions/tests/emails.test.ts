@@ -37,6 +37,15 @@ Deno.test('dados do usuário são escapados (sem injeção de HTML)', () => {
   ok(escapeHtml('<a href="x">&') === '&lt;a href=&quot;x&quot;&gt;&amp;', 'escapeHtml')
 })
 
+Deno.test('boas-vindas personalizada: nome, estado, valor e próxima cobrança', () => {
+  const r = renderTransactional('assinatura_ativada', { ...DATA, amount: 9.99, state: 'se' })
+  ok(r.subject === 'Bem-vindo(a) ao AtualidadeAI Concursos, Maria!', r.subject)
+  ok(r.html.includes('de Sergipe, do Brasil e do mundo') && r.text.includes('Atualidades de Sergipe'), 'estado')
+  ok(r.html.includes('R$ 9,99 por mês') && r.html.includes('4 de dezembro de 2026'), 'valor/data')
+  const semUf = renderTransactional('assinatura_ativada', { siteUrl: 'https://x.com' })
+  ok(semUf.subject === 'Bem-vindo(a) ao AtualidadeAI Concursos!' && semUf.text.includes('Informe o seu estado'), 'sem nome/estado')
+})
+
 Deno.test('funciona sem nome, valor ou data', () => {
   const r = renderTransactional('assinatura_ativada', { siteUrl: 'https://x.com' })
   ok(r.html.includes('Olá!') && !r.html.includes('undefined') && !r.html.includes('null'), 'campos ausentes')
