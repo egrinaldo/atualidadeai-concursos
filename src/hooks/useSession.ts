@@ -28,7 +28,9 @@ export function useSession() {
     let active = true
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return
-      if (data.session && isIdleExpired()) {
+      // Volta do checkout do Mercado Pago: pagar pode levar mais que o limite; não encerrar na chegada
+      const voltandoDoPagamento = window.location.pathname.startsWith('/pagamento/')
+      if (data.session && !voltandoDoPagamento && isIdleExpired()) {
         void expireSession()
         return
       }
