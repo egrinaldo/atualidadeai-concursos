@@ -2,6 +2,11 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## 11/11/2026 — Sessão encerrada por inatividade
+
+- O usuário (assinante ou admin) é desconectado após **60 minutos sem uso** do site (mouse, teclado, toque ou rolagem) e volta para "Entrar" com o aviso de inatividade. Antes, o Supabase renovava o token sozinho e a sessão durava indefinidamente.
+- A última atividade fica no navegador (vale entre abas e ao reabrir o navegador depois de horas). Limite em `src/lib/idle.ts` (`IDLE_MINUTES`); vigilância em `src/hooks/useSession.ts`; login e links de e-mail reiniciam a contagem (`src/lib/auth.ts`).
+
 ## 11/11/2026 — Mercado Pago em produção e boas-vindas personalizada
 
 - **Mercado Pago em produção** (autorizado pelo responsável em 11/11/2026): Access Token e assinatura do webhook de produção nos Secrets; `MERCADO_PAGO_TEST_PAYER_EMAIL` e `EMAIL_TEST_TO` removidos; `EMAIL_FROM` com o domínio verificado (`mail.atualidadeaiconcursos.com.br`). Valor cobrado: plano "Assinatura mensal", **R$ 9,99/mês (BRL)**, lido da tabela `plans`; a ativação só ocorre se valor e moeda no Mercado Pago forem iguais aos do plano.

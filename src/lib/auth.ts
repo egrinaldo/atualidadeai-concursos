@@ -1,5 +1,6 @@
 import type { AuthError, Session } from '@supabase/supabase-js'
 import { getSupabase } from '@/lib/supabase'
+import { touchActivity } from '@/lib/idle'
 
 /**
  * Operações de autenticação (Supabase Auth).
@@ -46,11 +47,13 @@ export async function signUp(input: SignUpInput, captchaToken?: string | null): 
   // E-mail já cadastrado: o Supabase devolve um usuário "fantasma" (sem
   // identidades). Respondemos igual a um cadastro novo para não revelar
   // quais e-mails têm conta (enumeração de usuários).
+  if (data.session) touchActivity()
   return { ok: true, needsConfirmation: !data.session }
 }
 
 export async function signIn(email: string, password: string, captchaToken?: string | null): Promise<AuthResult> {
   const { error } = await getSupabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password, ...(captchaToken ? { options: { captchaToken } } : {}) })
+  if (!error) touchActivity() // login novo: o tempo de inatividade começa agora
   return error ? { ok: false, message: translateAuthError(error), code: error.code } : { ok: true }
 }
 
@@ -93,6 +96,7 @@ export async function verifyEmailLink(expected: 'email' | 'recovery'): Promise<A
   if (type !== expected || !/^[A-Za-z0-9_-]{10,200}$/.test(tokenHash)) {
     return { ok: false, message: 'Link inválido. Solicite um novo.' }
   }
+  touchActivity() // a sessão criada pelo link começa a contar agora
   const { error } = await getSupabase().auth.verifyOtp({ token_hash: tokenHash, type: expected })
   if (!error) return { ok: true }
   if (error.code === 'otp_expired' || /expired|invalid/i.test(error.message))
