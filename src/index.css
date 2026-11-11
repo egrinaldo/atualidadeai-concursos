@@ -146,3 +146,43 @@
 @utility bg-radial-glow {
   background-image: radial-gradient(60% 50% at 50% 0%, rgb(51 102 255 / 0.35), transparent 70%);
 }
+
+/*
+ * TEMA TEMPORÁRIO — Black Friday (até 29/11/2026). Ligado pela classe `tema-black-friday` no <html>, que src/main.tsx
+ * só coloca enquanto `promoActive()` (src/content/plans.ts) for verdadeiro. Depois do prazo, nada disto é aplicado e o
+ * site volta sozinho às cores padrão acima. Para remover de vez: apague este bloco, o componente PromoBar e `promo`.
+ */
+html.tema-black-friday {
+  --color-navy-950: #050505;
+  --color-navy-900: #0d0d0d;
+  --color-navy-800: #171717;
+  --color-navy-700: #222222;
+  --color-navy-600: #2e2e2e;
+  --color-navy-500: #444444;
+
+  --color-brand-200: #ffd6c2;
+  --color-brand-300: #ffae85;
+  --color-brand-400: #ff7a3d;
+  --color-brand-500: #e8590c;
+  --color-brand-600: #c94a06;
+  --color-brand-700: #a33c05;
+
+  --color-signal-300: #ffe27a;
+  --color-signal-400: #ffc81a;
+  --color-signal-500: #f2b200;
+
+  --shadow-glow: 0 0 0 1px rgb(255 200 26 / 0.3), 0 12px 40px -8px rgb(232 89 12 / 0.55);
+}
+
+/* Black Friday: ambientação (grade, divisores e brilhos) em laranja e dourado em vez de azul */
+html.tema-black-friday .bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 200 26 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 200 26 / 0.05) 1px, transparent 1px);
+}
+html.tema-black-friday .glow-line {
+  background: linear-gradient(90deg, transparent, rgb(232 89 12 / 0.55), rgb(255 200 26 / 0.7), rgb(232 89 12 / 0.55), transparent);
+}
+html.tema-black-friday .bg-radial-glow {
+  background-image: radial-gradient(60% 50% at 50% 0%, rgb(232 89 12 / 0.28), transparent 70%);
+}

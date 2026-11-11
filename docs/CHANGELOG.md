@@ -2,6 +2,13 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## 11/11/2026 — Preço de produção R$ 29,90 e Black Friday (até 29/11/2026)
+
+- **Preço:** plano mensal passa a **R$ 29,90** (migração 29; na fase de testes era R$ 10,00 e R$ 9,99).
+- **Black Friday:** quem assina até **29/11/2026 23:59 (Brasília)** paga **R$ 9,90 no 1º mês**; depois do 1º pagamento aprovado, o backend reajusta a assinatura no Mercado Pago para R$ 29,90 (`adjustAfterIntro` em `_shared/sync.ts`) e envia o e-mail `reajuste_preco` antes da 2ª cobrança. Colunas novas: `plans.intro_price/intro_until/intro_label`, `subscriptions.agreed_amount/intro_pending/price_adjusted_at`. A ativação aceita o valor combinado (promoção) ou o preço normal.
+- **Site:** tema temporário de Black Friday (preto, laranja e dourado), faixa no topo com contagem de dias e preço "de R$ 29,90 por R$ 9,90 no 1º mês". Liga e desliga **sozinho pela data** (`promoActive()` em `src/content/plans.ts`): a partir de 30/11/2026 00:00 o site volta ao visual padrão e mostra R$ 29,90/mês, sem nova publicação. Termos de Uso: cláusula sobre preço de entrada promocional.
+- Aviso registrado: o responsável foi informado de que o preço "de" deve ser um preço efetivamente praticado (CDC, art. 37); a decisão de exibir "de R$ 29,90" é dele, com R$ 29,90 como preço de produção a partir desta data.
+
 ## 11/11/2026 — Sessão encerrada por inatividade
 
 - O usuário (assinante ou admin) é desconectado após **10 minutos sem uso** do site (60 min na primeira versão, depois 3 min; 10 min a pedido do responsável no mesmo dia) (mouse, teclado, toque ou rolagem) e volta para "Entrar" com o aviso de inatividade. Antes, o Supabase renovava o token sozinho e a sessão durava indefinidamente.

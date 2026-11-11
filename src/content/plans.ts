@@ -1,7 +1,8 @@
 /**
  * PLANO DE ASSINATURA
  * ---------------------------------------------------------------------
- * Oferta definida pelo responsável: plano único, mensal, R$ 9,99 (era R$ 10,00 até 07/11/2026).
+ * Oferta definida pelo responsável: plano único, mensal, R$ 29,90 (preço de produção desde 11/11/2026; antes, na fase
+ * de testes, R$ 10,00 e R$ 9,99). Black Friday: 1º mês por R$ 9,90 até 29/11/2026 (ver `promo` abaixo).
  *
  * Na Subetapa 5 o plano passa a ser lido da tabela `plans` do Supabase
  * (preço configurável pelo banco) e este arquivo vira apenas o valor
@@ -31,7 +32,7 @@ export const plan: Plan = {
   id: 'monthly',
   name: 'Assinatura mensal',
   description: 'Acesso completo a todos os materiais, com renovação automática todo mês.',
-  priceCents: 999,
+  priceCents: 2990,
   months: 1,
   priceSuffix: '/mês',
 }
@@ -50,7 +51,32 @@ export function formatBRL(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-/** Ex.: "R$ 9,99/mês" */
+/** Ex.: "R$ 29,90/mês" */
 export function planPriceLabel(p: Plan = plan): string {
   return `${formatBRL(p.priceCents)}${p.priceSuffix}`
+}
+
+/**
+ * PROMOÇÃO TEMPORÁRIA — Black Friday (decisão do responsável, 11/11/2026)
+ * 1º mês por R$ 9,90 para quem assinar até 29/11/2026 23:59 (Brasília); depois, R$ 29,90/mês.
+ * O tema e os textos da promoção ligam e desligam SOZINHOS pela data (`promoActive`): a partir de 30/11/2026 00:00
+ * o site volta ao visual e ao texto padrão, sem nova publicação. Mesmo valor/data na tabela `plans` (migração 29),
+ * que é quem define o que o Mercado Pago cobra.
+ */
+export const promo = {
+  label: 'Black Friday',
+  introCents: 990,
+  /** Fim exclusivo: 30/11/2026 00:00 em Brasília. */
+  endsAt: '2026-11-30T03:00:00Z',
+  /** Último dia, para os textos. */
+  lastDayLabel: '29/11',
+}
+
+export function promoActive(now: Date = new Date()): boolean {
+  return now < new Date(promo.endsAt)
+}
+
+/** Ex.: "1º mês por R$ 9,90, depois R$ 29,90/mês" (promoção) ou "R$ 29,90/mês". */
+export function offerLabel(now: Date = new Date()): string {
+  return promoActive(now) ? `1º mês por ${formatBRL(promo.introCents)}, depois ${planPriceLabel()}` : planPriceLabel()
 }

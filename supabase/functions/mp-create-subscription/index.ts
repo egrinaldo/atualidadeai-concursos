@@ -8,7 +8,7 @@
  */
 import { adminClient, logEvent, rateLimited, userFromRequest } from '../_shared/db.ts'
 import { errorMessage, json, preflight, providerBusy, requireEnv, tooManyRequests } from '../_shared/http.ts'
-import { billingToMp } from '../_shared/mapping.ts'
+import { billingToMp, firstChargeAmount, introActive } from '../_shared/mapping.ts'
 import { MercadoPago, MercadoPagoError } from '../_shared/mercadopago.ts'
 
 const REUSE_PENDING_HOURS = 24
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const { data: plan } = await admin
       .from('plans')
-      .select('id, code, name, price, currency, billing_period')
+      .select('id, code, name, price, currency, billing_period, intro_price, intro_until, intro_label')
       .eq('code', planCode)
       .eq('is_active', true)
       .maybeSingle()
@@ -53,19 +53,25 @@ Deno.serve(async (req) => {
 
     const { data: subs } = await admin
       .from('subscriptions')
-      .select('id, status, checkout_url, external_subscription_id, created_at, plan_id')
+      .select('id, status, checkout_url, external_subscription_id, created_at, plan_id, agreed_amount')
       .eq('user_id', user.id)
       .in('status', ['active', 'pending', 'paused'])
       .order('created_at', { ascending: false })
 
     if (subs?.some((s) => s.status === 'active')) return json({ error: 'Você já possui uma assinatura ativa.' }, 409)
 
-    // Reaproveita um link de pagamento recente para não criar assinaturas duplicadas
+    // Valor da 1ª cobrança: preço de entrada durante a promoção (Black Friday), senão o preço normal
+    const promo = introActive(plan)
+    const amount = firstChargeAmount(plan)
+    const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
+
+    // Reaproveita um link de pagamento recente para não criar assinaturas duplicadas (só se o valor ainda for o mesmo)
     const recent = subs?.find(
       (s) =>
         s.status === 'pending' &&
         s.plan_id === plan.id &&
         s.checkout_url &&
+        Math.round(Number(s.agreed_amount ?? plan.price) * 100) === Math.round(amount * 100) &&
         Date.now() - new Date(s.created_at).getTime() < REUSE_PENDING_HOURS * 3600_000,
     )
     if (recent && !informed) return json({ checkout_url: recent.checkout_url, subscription_id: recent.id, reused: true })
@@ -80,7 +86,7 @@ Deno.serve(async (req) => {
 
     const { data: sub, error: insErr } = await admin
       .from('subscriptions')
-      .insert({ user_id: user.id, plan_id: plan.id, provider: 'mercadopago', status: 'pending' })
+      .insert({ user_id: user.id, plan_id: plan.id, provider: 'mercadopago', status: 'pending', agreed_amount: amount, intro_pending: promo })
       .select('id')
       .single()
     if (insErr || !sub) throw new Error(`não foi possível criar a assinatura local: ${insErr?.message}`)
@@ -92,12 +98,14 @@ Deno.serve(async (req) => {
 
     const preapproval = await MercadoPago.createPreapproval(
       {
-        reason: `${plan.name} — AtualidadeAI Concursos`,
+        reason: promo
+          ? `${plan.name} — AtualidadeAI Concursos (${plan.intro_label ?? 'promoção'}: 1º mês ${brl(amount)}, depois ${brl(Number(plan.price))}/mês)`
+          : `${plan.name} — AtualidadeAI Concursos`,
         external_reference: sub.id,
         payer_email: payerEmail,
         auto_recurring: {
           ...billingToMp(plan.billing_period),
-          transaction_amount: Number(plan.price),
+          transaction_amount: amount,
           currency_id: plan.currency,
         },
         back_url: backUrl(siteUrl),

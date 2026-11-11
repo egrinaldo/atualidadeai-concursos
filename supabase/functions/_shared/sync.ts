@@ -23,11 +23,14 @@ type LocalSub = {
   status: string
   started_at: string | null
   cancelled_at: string | null
+  external_subscription_id?: string | null
+  agreed_amount?: number | string | null
+  intro_pending?: boolean | null
   plans: { price: number; currency: string } | null
 }
 
 async function findSubscription(admin: SupabaseClient, pre: Pick<Preapproval, 'id' | 'external_reference'>): Promise<LocalSub | null> {
-  const cols = 'id, user_id, status, started_at, cancelled_at, plans(price, currency)'
+  const cols = 'id, user_id, status, started_at, cancelled_at, external_subscription_id, agreed_amount, intro_pending, plans(price, currency)'
   if (isUuid(pre.external_reference)) {
     const { data } = await admin.from('subscriptions').select(cols).eq('id', pre.external_reference).maybeSingle()
     if (data) return data as unknown as LocalSub
@@ -43,7 +46,10 @@ export async function applyPreapproval(admin: SupabaseClient, pre: Preapproval):
   let status = mapPreapprovalStatus(pre.status)
   let detail = `preapproval ${pre.id}: ${pre.status} → ${status}`
 
-  if (status === 'active' && sub.plans && !amountMatches(pre.auto_recurring, sub.plans)) {
+  // Valor aceito: o combinado na criação (preço de entrada da promoção) ou o preço normal do plano (após o reajuste)
+  const combinado = sub.plans && sub.agreed_amount != null ? { price: sub.agreed_amount, currency: sub.plans.currency } : null
+  const valorOk = !!sub.plans && (amountMatches(pre.auto_recurring, sub.plans) || (!!combinado && amountMatches(pre.auto_recurring, combinado)))
+  if (status === 'active' && sub.plans && !valorOk) {
     status = 'pending'
     detail = `valor/moeda divergente do plano — assinatura NÃO ativada (${pre.auto_recurring?.transaction_amount} ${pre.auto_recurring?.currency_id})`
   }
@@ -69,7 +75,12 @@ export async function applyPreapproval(admin: SupabaseClient, pre: Preapproval):
   // Ativação (primeira vez desta assinatura): UM e-mail de boas-vindas personalizado (nome, estado, valor, próxima
   // cobrança, o que recebe). O antigo "orientacoes_iniciais" foi incorporado a ele (11/11/2026).
   if (status === 'active' && sub.status !== 'active') {
-    const data = { amount: pre.auto_recurring?.transaction_amount ?? null, nextPaymentDate: pre.next_payment_date ?? null }
+    const data = {
+      amount: pre.auto_recurring?.transaction_amount ?? null,
+      nextPaymentDate: pre.next_payment_date ?? null,
+      // Promoção do 1º mês: o e-mail mostra o valor das próximas cobranças
+      nextAmount: sub.intro_pending && sub.plans ? Number(sub.plans.price) : null,
+    }
     await notifyUser(admin, { userId: sub.user_id, kind: 'assinatura_ativada', dedupeKey: `subscription:${sub.id}:activated`, data })
   }
   return { status: 'processed', detail, subscriptionId: sub.id }
@@ -77,7 +88,7 @@ export async function applyPreapproval(admin: SupabaseClient, pre: Preapproval):
 
 async function upsertPayment(
   admin: SupabaseClient,
-  sub: { id: string; user_id: string } | null,
+  sub: LocalSub | null,
   p: { id: string; status: string; status_detail?: string | null; amount?: number; currency?: string; paid_at?: string | null },
 ) {
   const status = mapPaymentStatus(p.status)
@@ -99,6 +110,9 @@ async function upsertPayment(
   // Estorno/contestação: cancela a assinatura no Mercado Pago (sem novas cobranças)
   if (sub && revokesAccess(status)) await cancelAfterRefund(admin, sub.id, p.id, status)
 
+  // Promoção do 1º mês (Black Friday): pago o 1º mês, a assinatura passa ao preço normal nas próximas cobranças
+  if (sub && status === 'approved' && sub.intro_pending) await adjustAfterIntro(admin, sub)
+
   // Um e-mail por pagamento e status (aprovado, pendente ou recusado)
   const kind = emailForPaymentStatus(status)
   if (kind && sub) {
@@ -107,6 +121,42 @@ async function upsertPayment(
       kind,
       dedupeKey: `payment:${p.id}:${kind}`,
       data: { amount: p.amount ?? null },
+    })
+  }
+}
+
+/**
+ * Reajusta a assinatura no Mercado Pago para o preço normal do plano depois do 1º pagamento aprovado com preço de
+ * entrada, e avisa o assinante por e-mail (antes da 2ª cobrança). Idempotente: só age com intro_pending = true.
+ */
+async function adjustAfterIntro(admin: SupabaseClient, sub: LocalSub) {
+  if (!sub.plans || !sub.external_subscription_id) return
+  const normal = Number(sub.plans.price)
+  const updated = await MercadoPago.updatePreapproval(sub.external_subscription_id, {
+    auto_recurring: { transaction_amount: normal, currency_id: sub.plans.currency },
+  })
+  const { data: claimed } = await admin
+    .from('subscriptions')
+    .update({ intro_pending: false, price_adjusted_at: new Date().toISOString(), next_payment_at: updated.next_payment_date ?? null })
+    .eq('id', sub.id)
+    .eq('intro_pending', true)
+    .select('id')
+  sub.intro_pending = false
+  await admin.from('payment_events').insert({
+    source: 'sync',
+    topic: 'preapproval',
+    action: 'adjust_after_intro',
+    resource_id: sub.external_subscription_id,
+    status: 'processed',
+    error: `preço normal ${normal} aplicado após o 1º mês promocional`,
+    processed_at: new Date().toISOString(),
+  })
+  if (claimed?.length) {
+    await notifyUser(admin, {
+      userId: sub.user_id,
+      kind: 'reajuste_preco',
+      dedupeKey: `subscription:${sub.id}:intro-adjusted`,
+      data: { amount: normal, nextPaymentDate: updated.next_payment_date ?? null },
     })
   }
 }

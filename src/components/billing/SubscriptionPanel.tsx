@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert } from '@/components/forms/Alert'
 import { TextField } from '@/components/forms/Field'
 import { Badge, Button, Icon } from '@/components/ui'
-import { planPriceLabel } from '@/content/plans'
+import { offerLabel } from '@/content/plans'
 import { validateEmail } from '@/lib/validation'
 import { cancelSubscription, formatDate, loadBilling, startCheckout, syncSubscription, type BillingSnapshot } from '@/lib/billing'
 import type { Subscription } from '@/types/database'
@@ -176,7 +176,7 @@ export function SubscriptionPanel({ accountEmail }: { accountEmail: string }) {
       {canSubscribe && (
         <div className="mt-4">
           <p className="text-sm text-slate-400">
-            Assine por <strong className="text-white">{planPriceLabel()}</strong> para receber os materiais diários, semanais e mensais.
+            Assine por <strong className="text-white">{offerLabel()}</strong> para receber os materiais diários, semanais e mensais.
           </p>
           <div className="mt-4">
             <TextField

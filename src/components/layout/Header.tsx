@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button, Container, Icon, Logo } from '@/components/ui'
 import { navLinks } from '@/content/landing'
 import { cn } from '@/utils/cn'
+import { PromoBar } from './PromoBar'
 
 /**
  * Cabeçalho fixo com navegação por âncoras.
@@ -34,6 +35,7 @@ export function Header() {
         scrolled || open ? 'border-b border-white/8 bg-navy-950/85 backdrop-blur-lg' : 'bg-transparent',
       )}
     >
+      <PromoBar />
       <Container className="flex h-16 items-center justify-between gap-6 lg:h-20">
         <a href="/" aria-label="AtualidadeAI Concursos — início" onClick={close}>
           <Logo />
