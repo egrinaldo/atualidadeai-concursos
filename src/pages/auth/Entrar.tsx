@@ -42,7 +42,13 @@ export function Entrar() {
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [serverError, setServerError] = useState<{ message: string; code?: string } | null>(null)
-  const [info, setInfo] = useState<string | null>(params.get('senha') === 'redefinida' ? 'Senha alterada. Entre com a nova senha.' : null)
+  const [info, setInfo] = useState<string | null>(
+    params.get('senha') === 'redefinida'
+      ? 'Senha alterada. Entre com a nova senha.'
+      : params.get('motivo') === 'inatividade'
+        ? 'Por segurança, sua sessão foi encerrada após 1 hora sem uso. Entre novamente.'
+        : null,
+  )
   const [submitting, setSubmitting] = useState(false)
   const captcha = useCaptcha()
 
