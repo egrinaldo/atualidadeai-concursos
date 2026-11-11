@@ -14,8 +14,8 @@ export function PromoBar() {
       <span className="mx-2" aria-hidden>
         ·
       </span>
-      1º mês por {formatBRL(promo.introCents)}
-      <span className="hidden sm:inline"> (depois {formatBRL(plan.priceCents)}/mês)</span>
+      {formatBRL(promo.introCents)}/mês garantido
+      <span className="hidden sm:inline"> para quem assinar até {promo.lastDayLabel} (depois, {formatBRL(plan.priceCents)}/mês)</span>
       <span className="mx-2" aria-hidden>
         ·
       </span>

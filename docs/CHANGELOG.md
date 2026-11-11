@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## 11/11/2026 — Black Friday: R$ 9,90/mês garantido (ajuste do mesmo dia)
+
+- Decisão do responsável: exibir só **R$ 9,90/mês** (sem preço "de") e **manter R$ 9,90 nas renovações** para quem assinar até 29/11/2026. Novas assinaturas a partir de 30/11/2026: R$ 29,90/mês. O reajuste automático após o 1º mês (`adjustAfterIntro`) fica desligado (`intro_pending = false` na criação). Site, Termos (cláusula 5), FAQ e vídeos diários atualizados.
+
 ## 11/11/2026 — Preço de produção R$ 29,90 e Black Friday (até 29/11/2026)
 
 - **Preço:** plano mensal passa a **R$ 29,90** (migração 29; na fase de testes era R$ 10,00 e R$ 9,99).
