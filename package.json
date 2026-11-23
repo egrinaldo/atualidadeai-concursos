@@ -18,7 +18,7 @@
     "auth:email": "npx --yes deno run --no-config --allow-read --allow-env --allow-net scripts/configure-auth-email.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
+    "@supabase/supabase-js": "^2.119.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
