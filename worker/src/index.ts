@@ -45,15 +45,20 @@ async function main() {
     if (!steps.length || steps.some((s) => !JOB_TYPES.includes(s.type) || s.tag === null)) throw new Error(`tipo inválido: ${arg1}`)
     const now = new Date()
     const mode = process.env.TICK_SLOT
+    // Data da edição forçada (disparo manual para refazer um dia perdido): vai no payload como referenceDate
+    const refEnv = (process.env.TICK_REFERENCE_DATE ?? '').trim()
+    if (refEnv && !/^\d{4}-\d{2}-\d{2}$/.test(refEnv)) throw new Error(`TICK_REFERENCE_DATE inválida: ${refEnv}`)
+    const extra = refEnv ? { referenceDate: refEnv } : {}
     for (const { type, tag } of steps) {
       const slot = tickSlot(mode, type, now)
-      const base = `${type}${tag ? `@${tag}` : ''}:${slot}`
-      let r = await queue.enqueue(type, tag ? { stage: tag } : {}, { dedupeKey: base })
+      const base = `${type}${tag ? `@${tag}` : ''}:${slot}${refEnv ? `:${refEnv}` : ''}`
+      const payload = { ...(tag ? { stage: tag } : {}), ...extra }
+      let r = await queue.enqueue(type, payload, { dedupeKey: base })
       // Vaga já usada por uma rodada que não fez nada (ex.: disparo atrasado/adiantado): roda de novo
       for (let n = 2; r === 'duplicate' && n <= 6; n++) {
         const { data: prev } = await db.from('processing_jobs').select('status, result').eq('dedupe_key', n === 2 ? base : `${base}#${n - 1}`).maybeSingle()
         if (!isNoop(prev)) break
-        r = await queue.enqueue(type, tag ? { stage: tag } : {}, { dedupeKey: `${base}#${n}` })
+        r = await queue.enqueue(type, payload, { dedupeKey: `${base}#${n}` })
       }
       log.info('rodada', { type, tag, slot, result: r })
       const summary = await runQueue(ctx, queue, handlers, { types: [type], maxJobs: 5 })
